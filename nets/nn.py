@@ -2,13 +2,14 @@ import os
 import random
 import numpy as np
 import tensorflow as tf
-from abc import ABC, abstractmethod
+from .model import Model
+from abc import abstractmethod
 
 DEFAULT_LEARNING_RATE = 0.001
 DEFAULT_EPOCHS = 50
 DEFAULT_BATCH_SIZE = 128
 
-class NN(ABC):
+class NN(Model):
 	def __init__(self, id, input_shape, classes, class_weights=None):
 		self.id = id
 		self.input_shape = input_shape
@@ -44,21 +45,6 @@ class NN(ABC):
 	@abstractmethod
 	def net(self, x, input_shape, weights, biases):
 		raise NotImplementedError
-
-	def split_data(self, X, y=None):
-		batches = []
-
-		for i in range(0, int(len(X) / DEFAULT_BATCH_SIZE) + 1):
-			start = (i * DEFAULT_BATCH_SIZE)
-			end = min((i + 1) * DEFAULT_BATCH_SIZE, len(X))
-			batch_X = X[start:end]
-			if y is None:
-				batches.append({'x': batch_X})
-			else:
-				batch_y = y[start:end]
-				batches.append({'x': batch_X, 'y': batch_y})
-
-		return batches
 
 	def checkpoint_variables(self, sess):
 		for var in tf.global_variables():
@@ -102,18 +88,19 @@ class NN(ABC):
 		
 		return loss, acc
 
-	def fit(self, train_X, train_y, val_X, val_y, epochs=DEFAULT_EPOCHS):
+	def fit(self, X, y, epochs=DEFAULT_EPOCHS):
 		if len(self.input_shape) == 3:
 			height, width, channels = self.input_shape
 			input_size = height * width * channels
 		else:
 			input_size = self.input_shape[0]
 
+		train_X, train_y, val_X, val_y = split_data(X, y)
 		train_X = np.reshape(train_X, [-1, input_size])
 		val_X = np.reshape(val_X, [-1, input_size])
 
-		batches = self.split_data(train_X, train_y)
-		val_batches = self.split_data(val_X, val_y)
+		batches = self.batch_data(train_X, train_y)
+		val_batches = self.batch_data(val_X, val_y)
 
 		print('Started training with ' + str(len(train_X)) + ' images')
 		with self.initialize_session() as sess:
