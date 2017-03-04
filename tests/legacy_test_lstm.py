@@ -31,4 +31,4 @@ print(train_input[:5])
 print(train_output[:5])
 
 lstm = LSTM('Test', [20, 1], 21)
-lstm.train(np.asarray(train_input), np.asarray(train_output))
+lstm.train(np.asarray(train_input), np.asarray(train_output), epochs=100)

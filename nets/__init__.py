@@ -1,4 +1,4 @@
-from .lstm import LSTM
+from .cnn import CNN
 from .deep_cnn import DeepCNN
-from .single_layer_nn import SingleLayerNN
-from .single_layer_cnn import SingleLayerCNN
+from .neural_net import NeuralNet
+from .single_layer_neural_net import SingleLayerNeuralNet
