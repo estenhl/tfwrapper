@@ -35,6 +35,9 @@ class InceptionV3():
 	def extract_features_from_folder(self, folder, label=None, skip=[], layer='pool_3:0', sess=None):
 		all_features = []
 
+		if not sess:
+			sess = tf.Session(self.graph)
+
 		for filename in os.listdir(folder):
 			if filename not in skip:
 				src = os.path.join(folder, filename)
@@ -51,6 +54,9 @@ class InceptionV3():
 
 	def extract_features_from_datastructure(self, root, skip=[], layer='pool_3:0', sess=None):
 		all_features = []
+
+		if not sess:
+			sess = tf.Session(graph=self.graph)
 
 		for foldername in os.listdir(root):
 			folder = os.path.join(root, foldername)
