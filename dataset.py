@@ -59,6 +59,15 @@ def labels_to_indexes(y):
 
 	return np.asarray(indices), labels
 
+def split_dataset(X, y, val_split=0.8):
+	train_len = int(len(X) * val_split)
+	train_X = X[:train_len]
+	train_y = y[:train_len]
+	val_X = X[train_len:]
+	val_y = y[train_len:]
+
+	return train_X, train_y, val_X, val_y
+
 class Dataset():
 	X = np.asarray([])
 	y = np.asarray([])
@@ -78,7 +87,7 @@ class Dataset():
 		if y is not None:
 			self.y = y
 
-	def getdata(self, normalize=False, balance=False, translate_labels=False, shuffle=False, onehot=False):
+	def getdata(self, normalize=False, balance=False, translate_labels=False, shuffle=False, onehot=False, split=False):
 		X = self.X
 		y = self.y
 		labels = []
@@ -98,4 +107,8 @@ class Dataset():
 		if onehot:
 			y = onehot_array(y)
 
-		return X, y, labels
+		if split:
+			X, y, test_X, test_y = split_dataset(X, y)
+			return X, y, test_X, test_y, labels
+		else:
+			return X, y, labels

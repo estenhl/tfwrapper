@@ -3,6 +3,8 @@ import numpy as np
 import tensorflow as tf
 from abc import ABC, abstractmethod
 
+from .dataset import split_dataset
+
 class TFSession():
 	def __init__(self, session=None, graph=None, init_vars=False, variables={}):
 		self.has_local_session = (session is None)
@@ -71,15 +73,6 @@ class SupervisedModel(ABC):
 	def optimizer_function(self):
 		raise NotImplementedError('SupervisedModel is a generic class')
 		
-	def split_data(self, X, y, val_split=0.8):
-		train_len = int(len(X) * val_split)
-		train_X = X[:train_len]
-		train_y = y[:train_len]
-		val_X = X[train_len:]
-		val_y = y[train_len:]
-
-		return train_X, train_y, val_X, val_y
-		
 	def batch_data(self, data):
 		batches = []
 
@@ -96,7 +89,7 @@ class SupervisedModel(ABC):
 		X = np.reshape(X, [-1, self.input_size])
 		y = np.reshape(y, [-1, self.y_size])
 		if val_X == None and validate:
-			X, y, val_X, val_y = self.split_data(X, y)
+			X, y, val_X, val_y = split_dataset(X, y)
 			
 		X_batches = self.batch_data(X)
 		y_batches = self.batch_data(y)
@@ -118,12 +111,15 @@ class SupervisedModel(ABC):
 
 	def predict(self, X, sess=None):
 		batches = self.batch_data(X)
-		preds = np.array([])
+		preds = None
 
 		with TFSession(sess, self.graph) as sess:
 			for batch in batches:
-				preds = np.concatenate([preds, sess.run(self.pred, feed_dict={self.X: batch}).flatten()])
-
+				batch_preds = sess.run(self.pred, feed_dict={self.X: batch})
+				if preds:
+					preds = np.concatenate([preds, batch_preds])
+				else:
+					preds = batch_preds
 		return preds
 
 	def save(self, filename, sess=None):
@@ -142,4 +138,4 @@ class SupervisedModel(ABC):
 			self.graph = sess.graph
 			self.X = sess.graph.get_tensor_by_name(self.name + '_X_placeholder:0')
 			self.y = sess.graph.get_tensor_by_name(self.name + '_y_placeholder:0')
-		self.pred = sess.graph.get_tensor_by_name(self.name + '_pred:0')
+			self.pred = sess.graph.get_tensor_by_name(self.name + '_pred:0')
