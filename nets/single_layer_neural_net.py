@@ -5,16 +5,25 @@ from tfwrapper import TFSession
 from tfwrapper.nets import NeuralNet
 
 class SingleLayerNeuralNet(NeuralNet):
-	def __init__(self, X_shape, y_size, hidden, sess=None, name='SingleLayerNeuralNet'):
-		X_size = np.prod(X_shape)
+	def __init__(self, X_shape, y_size, hidden, sess=None, graph=None, name='SingleLayerNeuralNet'):
+		if graph is None:
+			if sess is not None:
+				raise Exception('When a session is passed, a graph must be passed aswell')
+			graph = tf.Graph()
 
-		layers = [
-			lambda x: self.fullyconnected(x, self.weights(X_size, hidden, y_size)[0], self.biases(hidden, y_size)[0]),
-			lambda x: tf.add(tf.matmul(x, self.weights(X_size, hidden, y_size)[1]), self.biases(hidden, y_size)[1])
-		]
+		with graph.as_default():
+			with TFSession(sess, graph) as sess:
+				X_size = np.prod(X_shape)
 
-		super().__init__(X_shape, y_size, layers, sess=sess, name=name)
-		sess.run(tf.global_variables_initializer())
+				layers = [
+					lambda x: self.fullyconnected(x, self.weights(X_size, hidden, y_size)[0], self.biases(hidden, y_size)[0]),
+					lambda x: tf.add(tf.matmul(x, self.weights(X_size, hidden, y_size)[1]), self.biases(hidden, y_size)[1])
+				]
+
+				super().__init__(X_shape, y_size, layers, sess=sess, graph=graph, name=name)
+				sess.run(tf.global_variables_initializer())
+
+		self.graph = graph
 
 	def weights(self, X_size, hidden, y_size):
 		return [
