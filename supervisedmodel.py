@@ -50,8 +50,8 @@ class SupervisedModel(ABC):
 				self.input_size = np.prod(X_shape)
 				self.output_size = y_size
 
-				self.X = tf.placeholder(tf.float32, [None, self.input_size], name='X_placeholder')
-				self.y = tf.placeholder(tf.float32, [None, y_size], name='y_placeholder')
+				self.X = tf.placeholder(tf.float32, [None, self.input_size], name=self.name + '_X_placeholder')
+				self.y = tf.placeholder(tf.float32, [None, y_size], name=self.name + '_y_placeholder')
 
 				prev = self.X
 				for layer in layers:
@@ -130,12 +130,16 @@ class SupervisedModel(ABC):
 		saver = tf.train.Saver()
 		saver.save(sess, filename)
 
-	def load(self, filename, sess):
-		with TFSession(sess, self.graph) as sess:
+	def load(self, filename, sess=None):
+		if sess is None:
+			raise NotImplementedError('Loading outside a session is not implemented')
+			
+		with TFSession(sess) as sess:
 			graph_path = filename + '.meta'
 			saver = tf.train.import_meta_graph(graph_path)
 			saver.restore(sess, filename)
 
 			self.graph = sess.graph
-			self.X = sess.graph.get_tensor_by_name('X_placeholder:0')
-			self.y = sess.graph.get_tensor_by_name('y_placeholder:0')
+			self.X = sess.graph.get_tensor_by_name(self.name + '_X_placeholder:0')
+			self.y = sess.graph.get_tensor_by_name(self.name + '_y_placeholder:0')
+		self.pred = sess.graph.get_tensor_by_name(self.name + '_pred:0')

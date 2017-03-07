@@ -16,8 +16,8 @@ class SingleLayerNeuralNet(NeuralNet):
 				X_size = np.prod(X_shape)
 
 				layers = [
-					lambda x: self.fullyconnected(x, self.weights(X_size, hidden, y_size)[0], self.biases(hidden, y_size)[0]),
-					lambda x: tf.add(tf.matmul(x, self.weights(X_size, hidden, y_size)[1]), self.biases(hidden, y_size)[1])
+					lambda x: self.fullyconnected(x, self.weights(X_size, hidden, y_size)[0], self.biases(hidden, y_size)[0], name=name + '_hidden'),
+					lambda x: tf.add(tf.matmul(x, self.weights(X_size, hidden, y_size)[1]), self.biases(hidden, y_size)[1], name=name + '_pred')
 				]
 
 				super().__init__(X_shape, y_size, layers, sess=sess, graph=graph, name=name)

@@ -20,17 +20,17 @@ class NeuralNet(SupervisedModel):
 		self.graph = graph
 
 	def loss_function(self):
-		return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.pred, self.y, name=self.name + '_softmax'), name=self.name + '_reduce_mean')
+		return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.pred, self.y, name=self.name + '_softmax'), name=self.name + '_loss')
 
 	def optimizer_function(self):
-		return tf.train.AdamOptimizer(learning_rate=self.learning_rate, name=self.name + '_adam').minimize(self.loss)
+		return tf.train.AdamOptimizer(learning_rate=self.learning_rate, name=self.name + '_adam').minimize(self.loss, name=self.name + '_optimizer')
 
 	def accuracy_function(self, correct_pred):
-		return tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '_accuracy')
 
 	def fullyconnected(self, prev, weight, bias, name=None):
-		fc = tf.reshape(prev, [-1, weight.get_shape().as_list()[0]], name=self.name + '_RESHAPE')
-		fc = tf.add(tf.matmul(fc, weight), bias)
+		fc = tf.reshape(prev, [-1, weight.get_shape().as_list()[0]], name=name + '_reshape')
+		fc = tf.add(tf.matmul(fc, weight), bias, name=name + '_add')
 		fc = tf.nn.relu(fc, name=name)
 
 		return fc
@@ -53,6 +53,11 @@ class NeuralNet(SupervisedModel):
 
 		return loss / len(X), acc
 
-	def load(self, filename, sess):
-		with TFSession(sess, self.graph) as sess:
-			super().load(filename, sess)
+	def load(self, filename, sess=None):
+		if sess is None:
+			raise NotImplementedError('Loading outside a session is not implemented')
+			
+		with TFSession(sess) as sess:
+			super().load(filename, sess=sess)
+			self.loss = sess.graph.get_tensor_by_name(self.name + '_loss:0')
+			self.accuracy = sess.graph.get_tensor_by_name(self.name + '_accuracy:0')
