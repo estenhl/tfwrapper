@@ -1,16 +1,16 @@
+import random
 import numpy as np
 import tensorflow as tf
 from abc import ABC, abstractmethod
-
-DEFAULT_VAL_SPLIT = 0.8
 
 class TFSession():
 	def __init__(self, session=None, graph=None, init_vars=False):
 		self.has_local_session = (session is None)
 		self.session = session
-		graph.as_default()
+		self.graph = graph
 
 		if self.has_local_session:
+			print('Initing new session with graph ' + str(graph))
 			self.session = tf.Session(graph=graph)
 			if init_vars:
 				print('Initializing vars!')
@@ -25,7 +25,9 @@ class TFSession():
 
 
 class SupervisedModel(ABC):
-	learning_rate = 0.01
+	graph = None
+
+	learning_rate = 0.1
 	batch_size = 128
 
 	def __init__(self, X_shape, y_size, layers, sess=None, name='SupervisedModel'):
@@ -35,19 +37,16 @@ class SupervisedModel(ABC):
 		self.input_size = np.prod(X_shape)
 		self.output_size = y_size
 
-		self.graph = tf.Graph()
-		self.graph.as_default()
-		with TFSession(sess, self.graph) as sess:
-			self.X = tf.placeholder(tf.float32, [None, self.input_size], name='X_placeholder')
-			self.y = tf.placeholder(tf.float32, [None, y_size], name='y_placeholder')
+		self.X = tf.placeholder(tf.float32, [None, self.input_size], name='X_placeholder')
+		self.y = tf.placeholder(tf.float32, [None, y_size], name='y_placeholder')
 
-			prev = self.X
-			for layer in layers:
-				prev = layer(prev)
-			self.pred = prev
+		prev = self.X
+		for layer in layers:
+			prev = layer(prev)
+		self.pred = prev
 
-			self.loss = self.loss_function()
-			self.optimizer = self.optimizer_function()
+		self.loss = self.loss_function()
+		self.optimizer = self.optimizer_function()
 
 	@abstractmethod
 	def loss_function(self):
@@ -57,7 +56,7 @@ class SupervisedModel(ABC):
 	def optimizer_function(self):
 		raise NotImplementedError('SupervisedModel is a generic class')
 		
-	def split_data(self, X, y, val_split=DEFAULT_VAL_SPLIT):
+	def split_data(self, X, y, val_split=0.8):
 		train_len = int(len(X) * val_split)
 		train_X = X[:train_len]
 		train_y = y[:train_len]
@@ -76,7 +75,8 @@ class SupervisedModel(ABC):
 
 		return batches
 
-	def train(self, X, y, val_X=None, val_y=None, validate=True, epochs=5000, sess=None):
+	def train(self, X, y, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=True):
+		print('Training with sess: ' + str(sess) + ', graph: ' + str(sess.graph))
 		assert len(X) == len(y)
 
 		X = np.reshape(X, [-1, self.input_size])
@@ -86,14 +86,17 @@ class SupervisedModel(ABC):
 			
 		X_batches = self.batch_data(X)
 		y_batches = self.batch_data(y)
-		num_batches = len(X_batches)	
+		num_batches = len(X_batches)
 		
-		self.graph.as_default()
-		with TFSession(sess, self.graph, init_vars=True) as sess:
-			sess.run(tf.global_variables_initializer())
-			for epoch in range(epochs):
-				for i in range(num_batches):
-					sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
+		if verbose:
+			print('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
+
+		#sess.run(tf.global_variables_initializer())
+		for epoch in range(epochs):
+			for i in range(num_batches):
+				sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
+
+			if verbose:			
 				train_loss, train_acc = self.validate(X_batches[num_batches - 1], y_batches[num_batches - 1], sess=sess)
 				val_loss, val_acc = self.validate(val_X, val_y, sess=sess)
 				print('Epoch %d, train loss: %.3f, train acc: %2f, val loss: %.3f, val acc: %2f' % (epoch + 1, train_loss, train_acc, val_loss, val_acc))

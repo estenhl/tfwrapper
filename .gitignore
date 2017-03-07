@@ -3,3 +3,4 @@
 **/*.pyc
 mnist/**/*
 .cache/**/*
+nets/pretrained/models/**/*

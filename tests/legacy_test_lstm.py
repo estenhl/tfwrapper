@@ -1,7 +1,8 @@
 import sys
-sys.path.append('../')
+sys.path.append('.')
 
 import numpy as np
+import tensorflow as tf
 from nets.lstm import LSTM
 from random import shuffle
  
@@ -29,6 +30,6 @@ for i in train_input:
 
 print(train_input[:5])
 print(train_output[:5])
-
-lstm = LSTM('Test', [20, 1], 21)
-lstm.train(np.asarray(train_input), np.asarray(train_output), epochs=100)
+with tf.Session() as sess:
+	lstm = LSTM([20, 1], 21, 24, sess=sess, name='Test')
+	lstm.train(np.asarray(train_input), np.asarray(train_output), epochs=100, sess=sess)
