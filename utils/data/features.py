@@ -21,13 +21,3 @@ def write_features(dest, all_features):
 	with open(dest, 'w') as f:
 		for features in all_features:
 			f.write(features['filename'] + ',' + features['label'] + ',' + ','.join([str(x) for x in features['features']]) + '\n')
-
-def translate_features(all_features):
-	X = []
-	y = []
-
-	for features in all_features:
-		X.append(features['features'])
-		y.append(features['label'])
-
-	return np.asarray(X), y
