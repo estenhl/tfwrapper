@@ -14,7 +14,7 @@ class SingleLayerNeuralNet(NeuralNet):
 		]
 
 		super().__init__(X_shape, y_size, layers, sess=sess, name=name)
-		sess.run(tf.global_variables_initializer())
+		sess.run(tf.initialize_all_variables())
 
 	def weights(self, X_size, hidden, y_size):
 		return [
