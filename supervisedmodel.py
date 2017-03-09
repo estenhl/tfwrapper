@@ -72,6 +72,12 @@ class SupervisedModel(ABC):
 	@abstractmethod
 	def optimizer_function(self):
 		raise NotImplementedError('SupervisedModel is a generic class')
+
+	def weight(self, shape, name):
+		return tf.Variable(tf.random_normal(shape), name=name)
+
+	def bias(self, size, name):
+		return tf.Variable(tf.random_normal([size]), name=name)
 		
 	def batch_data(self, data):
 		batches = []
@@ -106,8 +112,10 @@ class SupervisedModel(ABC):
 
 					if verbose:			
 						train_loss, train_acc = self.validate(X_batches[num_batches - 1], y_batches[num_batches - 1], sess=sess)
-						val_loss, val_acc = self.validate(val_X, val_y, sess=sess)
-						print('Epoch %d, train loss: %.3f, train acc: %2f, val loss: %.3f, val acc: %2f' % (epoch + 1, train_loss, train_acc, val_loss, val_acc))
+						print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, train_loss, train_acc)
+						if validate:
+							val_loss, val_acc = self.validate(val_X, val_y, sess=sess)
+						print('Epoch %d, val loss: %.3f, val acc: %2f' % (epoch + 1, val_loss, val_acc))
 
 	def predict(self, X, sess=None):
 		batches = self.batch_data(X)
