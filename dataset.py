@@ -95,14 +95,14 @@ class Dataset():
 		if normalize:
 			X = normalize_array(X)
 
-		if balance:
-			X, y = balance_dataset(X, y)
-
 		if translate_labels:
 			y, labels = labels_to_indexes(y)
 
 		if shuffle:
 			X, y = shuffle_dataset(X, y)
+
+		if balance:
+			X, y = balance_dataset(X, y)
 
 		if onehot:
 			y = onehot_array(y)

@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import tensorflow as tf
 
 from tfwrapper import TFSession
@@ -35,6 +36,16 @@ class InceptionV3():
 				print('Unable to get feature for ' + str(filename))
 
 				return None
+
+
+	def extract_features_from_files(self, filenames, layer='pool_3:0', sess=None):
+		features = []
+		with TFSession(sess, self.graph) as sess:
+			for filename in filenames:
+				features.append(self.extract_features_from_file(filename, layer=layer, sess=sess))
+
+
+		return np.asarray(features)
 
 	def extract_features_from_folder(self, folder, label=None, skip=[], layer='pool_3:0', sess=None):
 		all_features = []
