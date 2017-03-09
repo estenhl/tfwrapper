@@ -112,7 +112,7 @@ class SupervisedModel(ABC):
 
 					if verbose:			
 						train_loss, train_acc = self.validate(X_batches[num_batches - 1], y_batches[num_batches - 1], sess=sess)
-						print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, train_loss, train_acc)
+						print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, train_loss, train_acc))
 						if validate:
 							val_loss, val_acc = self.validate(val_X, val_y, sess=sess)
 						print('Epoch %d, val loss: %.3f, val acc: %2f' % (epoch + 1, val_loss, val_acc))
