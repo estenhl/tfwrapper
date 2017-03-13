@@ -1,3 +1,5 @@
+import os
+import cv2
 import numpy as np
 from collections import Counter
 
@@ -68,15 +70,36 @@ def split_dataset(X, y, val_split=0.8):
 
 	return train_X, train_y, val_X, val_y
 
+def parse_datastructure(root, suffix='.jpg', verbose=False):
+	X = []
+	y = []
+
+	for foldername in os.listdir(root):
+		src = os.path.join(root, foldername)
+		if os.path.isdir(src):
+			for filename in os.listdir(src):
+				if filename.endswith(suffix):
+					src_file = os.path.join(src, filename)
+					img = cv2.imread(src_file)
+					X.append(img)
+					y.append(foldername)
+				elif verbose:
+					print('Skipping filename ' + filename)
+		elif verbose:
+			print('Skipping foldername ' + foldername)
+
+	return np.asarray(X), np.asarray(y)
+
+
 class Dataset():
 	X = np.asarray([])
 	y = np.asarray([])
 
-	def __init__(self, X=None, y=None, features=None, root_folder=None, datafile=None):
+	def __init__(self, X=None, y=None, features=None, root_folder=None, datafile=None, verbose=False):
 		if datafile is not None and root_folder is not None:
 			raise NotImplementedError('Parsing an image folder with a datafile is not implemented')
 		elif root_folder is not None:
-			raise NotImplementedError('Parsing a datastructure is not implemented')
+			self.X, self.y = parse_datastructure(root_folder, verbose=verbose)
 
 		if features is not None:
 			self.X, self.y = translate_features(features)

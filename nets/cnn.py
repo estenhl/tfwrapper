@@ -3,8 +3,8 @@ import tensorflow as tf
 from .neural_net import NeuralNet
 
 class CNN(NeuralNet):
-	def __init__(self, X_shape, y_size, layers, sess=None, name='NeuralNet'):
-		super().__init__(X_shape, y_size, layers, sess=sess, name=name)
+	def __init__(self, X_shape, y_size, layers, sess=None, graph=None, name='NeuralNet'):
+		super().__init__(X_shape, y_size, layers, sess=sess, graph=graph, name=name)
 
 	def conv2d(self, x, W, b, strides=1, padding='SAME', name=None):
 		conv = tf.nn.conv2d(x, W, strides=[1, strides, strides, 1], padding=padding, name=name)

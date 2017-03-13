@@ -52,7 +52,7 @@ class SupervisedModel(ABC):
 				self.input_size = np.prod(X_shape)
 				self.output_size = y_size
 
-				self.X = tf.placeholder(tf.float32, [None, self.input_size], name=self.name + '_X_placeholder')
+				self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '_X_placeholder')
 				self.y = tf.placeholder(tf.float32, [None, y_size], name=self.name + '_y_placeholder')
 
 				prev = self.X
@@ -85,14 +85,15 @@ class SupervisedModel(ABC):
 		for i in range(0, int(len(data) / self.batch_size) + 1):
 			start = (i * self.batch_size)
 			end = min((i + 1) * self.batch_size, len(data))
-			batches.append(data[start:end])
+			if start != end:
+				batches.append(data[start:end])
 
 		return batches
 
-	def train(self, X, y, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=True):
+	def train(self, X, y, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=False):
 		assert len(X) == len(y)
 
-		X = np.reshape(X, [-1, self.input_size])
+		X = np.reshape(X, [-1] + self.X_shape)
 		y = np.reshape(y, [-1, self.y_size])
 		if val_X == None and validate:
 			X, y, val_X, val_y = split_dataset(X, y)
@@ -106,6 +107,7 @@ class SupervisedModel(ABC):
 
 		with self.graph.as_default():
 			with TFSession(sess, self.graph, init_vars=True) as sess:
+				sess.run(tf.global_variables_initializer())
 				for epoch in range(epochs):
 					for i in range(num_batches):
 						sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
