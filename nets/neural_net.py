@@ -20,7 +20,7 @@ class NeuralNet(SupervisedModel):
 		self.graph = graph
 
 	def loss_function(self):
-		return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.pred, self.y, name=self.name + '_softmax'), name=self.name + '_loss')
+		return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '_softmax'), name=self.name + '_loss')
 
 	def optimizer_function(self):
 		return tf.train.AdamOptimizer(learning_rate=self.learning_rate, name=self.name + '_adam').minimize(self.loss, name=self.name + '_optimizer')
