@@ -140,7 +140,7 @@ class SupervisedModel(ABC):
 		if sess is None:
 			raise NotImplementedError('Loading outside a session is not implemented')
 			
-		with TFSession(sess) as sess:
+		with TFSession(sess, sess.graph) as sess:
 			graph_path = filename + '.meta'
 			saver = tf.train.import_meta_graph(graph_path)
 			saver.restore(sess, filename)
