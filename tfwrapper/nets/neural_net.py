@@ -15,7 +15,7 @@ class NeuralNet(SupervisedModel):
 			with TFSession(sess, graph) as sess:
 				super().__init__(X_shape, classes, layers, sess=sess, graph=graph, name=name)
 
-				correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
+				self.correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
 				self.accuracy = self.accuracy_function(correct_pred)
 
 		self.graph = graph
@@ -27,7 +27,7 @@ class NeuralNet(SupervisedModel):
 		return tf.train.AdamOptimizer(learning_rate=self.learning_rate, name=self.name + '_adam').minimize(self.loss, name=self.name + '_optimizer')
 
 	def accuracy_function(self, correct_pred):
-		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '_accuracy')
+		return tf.reduce_mean(tf.cast(self.correct_pred, tf.float32), name=self.name + '_accuracy')
 
 	def fullyconnected(self, prev, weight, bias, name=None):
 		fc = tf.reshape(prev, [-1, weight.get_shape().as_list()[0]], name=name + '_reshape')

@@ -12,7 +12,7 @@ class ShallowCNN(CNN):
 			self.channels = 1
 		self.classes = classes
 
-		if not (int(np.prod(X_shape)) % 4 == 0):
+		if not (height % 4 == 0 and width % 4 == 0):
 			raise Exception('Height and width must be multiples of 4!')
 		
 		layers = self.layers(X_shape, name)
