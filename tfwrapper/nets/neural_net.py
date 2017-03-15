@@ -8,9 +8,9 @@ class NeuralNet(SupervisedModel):
 	def __init__(self, X_shape, classes, layers, sess=None, graph=None, name='NeuralNet'):
 
 		self.X_shape = X_shape
-		self.y_size = y_size
+		#self.y_size = y_size
 		self.name = name
-		self.input_size = np.prod(X_shape)
+		#self.input_size = np.prod(X_shape)
 		self.output_size = y_size
 
 		self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '_X_placeholder')
