@@ -72,7 +72,7 @@ class NeuralNet(SupervisedModel):
 
 		# tf Graph input
 		x = tf.placeholder(tf.float32, [None, 64, 64, 3])
-		y_ = tf.placeholder(tf.float32, [None, n_classes])
+		y = tf.placeholder(tf.float32, [None, n_classes])
 		keep_prob = tf.placeholder(tf.float32) #dropout (keep probability)
 
 
@@ -149,14 +149,12 @@ class NeuralNet(SupervisedModel):
 		optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 		# Evaluate model
-		correct_pred = tf.equal(tf.argmax(pred, 1), tf.argmax(y_, 1))
+		correct_pred = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
 		accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 		# Initializing the variables
 		init = tf.global_variables_initializer()
 
-		from collections import Counter
-		print('Counts: ' + str(Counter([str(x) for x in y])))
 		# Launch the graph
 		with tf.Session() as sess:
 			sess.run(init)
@@ -165,16 +163,16 @@ class NeuralNet(SupervisedModel):
 				for i in range(num_batches):
 					batch_x, batch_y = X_batches[i], y_batches[i]
 					# Run optimization op (backprop)
-					sess.run(optimizer, feed_dict={x: batch_x, y_: batch_y,
+					sess.run(optimizer, feed_dict={x: batch_x, y: batch_y,
 												   keep_prob: dropout})
 					# Calculate batch loss and accuracy
 				loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x,
-																y_: batch_y,
+																y: batch_y,
 																keep_prob: 1.})
-				print('Epoch %d: loss: %.2f, acc %.2f' % (epoch + 1, loss, acc))
-				preds = sess.run(pred, feed_dict={x: batch_x, keep_prob: 1.})
+				preds = sess.run(pred, feed_dict={x: batch_x})
 				for i in range(0, len(preds)):
-					print(str([round(x, 2) for x in preds[i]]) + ': ' + str(batch_y[i]))
+					print(str(preds[i]) + ': ' + str(y[i]))
+				print('Epoch %d: loss: %.2f, acc %.2f' % (epoch + 1, loss, acc))
 			print("Optimization Finished!")
 
 	def load(self, filename, sess=None):
