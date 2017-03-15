@@ -38,6 +38,9 @@ class NeuralNet(SupervisedModel):
 	def validate(self, X, y, sess=None, verbose=False):
 		assert len(X) == len(y)
 
+		X = np.reshape(X, [-1] + self.X_shape)
+		y = np.reshape(y, [-1, self.y_size])
+
 		X_batches = self.batch_data(X)
 		y_batches = self.batch_data(y)
 		num_batches = len(X_batches)
