@@ -21,7 +21,8 @@ class ShallowCNN(CNN):
 
 	def layers(self, X_shape, name):
 		height, width, channels = X_shape
-		fc_input_size = int((np.prod(X_shape) * 64) / 4)
+		print('SHAOE: ' + str(X_shape))
+		fc_input_size = int((height/4) * (width/4) * 64)
 
 		weights = {
 			'conv1': [5, 5, channels, 32],
@@ -46,8 +47,8 @@ class ShallowCNN(CNN):
 			lambda x: self.conv2d(x, self.weight(weights['conv2'], name=self.name + '_wc2'), self.bias(biases['conv2'], name=self.name + '_bc2'), name=name + '_conv2'),
 			lambda x: self.conv2d(x, self.weight(weights['conv3'], name=self.name + '_wc3'), self.bias(biases['conv3'], name=self.name + '_bc3'), name=name + '_conv3'),
 			lambda x: self.maxpool2d(x, k=2, name=name + '_pool2'),
-			lambda x: self.fullyconnected(x, self.weight(weights['fc'], name=self.name + '_fc'), self.bias(biases['fc'], name=self.name + '_fc'), name=name + '_fc1'),
-			lambda x: tf.dropout(x, 0.8, name=self.name + '_dropout'),
+			lambda x: self.fullyconnected(x, self.weight(weights['fc'], name=self.name + '_fc'), self.bias(biases['fc'], name=self.name + '_fc'), name=name + '_fc'),
+			lambda x: tf.nn.dropout(x, 0.8, name=self.name + '_dropout'),
 			lambda x: tf.add(tf.matmul(x, self.weight(weights['out'], name=self.name + '_wout')), self.bias(biases['out'], name=self.name + '_bout'), name=name + '_pred')
 		]
 		
