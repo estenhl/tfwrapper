@@ -5,6 +5,7 @@ from tfwrapper import TFSession
 from tfwrapper import SupervisedModel
 
 class NeuralNet(SupervisedModel):
+	batch_size = 10
 	def __init__(self, X_shape, classes, layers, sess=None, graph=None, name='NeuralNet'):
 
 		self.X_shape = X_shape
