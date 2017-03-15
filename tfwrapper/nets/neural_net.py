@@ -176,8 +176,6 @@ class NeuralNet(SupervisedModel):
 				print('Epoch %d: loss: %.2f, acc %.2f' % (epoch + 1, loss, acc))
 			print("Optimization Finished!")
 		"""
-		from __future__ import print_function
-
 		import tensorflow as tf
 
 		# Import MNIST data
@@ -301,7 +299,7 @@ class NeuralNet(SupervisedModel):
 		        sess.run(accuracy, feed_dict={x: mnist.test.images[:256],
 		                                      y: mnist.test.labels[:256],
 		                                      keep_prob: 1.}))
-    
+
 	def load(self, filename, sess=None):
 		if sess is None:
 			raise NotImplementedError('Loading outside a session is not implemented')
