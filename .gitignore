@@ -1,7 +1,9 @@
 **/.DS_Store
+**/__MACOSX/**/*
 **/__pycache__/*
 **/*.pyc
 tfwrapper/mnist/**/*
 **/.cache/**/*
 tfwrapper/nets/pretrained/models/**/*
 tfwrapper/datasets/**/*
+!tfwrapper/datasets/__init__.py
