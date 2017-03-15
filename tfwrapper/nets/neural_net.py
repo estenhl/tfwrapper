@@ -135,7 +135,7 @@ class NeuralNet(SupervisedModel):
 		biases = {
 			'bc1': tf.Variable(tf.random_normal([32])),
 			'bc2': tf.Variable(tf.random_normal([64])),
-			'bc3': tf.Variable(tf.random_normal([128]))
+			'bc3': tf.Variable(tf.random_normal([128])),
 			'bd1': tf.Variable(tf.random_normal([1024])),
 			'out': tf.Variable(tf.random_normal([n_classes]))
 		}
