@@ -9,7 +9,7 @@ class NeuralNet(SupervisedModel):
 
 		self.X_shape = X_shape
 		self.classes = classes
-		#self.y_size = y_size
+		self.y_size = classes
 		self.name = name
 		#self.input_size = np.prod(X_shape)
 		#self.output_size = y_size
