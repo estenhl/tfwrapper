@@ -50,7 +50,7 @@ class NeuralNet(SupervisedModel):
 		print('TRAINING NEURAL NET')
 		assert len(X) == len(y)
 
-		X = np.reshape(X, [-1] + self.X_shape)
+		X = np.reshape(X, [-1], 192, 192, 3])
 		y = np.reshape(y, [-1, self.y_size])
 		if val_X is None and validate:
 			X, y, val_X, val_y = split_dataset(X, y)
@@ -66,12 +66,11 @@ class NeuralNet(SupervisedModel):
 		display_step = 10
 
 		# Network Parameters
-		n_input = 192*192*3 # MNIST data input (img shape: 28*28)
 		n_classes = 2 # MNIST total classes (0-9 digits)
 		dropout = 0.75 # Dropout, probability to keep units
 
 		# tf Graph input
-		x = tf.placeholder(tf.float32, [None, n_input])
+		x = tf.placeholder(tf.float32, [None, 192, 192, 3])
 		y = tf.placeholder(tf.float32, [None, n_classes])
 		keep_prob = tf.placeholder(tf.float32) #dropout (keep probability)
 
