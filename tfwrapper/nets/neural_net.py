@@ -149,14 +149,14 @@ class NeuralNet(SupervisedModel):
 		optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 		# Evaluate model
-		correct_pred = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
+		correct_pred = tf.equal(tf.argmax(pred, 1), tf.argmax(y_, 1))
 		accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 		# Initializing the variables
 		init = tf.global_variables_initializer()
 
-		from collections import Counter
-		#print('Counts: ' + str(Counter([str(x) for x in y])))
+		#from collections import Counter
+		print('Counts: ' + str(Counter([str(x) for x in y])))
 		# Launch the graph
 		with tf.Session() as sess:
 			sess.run(init)
@@ -165,7 +165,7 @@ class NeuralNet(SupervisedModel):
 				for i in range(num_batches):
 					batch_x, batch_y = X_batches[i], y_batches[i]
 					# Run optimization op (backprop)
-					sess.run(optimizer, feed_dict={x: batch_x, y: batch_y,
+					sess.run(optimizer, feed_dict={x: batch_x, y_: batch_y,
 												   keep_prob: dropout})
 					# Calculate batch loss and accuracy
 				loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x,
