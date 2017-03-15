@@ -6,18 +6,26 @@ from tfwrapper import SupervisedModel
 
 class NeuralNet(SupervisedModel):
 	def __init__(self, X_shape, classes, layers, sess=None, graph=None, name='NeuralNet'):
-		if graph is None:
-			if sess is not None:
-				raise Exception('When a session is passed, a graph must be passed aswell')
-			graph = tf.Graph()
 
+		self.X_shape = X_shape
+		self.y_size = y_size
+		self.name = name
+		self.input_size = np.prod(X_shape)
+		self.output_size = y_size
 
-		with TFSession(sess, graph) as sess:
-			super().__init__(X_shape, classes, layers, sess=sess, graph=graph, name=name)
+		self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '_X_placeholder')
+		self.y = tf.placeholder(tf.float32, [None, y_size], name=self.name + '_y_placeholder')
 
-			print('Accuracy: ' + str(sess))
-			self.correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1), name=name + '_correct_pred')
-			self.accuracy = self.accuracy_function()
+		prev = self.X
+		for layer in layers:
+			prev = layer(prev)
+		self.pred = prev
+
+		print('Loss: ' + str(sess))
+		self.loss = self.loss_function()
+		self.optimizer = self.optimizer_function()
+		self.correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1), name=name + '_correct_pred')
+		self.accuracy = self.accuracy_function()
 
 		self.graph = graph
 
