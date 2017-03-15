@@ -93,7 +93,7 @@ class NeuralNet(SupervisedModel):
 		# Create model
 		def conv_net(x, weights, biases, dropout):
 			# Reshape input picture
-			x = tf.reshape(x, shape=[-1, 192, 192, 3])
+			x = tf.reshape(x, shape=[-1, 192 * 192 * 3])
 
 			# Convolution Layer
 			conv1 = conv2d(x, weights['wc1'], biases['bc1'])
