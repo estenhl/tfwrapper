@@ -107,12 +107,9 @@ class NeuralNet(SupervisedModel):
 			# Max Pooling (down-sampling)
 			conv2 = maxpool2d(conv2, k=2)
 
-			conv3 = conv2d(conv2, weights['wc3'], biases['bc3'])
-			conv3 = maxpool2d(conv3, k=2)
-
 			# Fully connected layer
 			# Reshape conv2 output to fit fully connected layer input
-			fc1 = tf.reshape(conv3, [-1, weights['wd1'].get_shape().as_list()[0]])
+			fc1 = tf.reshape(conv2, [-1, weights['wd1'].get_shape().as_list()[0]])
 			fc1 = tf.add(tf.matmul(fc1, weights['wd1']), biases['bd1'])
 			fc1 = tf.nn.relu(fc1)
 			# Apply Dropout
