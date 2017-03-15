@@ -90,14 +90,30 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
 
 	return np.asarray(X), np.asarray(y)
 
+def parse_folder_with_labels_file(root, labels_file, verbose=False):
+	X = []
+	y = []
+
+	with open(labels_file, 'r') as f:
+		for line in f.readlines():
+			label, filename = line.split(',')
+			src_file = os.path.join(root, filename).strip()
+			if os.path.isfile(src_file):
+				img = cv2.imread(src_file)
+				X.append(img)
+				y.append(label)
+			else:
+				print('Skipping filename ' + src_file)
+
+	return np.asarray(X), np.asarray(y)
 
 class Dataset():
 	X = np.asarray([])
 	y = np.asarray([])
 
-	def __init__(self, X=None, y=None, features=None, root_folder=None, datafile=None, verbose=False):
-		if datafile is not None and root_folder is not None:
-			raise NotImplementedError('Parsing an image folder with a datafile is not implemented')
+	def __init__(self, X=None, y=None, features=None, root_folder=None, labels_file=None, verbose=False):
+		if labels_file is not None and root_folder is not None:
+			self.X, self.y = parse_folder_with_labels_file(root_folder, labels_file, verbose=verbose)
 		elif root_folder is not None:
 			self.X, self.y = parse_datastructure(root_folder, verbose=verbose)
 
