@@ -12,7 +12,7 @@ X, y, test_X, test_y, _ = dataset.getdata(shuffle=True, translate_labels=True, o
 graph = tf.Graph()
 with graph.as_default():
 	with tf.Session(graph=graph) as sess:
-		cnn = DeepCNN([196, 196, 3], 2, sess=sess, graph=graph, name='ExampleCNN')
+		cnn = DeepCNN([192, 192, 3], 2, sess=sess, graph=graph, name='ExampleCNN')
 		cnn.train(X, y, epochs=10, sess=sess, verbose=True)
 		_, acc = cnn.validate(test_X, test_y, sess=sess)
 		print('Accuracy for example CNN: %.2f' % acc)

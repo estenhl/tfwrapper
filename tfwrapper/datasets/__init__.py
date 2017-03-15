@@ -53,7 +53,7 @@ def download_cats_and_dogs(verbose=False):
 					continue
 
 				img = cv2.imread(src_file)
-				img = cv2.resize(img, (196, 196))
+				img = cv2.resize(img, (192, 192))
 				cv2.imwrite(dest_file, img)
 				os.remove(src_file)
 

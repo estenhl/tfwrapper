@@ -129,8 +129,7 @@ class Dataset():
 	def getdata(self, normalize=False, balance=False, translate_labels=False, shuffle=False, onehot=False, split=False):
 		X = self.X
 		y = self.y
-		print('X.shape: ' + str(X.shape))
-		print('y.shape: ' + str(y.shape))
+
 		labels = []
 
 		if normalize:
