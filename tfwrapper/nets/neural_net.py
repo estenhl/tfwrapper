@@ -104,9 +104,12 @@ class NeuralNet(SupervisedModel):
 			# Max Pooling (down-sampling)
 			conv2 = maxpool2d(conv2, k=2)
 
+			conv3 = conv2d(conv1, weights['wc3'], biases['bc3'])
+			conv3 = maxpool2d(conv3, k=2)
+
 			# Fully connected layer
 			# Reshape conv2 output to fit fully connected layer input
-			fc1 = tf.reshape(conv2, [-1, weights['wd1'].get_shape().as_list()[0]])
+			fc1 = tf.reshape(conv3, [-1, weights['wd1'].get_shape().as_list()[0]])
 			fc1 = tf.add(tf.matmul(fc1, weights['wd1']), biases['bd1'])
 			fc1 = tf.nn.relu(fc1)
 			# Apply Dropout
@@ -122,8 +125,9 @@ class NeuralNet(SupervisedModel):
 			'wc1': tf.Variable(tf.random_normal([5, 5, 3, 32])),
 			# 5x5 conv, 32 inputs, 64 outputs
 			'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
+			'wc3': tf.Variable(tf.random_normal([5, 5, 32, 128])),
 			# fully connected, 7*7*64 inputs, 1024 outputs
-			'wd1': tf.Variable(tf.random_normal([16*16*64, 1024])),
+			'wd1': tf.Variable(tf.random_normal([8*8*128, 1024])),
 			# 1024 inputs, 10 outputs (class prediction)
 			'out': tf.Variable(tf.random_normal([1024, n_classes]))
 		}
@@ -131,6 +135,7 @@ class NeuralNet(SupervisedModel):
 		biases = {
 			'bc1': tf.Variable(tf.random_normal([32])),
 			'bc2': tf.Variable(tf.random_normal([64])),
+			'bc3': tf.Variable(tf.random_normal([128]))
 			'bd1': tf.Variable(tf.random_normal([1024])),
 			'out': tf.Variable(tf.random_normal([n_classes]))
 		}
