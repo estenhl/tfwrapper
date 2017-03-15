@@ -171,7 +171,7 @@ class NeuralNet(SupervisedModel):
 				print('Epoch %d: loss: %.2f, acc %.2f' % (epoch + 1, loss, acc))
 				preds = sess.run(pred, feed_dict={x: batch_x, keep_prob: 1.})
 				for i in range(0, len(preds)):
-					print(str([round(x, 2) for x in preds[i]]) + ': ' + str(y[i]))
+					print(str([round(x, 2) for x in preds[i]]) + ': ' + str(batch_y[i]))
 			print("Optimization Finished!")
 
 	def load(self, filename, sess=None):
