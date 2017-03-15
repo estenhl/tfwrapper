@@ -169,7 +169,7 @@ class NeuralNet(SupervisedModel):
 																y: batch_y,
 																keep_prob: 1.})
 				print('Epoch %d: loss: %.2f, acc %.2f' % (epoch + 1, loss, acc))
-				preds = sess.run(pred, feed_dict={x: batch_x})
+				preds = sess.run(pred, feed_dict={x: batch_x, keep_prob: 1.})
 				for i in range(0, len(preds)):
 					print(str(preds[i]) + ': ' + str(y[i]))
 			print("Optimization Finished!")
