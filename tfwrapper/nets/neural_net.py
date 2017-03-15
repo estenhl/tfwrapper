@@ -69,7 +69,7 @@ class NeuralNet(SupervisedModel):
 		batch_size = 10
 
 		# Network Parameters
-		n_classes = 2 # MNIST total classes (0-9 digits)
+		n_classes = 10 # MNIST total classes (0-9 digits)
 		dropout = 0.75 # Dropout, probability to keep units
 
 		# tf Graph input
