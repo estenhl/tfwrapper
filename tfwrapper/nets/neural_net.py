@@ -50,7 +50,7 @@ class NeuralNet(SupervisedModel):
 		print('TRAINING NEURAL NET')
 		assert len(X) == len(y)
 
-		X = np.reshape(X, [-1, 192, 192, 3])
+		X = np.reshape(X, [-1, 64, 64, 3])
 		y = np.reshape(y, [-1, self.y_size])
 		if val_X is None and validate:
 			X, y, val_X, val_y = split_dataset(X, y)
@@ -70,7 +70,7 @@ class NeuralNet(SupervisedModel):
 		dropout = 0.75 # Dropout, probability to keep units
 
 		# tf Graph input
-		x = tf.placeholder(tf.float32, [None, 192, 192, 3])
+		x = tf.placeholder(tf.float32, [None, 64, 64, 3])
 		y = tf.placeholder(tf.float32, [None, n_classes])
 		keep_prob = tf.placeholder(tf.float32) #dropout (keep probability)
 
@@ -92,7 +92,7 @@ class NeuralNet(SupervisedModel):
 		# Create model
 		def conv_net(x, weights, biases, dropout):
 			# Reshape input picture
-			x = tf.reshape(x, shape=[-1, 192, 192, 3])
+			x = tf.reshape(x, shape=[-1, 64, 64, 3])
 
 			# Convolution Layer
 			conv1 = conv2d(x, weights['wc1'], biases['bc1'])
@@ -123,7 +123,7 @@ class NeuralNet(SupervisedModel):
 			# 5x5 conv, 32 inputs, 64 outputs
 			'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
 			# fully connected, 7*7*64 inputs, 1024 outputs
-			'wd1': tf.Variable(tf.random_normal([48*48*64, 1024])),
+			'wd1': tf.Variable(tf.random_normal([16*16*64, 1024])),
 			# 1024 inputs, 10 outputs (class prediction)
 			'out': tf.Variable(tf.random_normal([1024, n_classes]))
 		}
