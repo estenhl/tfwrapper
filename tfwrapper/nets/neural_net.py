@@ -53,7 +53,7 @@ class NeuralNet(SupervisedModel):
 
 		from tensorflow.examples.tutorials.mnist import input_data
 		mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
-		X, ytt = mnist.train_next_batch(10000)
+		X, ytt = mnist.train.next_batch(10000)
 
 		X = np.reshape(X, [-1, 28, 28, 1])
 		ytt = np.reshape(ytt, [-1, 10])
