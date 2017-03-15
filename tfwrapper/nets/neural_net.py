@@ -160,10 +160,10 @@ class NeuralNet(SupervisedModel):
 					sess.run(optimizer, feed_dict={x: batch_x, y: batch_y,
 												   keep_prob: dropout})
 					# Calculate batch loss and accuracy
-					loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x,
-																	  y: batch_y,
-																	  keep_prob: 1.})
-					print('Epoch %d: loss: %.2f, acc %.2f' % (epoch + 1, loss, acc))
+				loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x,
+																y: batch_y,
+																keep_prob: 1.})
+				print('Epoch %d: loss: %.2f, acc %.2f' % (epoch + 1, loss, acc))
 			print("Optimization Finished!")
 
 	def load(self, filename, sess=None):
