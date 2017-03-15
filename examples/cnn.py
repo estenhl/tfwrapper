@@ -25,4 +25,6 @@ graph = tf.Graph()
 with graph.as_default():
 	with tf.Session(graph=graph) as sess:
 		cnn = DeepCNN([48, 48, 1], 2, sess=sess, graph=graph, name='ExampleCNN')
-		cnn.train(X, y, epochs=100, verbose=True)
+		cnn.train(X, y, epochs=10, verbose=True)
+		_, acc = cnn.validate(test_X, test_y, sess=sess)
+		print('Accuracy for example CNN: %.2f' % acc)
