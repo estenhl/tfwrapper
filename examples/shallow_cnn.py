@@ -14,5 +14,5 @@ with graph.as_default():
 	with tf.Session(graph=graph) as sess:
 		cnn = ShallowCNN([192, 192, 3], 2, sess=sess, graph=graph, name='ExampleShallowCNN')
 		cnn.train(X[:-1000], y[:-1000], val_X=X[-1000:], val_y=y[-1000:], epochs=500, sess=sess, verbose=True)
-		_, acc = cnn.validate(test_X, test_y, sess=sess)
-		print('Accuracy for example CNN: %.2f' % acc)
+		#_, acc = cnn.validate(test_X, test_y, sess=sess)
+		#print('Accuracy for example CNN: %.2f' % acc)

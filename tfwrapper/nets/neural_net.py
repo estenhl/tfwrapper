@@ -158,7 +158,7 @@ class NeuralNet(SupervisedModel):
 		with tf.Session() as sess:
 			sess.run(init)
 			# Keep training until reach max iterations
-			for epoch in range(50):
+			for epoch in range(500):
 				for i in range(num_batches):
 					batch_x, batch_y = X_batches[i], y_batches[i]
 					# Run optimization op (backprop)
