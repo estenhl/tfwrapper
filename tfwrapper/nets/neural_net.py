@@ -11,12 +11,12 @@ class NeuralNet(SupervisedModel):
 				raise Exception('When a session is passed, a graph must be passed aswell')
 			graph = tf.Graph()
 
-		with graph.as_default():
-			with TFSession(sess, graph) as sess:
-				super().__init__(X_shape, classes, layers, sess=sess, graph=graph, name=name)
 
-				self.correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1), name=name + '_correct_pred')
-				self.accuracy = self.accuracy_function()
+		with TFSession(sess, graph) as sess:
+			super().__init__(X_shape, classes, layers, sess=sess, graph=graph, name=name)
+
+			self.correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1), name=name + '_correct_pred')
+			self.accuracy = self.accuracy_function()
 
 		self.graph = graph
 

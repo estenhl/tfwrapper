@@ -44,24 +44,23 @@ class SupervisedModel(ABC):
 				raise Exception('When a session is passed, a graph must be passed aswell')
 			graph = tf.Graph()
 
-		with graph.as_default():
-			with TFSession(sess, graph) as sess:
-				self.X_shape = X_shape
-				self.y_size = y_size
-				self.name = name
-				self.input_size = np.prod(X_shape)
-				self.output_size = y_size
+		with TFSession(sess, graph) as sess:
+			self.X_shape = X_shape
+			self.y_size = y_size
+			self.name = name
+			self.input_size = np.prod(X_shape)
+			self.output_size = y_size
 
-				self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '_X_placeholder')
-				self.y = tf.placeholder(tf.float32, [None, y_size], name=self.name + '_y_placeholder')
+			self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '_X_placeholder')
+			self.y = tf.placeholder(tf.float32, [None, y_size], name=self.name + '_y_placeholder')
 
-				prev = self.X
-				for layer in layers:
-					prev = layer(prev)
-				self.pred = prev
+			prev = self.X
+			for layer in layers:
+				prev = layer(prev)
+			self.pred = prev
 
-				self.loss = self.loss_function()
-				self.optimizer = self.optimizer_function()
+			self.loss = self.loss_function()
+			self.optimizer = self.optimizer_function()
 
 		self.graph = graph
 
