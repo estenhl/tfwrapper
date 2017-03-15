@@ -113,15 +113,12 @@ class SupervisedModel(ABC):
 						sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
 
 					if verbose:			
-						train_loss, train_acc = self.validate(X[-100:], y[-100:], sess=sess)
-						loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X[-100:], self.y: y[-100:]})
-						print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, train_loss, train_acc))
-						print(str(loss) + ' ' + str(acc))
+						loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X[-1000:], self.y: y[-1000:]})
+						print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, loss, acc))
+
 						if validate:
-							val_loss, val_acc = self.validate(val_X, val_y, sess=sess)
 							loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: val_X, self.y: val_y})
-							print(str(loss) + ' ' + str(acc))
-							print('Epoch %d, val loss: %.3f, val acc: %2f' % (epoch + 1, val_loss, val_acc))
+							print('Epoch %d, val loss: %.3f, val acc: %2f' % (epoch + 1, loss, acc))
 
 	def predict(self, X, sess=None):
 		batches = self.batch_data(X)
