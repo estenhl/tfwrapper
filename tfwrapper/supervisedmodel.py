@@ -95,7 +95,7 @@ class SupervisedModel(ABC):
 
 		X = np.reshape(X, [-1] + self.X_shape)
 		y = np.reshape(y, [-1, self.y_size])
-		if val_X == None and validate:
+		if val_X is None and validate:
 			X, y, val_X, val_y = split_dataset(X, y)
 			
 		X_batches = self.batch_data(X)
@@ -113,8 +113,8 @@ class SupervisedModel(ABC):
 						sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
 
 					if verbose:			
-						train_loss, train_acc = self.validate(X_batches[num_batches - 1], y_batches[num_batches - 1], sess=sess)
-						loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
+						train_loss, train_acc = self.validate(X[-100:], y[-100:], sess=sess)
+						loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X[-100:], self.y: y[-100:]})
 						print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, train_loss, train_acc))
 						print(str(loss) + ' ' + str(acc))
 						if validate:
