@@ -13,7 +13,6 @@ graph = tf.Graph()
 with graph.as_default():
 	with tf.Session(graph=graph) as sess:
 		cnn = ShallowCNN([192, 192, 3], 2, sess=sess, graph=graph, name='ExampleShallowCNN')
-		print('NAME: ' + str(cnn.accuracy.name))
 		cnn.train(X, y, epochs=500, sess=sess, verbose=True)
 		_, acc = cnn.validate(test_X, test_y, sess=sess)
 		print('Accuracy for example CNN: %.2f' % acc)
