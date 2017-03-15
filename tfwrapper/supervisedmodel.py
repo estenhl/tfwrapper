@@ -119,6 +119,8 @@ class SupervisedModel(ABC):
 						print(str(loss) + ' ' + str(acc))
 						if validate:
 							val_loss, val_acc = self.validate(val_X, val_y, sess=sess)
+							loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: val_X, self.y: val_y})
+							print(str(loss) + ' ' + str(acc))
 							print('Epoch %d, val loss: %.3f, val acc: %2f' % (epoch + 1, val_loss, val_acc))
 
 	def predict(self, X, sess=None):
