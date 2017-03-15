@@ -153,21 +153,18 @@ class NeuralNet(SupervisedModel):
 		# Launch the graph
 		with tf.Session() as sess:
 			sess.run(init)
-			step = 1
 			# Keep training until reach max iterations
 			for epoch in range(50):
 				for i in range(num_batches):
-				batch_x, batch_y = X_batches[i], y_batches[i]
-				# Run optimization op (backprop)
-				sess.run(optimizer, feed_dict={x: batch_x, y: batch_y,
-											   keep_prob: dropout})
-				# Calculate batch loss and accuracy
-				loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x,
-																  y: batch_y,
-																  keep_prob: 1.})
-				print("Iter " + str(step*batch_size) + ", Minibatch Loss= " + \
-					  "{:.6f}".format(loss) + ", Training Accuracy= " + \
-					  "{:.5f}".format(acc))
+					batch_x, batch_y = X_batches[i], y_batches[i]
+					# Run optimization op (backprop)
+					sess.run(optimizer, feed_dict={x: batch_x, y: batch_y,
+												   keep_prob: dropout})
+					# Calculate batch loss and accuracy
+					loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x,
+																	  y: batch_y,
+																	  keep_prob: 1.})
+					print('Epoch %d: loss: %.2f, acc %.2f' % (epoch + 1, loss, acc))
 			print("Optimization Finished!")
 
 	def load(self, filename, sess=None):
