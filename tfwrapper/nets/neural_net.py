@@ -72,7 +72,7 @@ class NeuralNet(SupervisedModel):
 
 		# tf Graph input
 		x = tf.placeholder(tf.float32, [None, 64, 64, 3])
-		y = tf.placeholder(tf.float32, [None, n_classes])
+		y_ = tf.placeholder(tf.float32, [None, n_classes])
 		keep_prob = tf.placeholder(tf.float32) #dropout (keep probability)
 
 
@@ -155,6 +155,8 @@ class NeuralNet(SupervisedModel):
 		# Initializing the variables
 		init = tf.global_variables_initializer()
 
+		from collections import Counter
+		print('Counts: ' + Counter())
 		# Launch the graph
 		with tf.Session() as sess:
 			sess.run(init)
@@ -167,7 +169,7 @@ class NeuralNet(SupervisedModel):
 												   keep_prob: dropout})
 					# Calculate batch loss and accuracy
 				loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x,
-																y: batch_y,
+																y_: batch_y,
 																keep_prob: 1.})
 				print('Epoch %d: loss: %.2f, acc %.2f' % (epoch + 1, loss, acc))
 				preds = sess.run(pred, feed_dict={x: batch_x, keep_prob: 1.})
