@@ -21,7 +21,6 @@ class ShallowCNN(CNN):
 
 	def layers(self, X_shape, name):
 		height, width, channels = X_shape
-		print('SHAOE: ' + str(X_shape))
 		fc_input_size = int((height/4) * (width/4) * 64)
 
 		weights = {

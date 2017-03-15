@@ -22,7 +22,7 @@ class DeepCNN(CNN):
 		height, width, channels = input_shape
 
 		weights = {
-			'conv1': [5, 5, self.channels, 32],
+			'conv1': [5, 5, channels, 32],
 			'conv2': [5, 5, 32, 64],
 			'conv3': [5, 5, 64, 64],
 			'conv4': [5, 5, 64, 128],
