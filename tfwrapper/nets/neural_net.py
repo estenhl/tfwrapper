@@ -11,7 +11,7 @@ class NeuralNet(SupervisedModel):
 		#self.y_size = y_size
 		self.name = name
 		#self.input_size = np.prod(X_shape)
-		self.output_size = y_size
+		#self.output_size = y_size
 
 		self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '_X_placeholder')
 		self.y = tf.placeholder(tf.float32, [None, y_size], name=self.name + '_y_placeholder')
