@@ -125,7 +125,7 @@ class NeuralNet(SupervisedModel):
 			'wc1': tf.Variable(tf.random_normal([5, 5, 3, 32])),
 			# 5x5 conv, 32 inputs, 64 outputs
 			'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
-			'wc3': tf.Variable(tf.random_normal([5, 5, 32, 128])),
+			'wc3': tf.Variable(tf.random_normal([5, 5, 64, 128])),
 			# fully connected, 7*7*64 inputs, 1024 outputs
 			'wd1': tf.Variable(tf.random_normal([8*8*128, 1024])),
 			# 1024 inputs, 10 outputs (class prediction)
