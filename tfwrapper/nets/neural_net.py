@@ -155,7 +155,7 @@ class NeuralNet(SupervisedModel):
 		# Initializing the variables
 		init = tf.global_variables_initializer()
 
-		#from collections import Counter
+		from collections import Counter
 		print('Counts: ' + str(Counter([str(x) for x in y])))
 		# Launch the graph
 		with tf.Session() as sess:
