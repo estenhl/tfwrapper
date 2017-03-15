@@ -47,17 +47,17 @@ class NeuralNet(SupervisedModel):
 
 		return fc
 
-	def train(self, X, y, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=False):
+	def train(self, X, ytt, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=False):
 		print('TRAINING NEURAL NET')
 		assert len(X) == len(y)
 
 		X = np.reshape(X, [-1, 64, 64, 3])
-		y = np.reshape(y, [-1, self.y_size])
+		ytt = np.reshape(ytt, [-1, self.y_size])
 		if val_X is None and validate:
-			X, y, val_X, val_y = split_dataset(X, y)
+			X, ytt, val_X, val_y = split_dataset(X, ytt)
 			
 		X_batches = self.batch_data(X)
-		y_batches = self.batch_data(y)
+		y_batches = self.batch_data(ytt)
 		num_batches = len(X_batches)
 		
 		# Parameters
