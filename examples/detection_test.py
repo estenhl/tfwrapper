@@ -14,7 +14,7 @@ with graph.as_default():
 		cnn = DeepCNN(X_shape, 2, sess=sess, graph=graph, name='CatsAndDogsCNN')
 		cnn.train(X, y, epochs=10, sess=sess, verbose=True)
 		if not os.path.isdir('models'):
-			os.path.mkdir('models')
+			os.mkdir('models')
 		if not os.path.isdir('models/detection_test'):
-			os.path.mkdir('models/detection_test')
+			os.mkdir('models/detection_test')
 		cnn.save('models/detection_test/cnn', sess=sess)
