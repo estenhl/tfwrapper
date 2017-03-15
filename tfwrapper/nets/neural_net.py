@@ -104,7 +104,7 @@ class NeuralNet(SupervisedModel):
 			# Max Pooling (down-sampling)
 			conv2 = maxpool2d(conv2, k=2)
 
-			conv3 = conv2d(conv1, weights['wc3'], biases['bc3'])
+			conv3 = conv2d(conv2, weights['wc3'], biases['bc3'])
 			conv3 = maxpool2d(conv3, k=2)
 
 			# Fully connected layer
