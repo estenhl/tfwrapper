@@ -1,6 +1,9 @@
 import numpy as np
 import tensorflow as tf
 
+from tfwrapper import Dataset
+from tfwrapper.nets import DeepCNN
+
 def generate_dataset(size=1000):
 	X = []
 	y = []
