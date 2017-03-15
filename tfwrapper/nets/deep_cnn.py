@@ -3,7 +3,7 @@ import tensorflow as tf
 from .cnn import CNN
 
 class DeepCNN(CNN):
-	def __init__(self, X_shape, classes, sess=None, graph=None, name='NeuralNet'):
+	def __init__(self, X_shape, classes, sess=None, graph=None, name='DeepCNN'):
 		if len(X_shape) == 3:
 			height, width, self.channels = X_shape
 		elif len(X_shape) == 2:
