@@ -50,7 +50,7 @@ class NeuralNet(SupervisedModel):
 		print('TRAINING NEURAL NET')
 		assert len(X) == len(y)
 
-		X = np.reshape(X, [-1], 192, 192, 3])
+		X = np.reshape(X, [-1, 192, 192, 3])
 		y = np.reshape(y, [-1, self.y_size])
 		if val_X is None and validate:
 			X, y, val_X, val_y = split_dataset(X, y)
