@@ -11,6 +11,9 @@ class ShallowCNN(CNN):
 			height, width = X_shape
 			self.channels = 1
 		self.classes = classes
+
+		if not (int(np.prod(X_shape)) % 4 == 0):
+			raise Exception('Height and width must be multiples of 4!')
 		
 		layers = self.layers(X_shape, name)
 
@@ -18,7 +21,7 @@ class ShallowCNN(CNN):
 
 	def layers(self, X_shape, name):
 		height, width, channels = X_shape
-		fc_input_size = (np.prod(X_shape) * 64) / 4
+		fc_input_size = int((np.prod(X_shape) * 64) / 4)
 
 		weights = {
 			'conv1': [5, 5, channels, 32],
