@@ -49,7 +49,7 @@ class NeuralNet(SupervisedModel):
 
 	def train(self, X, ytt, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=False):
 		print('TRAINING NEURAL NET')
-		assert len(X) == len(y)
+		assert len(X) == len(ytt)
 
 		X = np.reshape(X, [-1, 64, 64, 3])
 		ytt = np.reshape(ytt, [-1, self.y_size])
