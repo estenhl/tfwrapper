@@ -5,29 +5,17 @@ from tfwrapper import TFSession
 from tfwrapper import SupervisedModel
 
 class NeuralNet(SupervisedModel):
-	batch_size = 10
 	def __init__(self, X_shape, classes, layers, sess=None, graph=None, name='NeuralNet'):
+		if graph is None:
+			if sess is not None:
+				raise Exception('When a session is passed, a graph must be passed aswell')
+			graph = tf.Graph()
 
-		self.X_shape = X_shape
-		self.classes = classes
-		self.y_size = classes
-		self.name = name
-		#self.input_size = np.prod(X_shape)
-		#self.output_size = y_size
+		with TFSession(sess, graph) as sess:
+			super().__init__(X_shape, classes, layers, sess=sess, graph=graph, name=name)
 
-		self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '_X_placeholder')
-		self.y = tf.placeholder(tf.float32, [None, classes], name=self.name + '_y_placeholder')
-
-		prev = self.X
-		for layer in layers:
-			prev = layer(prev)
-		self.pred = prev
-
-		print('Loss: ' + str(sess))
-		self.loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '_softmax'), name=self.name + '_loss')
-		self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate, name=self.name + '_adam').minimize(self.loss, name=self.name + '_optimizer')
-		self.correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1), name=name + '_correct_pred')
-		self.accuracy = tf.reduce_mean(tf.cast(self.correct_pred, tf.float32), name=self.name + '_accuracy')
+			correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
+			self.accuracy = self.accuracy_function(correct_pred)
 
 		self.graph = graph
 
@@ -37,8 +25,8 @@ class NeuralNet(SupervisedModel):
 	def optimizer_function(self):
 		return tf.train.AdamOptimizer(learning_rate=self.learning_rate, name=self.name + '_adam').minimize(self.loss, name=self.name + '_optimizer')
 
-	def accuracy_function(self):
-		return tf.reduce_mean(tf.cast(self.correct_pred, tf.float32), name=self.name + '_accuracy')
+	def accuracy_function(self, correct_pred):
+		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '_accuracy')
 
 	def fullyconnected(self, prev, weight, bias, name=None):
 		fc = tf.reshape(prev, [-1, weight.get_shape().as_list()[0]], name=name + '_reshape')
@@ -47,130 +35,26 @@ class NeuralNet(SupervisedModel):
 
 		return fc
 
-	def train(self, X, ytt, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=False):
-		print('TRAINING NEURAL NET')
-		assert len(X) == len(ytt)
+	def validate(self, X, y, sess=None, verbose=False):
+		assert len(X) == len(y)
 
-		from tensorflow.examples.tutorials.mnist import input_data
-		mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
-		X, ytt = mnist.train.next_batch(10000)
+		X = np.reshape(X, [-1] + self.X_shape)
+		y = np.reshape(y, [-1, self.y_size])
 
-		X = np.reshape(X, [-1, 28, 28, 1])
-		ytt = np.reshape(ytt, [-1, 10])
-		if val_X is None and validate:
-			X, ytt, val_X, val_y = split_dataset(X, ytt)
-			
 		X_batches = self.batch_data(X)
-		y_batches = self.batch_data(ytt)
+		y_batches = self.batch_data(y)
 		num_batches = len(X_batches)
-		
-		# Parameters
-		learning_rate = 0.001
-		batch_size = 10
+		loss = 0
+		acc = 0
 
-		# Network Parameters
-		n_classes = 10 # MNIST total classes (0-9 digits)
-		dropout = 0.75 # Dropout, probability to keep units
+		with self.graph.as_default():
+			with TFSession(sess, self.graph) as sess:
+				for i in range(num_batches):
+					batch_loss, batch_acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
+					loss += batch_loss
+					acc += batch_acc * (len(X_batches[i]) / len(X))
 
-		# tf Graph input
-		x = tf.placeholder(tf.float32, [None, 28, 28, 1])
-		y_ = tf.placeholder(tf.float32, [None, 10])
-		keep_prob = tf.placeholder(tf.float32) #dropout (keep probability)
-
-
-		# Create some wrappers for simplicity
-		def conv2d(x, W, b, strides=1):
-			# Conv2D wrapper, with bias and relu activation
-			x = tf.nn.conv2d(x, W, strides=[1, strides, strides, 1], padding='SAME')
-			x = tf.nn.bias_add(x, b)
-			return tf.nn.relu(x)
-
-
-		def maxpool2d(x, k=2):
-			# MaxPool2D wrapper
-			return tf.nn.max_pool(x, ksize=[1, k, k, 1], strides=[1, k, k, 1],
-								  padding='SAME')
-
-
-		# Create model
-		def conv_net(x, weights, biases, dropout):
-			# Reshape input picture
-			x = tf.reshape(x, shape=[-1, 28, 28, 1])
-
-			# Convolution Layer
-			conv1 = conv2d(x, weights['wc1'], biases['bc1'])
-			# Max Pooling (down-sampling)
-			conv1 = maxpool2d(conv1, k=2)
-
-			# Convolution Layer
-			conv2 = conv2d(conv1, weights['wc2'], biases['bc2'])
-			# Max Pooling (down-sampling)
-			conv2 = maxpool2d(conv2, k=2)
-
-			# Fully connected layer
-			# Reshape conv2 output to fit fully connected layer input
-			fc1 = tf.reshape(conv2, [-1, weights['wd1'].get_shape().as_list()[0]])
-			fc1 = tf.add(tf.matmul(fc1, weights['wd1']), biases['bd1'])
-			fc1 = tf.nn.relu(fc1)
-			# Apply Dropout
-			fc1 = tf.nn.dropout(fc1, dropout)
-
-			# Output, class prediction
-			out = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
-			return out
-
-		# Store layers weight & bias
-		weights = {
-			# 5x5 conv, 1 input, 32 outputs
-			'wc1': tf.Variable(tf.random_normal([5, 5, 1, 32])),
-			# 5x5 conv, 32 inputs, 64 outputs
-			'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
-			# fully connected, 7*7*64 inputs, 1024 outputs
-			'wd1': tf.Variable(tf.random_normal([7*7*64, 1024])),
-			# 1024 inputs, 10 outputs (class prediction)
-			'out': tf.Variable(tf.random_normal([1024, n_classes]))
-		}
-
-		biases = {
-			'bc1': tf.Variable(tf.random_normal([32])),
-			'bc2': tf.Variable(tf.random_normal([64])),
-			'bd1': tf.Variable(tf.random_normal([1024])),
-			'out': tf.Variable(tf.random_normal([n_classes]))
-		}
-
-		# Construct model
-		pred = conv_net(x, weights, biases, keep_prob)
-
-		# Define loss and optimizer
-		cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y_))
-		optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-
-		# Evaluate model
-		correct_pred = tf.equal(tf.argmax(pred, 1), tf.argmax(y_, 1))
-		accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
-
-		# Initializing the variables
-		init = tf.global_variables_initializer()
-
-		# Launch the graph
-		with tf.Session() as sess:
-			sess.run(init)
-			# Keep training until reach max iterations
-			for epoch in range(500):
-				for i in range(500):
-					batch_x, batch_y = X_batches[i], y_batches[i]
-					# Run optimization op (backprop)
-					sess.run(optimizer, feed_dict={x: batch_x, y_: batch_y,
-												   keep_prob: dropout})
-					# Calculate batch loss and accuracy
-				loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x,
-																y_: batch_y,
-																keep_prob: 1.})
-				preds = sess.run(pred, feed_dict={x: batch_x, keep_prob: 1.})
-				for i in range(0, len(preds)):
-					print(str(preds[i]) + ': ' + str(ytt[i]))
-				print('Epoch %d: loss: %.2f, acc %.2f' % (epoch + 1, loss, acc))
-			print("Optimization Finished!")
+		return loss / len(X), acc
 
 	def load(self, filename, sess=None):
 		if sess is None:
