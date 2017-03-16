@@ -68,7 +68,7 @@ class SupervisedModel(ABC):
 	@abstractmethod
 	def loss_function(self):
 		raise NotImplementedError('SupervisedModel is a generic class')
-	
+
 	@abstractmethod
 	def optimizer_function(self):
 		raise NotImplementedError('SupervisedModel is a generic class')
@@ -78,7 +78,7 @@ class SupervisedModel(ABC):
 
 	def bias(self, size, name):
 		return tf.Variable(tf.random_normal([size]), name=name)
-		
+
 	def batch_data(self, data):
 		batches = []
 
@@ -97,11 +97,11 @@ class SupervisedModel(ABC):
 		y = np.reshape(y, [-1, self.y_size])
 		if val_X is None and validate:
 			X, y, val_X, val_y = split_dataset(X, y)
-			
+
 		X_batches = self.batch_data(X)
 		y_batches = self.batch_data(y)
 		num_batches = len(X_batches)
-		
+
 		if verbose:
 			print('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
 
@@ -112,12 +112,15 @@ class SupervisedModel(ABC):
 				for i in range(num_batches):
 					sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
 
-				if verbose:			
+				if verbose:
+					preds = sess.run(self.pred, feed_dict={self.X: X[:10]})
+					for i in range(10):
+						print(str(preds[i]) + ': ' + str(y[i]))
 					loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X[-1000:], self.y: y[-1000:]})
 					print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, loss, acc))
 
 					if validate:
-						loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: val_X, self.y: val_y})
+						loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: val_X[:150], self.y: val_y[:150]})
 						print('Epoch %d, val loss: %.3f, val acc: %2f' % (epoch + 1, loss, acc))
 
 	def predict(self, X, sess=None):
@@ -140,7 +143,7 @@ class SupervisedModel(ABC):
 	def load(self, filename, sess=None):
 		if sess is None:
 			raise NotImplementedError('Loading outside a session is not implemented')
-			
+
 		with TFSession(sess, sess.graph) as sess:
 			graph_path = filename + '.meta'
 			saver = tf.train.import_meta_graph(graph_path)

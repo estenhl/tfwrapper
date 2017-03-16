@@ -14,7 +14,10 @@ print('y.shape: ' + str(y.shape))
 graph = tf.Graph()
 with graph.as_default():
 	with tf.Session(graph=graph) as sess:
-		cnn = ShallowCNN([28, 28, 1], 2, sess=sess, graph=graph, name='ExampleShallowCNN')
-		cnn.train(X, y, epochs=500, sess=sess, verbose=True)
-		_, acc = cnn.validate(test_X, test_y, sess=sess)
+		cnn = ShallowCNN([28, 28, 1], 10, sess=sess, graph=graph, name='ExampleShallowCNN')
+		cnn.train(X, y, epochs=10, sess=sess, verbose=True)
+		print('Testx: ' + str(test_X.shape))
+		print('Testy: ' + str(test_y.shape))
+
+		_, acc = cnn.validate(test_X[100:], test_y[100:], sess=sess)
 		print('Accuracy for example CNN: %.2f' % acc)
