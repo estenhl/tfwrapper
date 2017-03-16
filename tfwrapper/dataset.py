@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 from collections import Counter
 
+from tfwrapper.utils.data import parse_features
+
 def normalize_array(arr):
 	return (arr - arr.mean()) / arr.std()
 
@@ -111,11 +113,14 @@ class Dataset():
 	X = np.asarray([])
 	y = np.asarray([])
 
-	def __init__(self, X=None, y=None, features=None, root_folder=None, labels_file=None, verbose=False):
+	def __init__(self, X=None, y=None, features=None, features_file=None, root_folder=None, labels_file=None, verbose=False):
 		if labels_file is not None and root_folder is not None:
 			self.X, self.y = parse_folder_with_labels_file(root_folder, labels_file, verbose=verbose)
 		elif root_folder is not None:
 			self.X, self.y = parse_datastructure(root_folder, verbose=verbose)
+
+		if features_file is not None:
+			self.X, self.y = translate_features(parse_features(features_file))
 
 		if features is not None:
 			self.X, self.y = translate_features(features)
