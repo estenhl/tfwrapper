@@ -81,7 +81,7 @@ def download_cats_and_dogs(verbose=False):
 	
 	return data_path, labels_file
 
-def parse_mnist_data(data_file, labels_file, verbose=False):
+def parse_mnist_data(data_file, labels_file, size=None, verbose=False):
 	if verbose:
 		print('Unpacking mnist data')
 
@@ -99,12 +99,14 @@ def parse_mnist_data(data_file, labels_file, verbose=False):
 	labels.read(4)
 	N = labels.read(4)
 	N = unpack('>I', N)[0]
+	if size is not None:
+		N = size
 
 	X = zeros((N, rows, cols), dtype=float32)
 	y = zeros((N, 1), dtype=uint8)
 	for i in range(N):
 		if i % 1000 == 0 and verbose:
-			print("Read %i of %i images" % (i, number_of_images))
+			print("Read %i of %i images" % (i, N))
 		for row in range(rows):
 			for col in range(cols):
 				tmp_pixel = images.read(1)
@@ -115,7 +117,7 @@ def parse_mnist_data(data_file, labels_file, verbose=False):
 
 	return X, y
 
-def download_mnist(verbose=False):
+def download_mnist(size=None, verbose=False):
 	data_url = 'http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz'
 	labels_url = 'http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz'
 
@@ -130,16 +132,23 @@ def download_mnist(verbose=False):
 		if not os.path.isfile(local_labels_zip):
 			download_file(labels_url, local_labels_zip, verbose=verbose)
 
-	X, y = parse_mnist_data(local_data_zip, local_labels_zip, verbose=verbose)
+	X, y = parse_mnist_data(local_data_zip, local_labels_zip, size=size, verbose=verbose)
 	
 	return X, y
+
+def checkboxes(verbose=False):
+	root_folder=os.path.join(curr_path, 'checkboxes')
+	if not os.path.isdir(root_folder):
+		raise NotImplementedError('Checkboxes dataset is missing')
+
+	return Dataset(root_folder=root_folder), root_folder
 
 def cats_and_dogs(verbose=False):
 	data_path, labels_file = download_cats_and_dogs(verbose=verbose)
 	dataset = Dataset(root_folder=data_path, labels_file=labels_file, verbose=verbose)
 	return dataset
 
-def mnist(verbose=False):
-	X, y = download_mnist(verbose=verbose)
+def mnist(size=None, verbose=False):
+	X, y = download_mnist(size=size, verbose=verbose)
 	dataset = Dataset(X=X, y=y)
 	return dataset

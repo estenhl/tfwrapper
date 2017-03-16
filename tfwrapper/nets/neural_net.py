@@ -49,7 +49,6 @@ class NeuralNet(SupervisedModel):
 			with TFSession(sess, self.graph) as sess:
 				for i in range(num_batches):
 					batch_loss, batch_acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
-					print('Acc: ' + str(batch_acc))
 					loss += batch_loss
 					correct += batch_acc * len(X_batches[i])
 

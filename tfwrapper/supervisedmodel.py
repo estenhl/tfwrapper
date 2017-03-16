@@ -106,7 +106,6 @@ class SupervisedModel(ABC):
 			print('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
 
 		with TFSession(sess, self.graph, init_vars=True) as sess:
-			print('Training: ' + str(sess))
 			sess.run(tf.global_variables_initializer())
 			for epoch in range(epochs):
 				for i in range(num_batches):
@@ -114,13 +113,11 @@ class SupervisedModel(ABC):
 
 				if verbose:
 					preds = sess.run(self.pred, feed_dict={self.X: X[:10]})
-					for i in range(10):
-						print(str(preds[i]) + ': ' + str(y[i]))
-					loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X[-1000:], self.y: y[-1000:]})
+					loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
 					print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, loss, acc))
 
 					if validate:
-						loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: val_X[:150], self.y: val_y[:150]})
+						loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: val_X[:100], self.y: val_y[:100]})
 						print('Epoch %d, val loss: %.3f, val acc: %2f' % (epoch + 1, loss, acc))
 
 	def predict(self, X, sess=None):

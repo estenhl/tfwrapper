@@ -6,7 +6,7 @@ from tfwrapper.nets import ShallowCNN
 from tfwrapper.datasets import mnist
 
 
-dataset = mnist(verbose=True)
+dataset = mnist(size=5000, verbose=True)
 X, y, test_X, test_y, _ = dataset.getdata(shuffle=True, translate_labels=True, onehot=True, split=True)
 print('X.shape: ' + str(X.shape))
 print('y.shape: ' + str(y.shape))
