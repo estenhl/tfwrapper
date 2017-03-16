@@ -7,3 +7,5 @@ tfwrapper/mnist/**/*
 tfwrapper/nets/pretrained/models/**/*
 tfwrapper/datasets/**/*
 !tfwrapper/datasets/__init__.py
+examples/inception_v3_features.csv
+examples/models/**/*
