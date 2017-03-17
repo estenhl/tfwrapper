@@ -1,0 +1,2 @@
+chmod +x test
+source activate ml

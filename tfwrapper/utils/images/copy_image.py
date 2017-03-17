@@ -2,13 +2,15 @@ import os
 import cv2
 import numpy as np
 
-def copy_image_folder(src_folder, dest_folder, size=None, bw=False, h_flip=False, v_flip=False):
+def copy_image_folder(src_folder, dest_folder, size=None, bw=False, h_flip=False, v_flip=False, verbose=False):
 	for filename in os.listdir(src_folder):
-		if filename.endswith('.jpg'):
+		if filename.endswith('.jpg') or filename.endswith('.png'):
 			src = os.path.join(src_folder, filename)
-			copy_image(src, dest_folder, size=size, bw=bw, h_flip=h_flip, v_flip=v_flip)
+			copy_image(src, dest_folder, size=size, bw=bw, h_flip=h_flip, v_flip=v_flip, verbose=verbose)
 
-def copy_image(src_file, dest_folder, size=None, bw=False, h_flip=False, v_flip=False):
+def copy_image(src_file, dest_folder, size=None, bw=False, h_flip=False, v_flip=False, verbose=False):
+	if verbose:
+		print('Moving ' + src_file + ' to ' + dest_folder)
 	filename = os.path.basename(src_file)
 	name, suffix = filename.split('.')
 

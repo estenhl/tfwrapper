@@ -1,7 +1,85 @@
+import os
+import cv2
 import pytest
 import numpy as np
 
 from tfwrapper import Dataset
+from tfwrapper.utils.data import write_features
+
+from utils import curr_path
+from utils import remove_dir
+from utils import generate_features
+
+def test_create_from_data():
+	X = np.asarray([1, 2, 3])
+	y = np.asarray([2, 4, 6])
+	dataset = Dataset(X=X, y=y)
+	test_X, test_y, [] = dataset.getdata()
+
+	assert np.array_equal(X, test_X)
+	assert np.array_equal(y, test_y)
+
+def test_create_from_features():
+	X, y, features = generate_features()
+	dataset = Dataset(features=features)
+	test_X, test_y, _ = dataset.getdata()
+
+	assert np.array_equal(X, test_X)
+	assert np.array_equal(y, test_y)
+
+def test_create_from_feature_file():
+	X, y, features = generate_features()
+	tmp_file = os.path.join(curr_path, 'tmp.csv')
+	write_features(tmp_file, features)
+	dataset = Dataset(features_file=tmp_file)
+	os.remove(tmp_file)
+	test_X, test_y, _ = dataset.getdata()
+
+	assert np.array_equal(X, test_X)
+	assert np.array_equal(y, test_y)
+
+def create_tmp_dir(root=os.path.join(curr_path, 'tmp'), size=10):
+	os.mkdir(root)
+	for label in ['x', 'y']:
+		os.mkdir(os.path.join(root, label))
+		for i in range(int(size/2)):
+			img = np.zeros((10, 10, 3))
+			path = os.path.join(root, label, str(i) + '.jpg')
+			cv2.imwrite(path, img)
+
+	return root
+
+def test_create_from_datastructure():
+	size = 10
+	root_folder = create_tmp_dir(size=size)
+	dataset = Dataset(root_folder=root_folder)
+	remove_dir(root_folder)
+	X, y, _ = dataset.getdata()
+
+	assert size == len(X)
+	assert size == len(y)
+
+def create_tmp_labels_file(root_folder, name):
+	with open(name, 'w') as f:
+		for filename in os.listdir(root_folder):
+			f.write('label,' + filename + '\n')
+
+	return name
+
+def test_create_from_labels_file():
+	size = 10
+	parent = create_tmp_dir(size=size)
+	root_folder = os.path.join(parent, 'x')
+	labels_file = os.path.join(curr_path, 'tmp.csv')
+	labels_file = create_tmp_labels_file(root_folder, labels_file)
+
+	dataset = Dataset(root_folder=root_folder, labels_file=labels_file)
+	remove_dir(parent)
+	os.remove(labels_file)
+	X, y, _ = dataset.getdata()
+
+	assert size / 2 == len(X)
+	assert size / 2 == len(y)
 
 def test_normalize():
 	X = np.asarray([5, 4, 3])
