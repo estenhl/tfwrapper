@@ -5,6 +5,7 @@ import numpy as np
 
 from tfwrapper.utils.images import copy_image
 from tfwrapper.utils.images import copy_image_folder
+from tfwrapper.utils.images import find_duplicates
 
 from utils import curr_path
 from utils import remove_dir
@@ -134,3 +135,22 @@ def test_copy_images():
 
 	remove_dir(src)
 	remove_dir(dest)
+
+def test_find_duplicates():
+	src, imgs, filenames = create_image_dir(size=2)
+
+	for i in range(2):
+		img = np.zeros((10, 10, 3))
+		cv2.imwrite(os.path.join(src, 'duplicate' + str(i) + '.png'), img)
+
+	for i in range(1, 10):
+		img = np.ones((10, 10, 3)) * i
+		cv2.imwrite(os.path.join(src, 'non_duplicate' + str(i) + '.png'), img)
+
+	duplicates = find_duplicates(src)
+
+	assert 13 == len(os.listdir(src))
+
+	remove_dir(src)
+
+	assert 2 == len(duplicates)
