@@ -113,6 +113,9 @@ class SupervisedModel(ABC):
 
 				if verbose:
 					preds = sess.run(self.pred, feed_dict={self.X: X[:10]})
+					for i in range(len(preds)):
+						print(str(preds[i]) + ': ' + str(y[i]))
+						
 					loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
 					print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, loss, acc))
 
@@ -121,17 +124,8 @@ class SupervisedModel(ABC):
 						print('Epoch %d, val loss: %.3f, val acc: %2f' % (epoch + 1, loss, acc))
 
 	def predict(self, X, sess=None):
-		batches = self.batch_data(X)
-		preds = None
+		return sess.run(self.pred, feed_dict={self.X: batch})
 
-		with TFSession(sess, self.graph) as sess:
-			for batch in batches:
-				batch_preds = sess.run(self.pred, feed_dict={self.X: batch})
-				if preds is not None:
-					preds = np.concatenate([preds, batch_preds])
-				else:
-					preds = batch_preds
-		return preds
 
 	def save(self, filename, sess=None):
 		saver = tf.train.Saver()
