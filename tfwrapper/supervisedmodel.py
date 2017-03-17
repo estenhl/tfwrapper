@@ -127,7 +127,7 @@ class SupervisedModel(ABC):
 		with TFSession(sess, self.graph) as sess:
 			for batch in batches:
 				batch_preds = sess.run(self.pred, feed_dict={self.X: batch})
-				if preds:
+				if preds is not None:
 					preds = np.concatenate([preds, batch_preds])
 				else:
 					preds = batch_preds
