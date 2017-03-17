@@ -50,7 +50,7 @@ def translate_features(all_features):
 		X.append(features['features'])
 		y.append(features['label'])
 
-	return np.asarray(X), y
+	return X, y
 
 def labels_to_indexes(y):
 	labels = []
@@ -90,7 +90,7 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
 		elif verbose:
 			print('Skipping foldername ' + foldername)
 
-	return np.asarray(X), np.asarray(y)
+	return X, y
 
 def parse_folder_with_labels_file(root, labels_file, verbose=False):
 	X = []
@@ -104,21 +104,16 @@ def parse_folder_with_labels_file(root, labels_file, verbose=False):
 				img = cv2.imread(src_file)
 				X.append(img)
 				y.append(label)
-			else:
+			elif verbose:
 				print('Skipping filename ' + src_file)
 
-	return np.asarray(X), np.asarray(y)
+	return X, y
 
 class Dataset():
-	X = np.asarray([])
-	y = np.asarray([])
+	X = []
+	y = []
 
-	def __init__(self, X=None, y=None, features=None, features_file=None, root_folder=None, labels_file=None, verbose=False):
-		if labels_file is not None and root_folder is not None:
-			self.X, self.y = parse_folder_with_labels_file(root_folder, labels_file, verbose=verbose)
-		elif root_folder is not None:
-			self.X, self.y = parse_datastructure(root_folder, verbose=verbose)
-
+	def __init__(self, X=None, y=None, features=None, features_file=None, verbose=False):
 		if features_file is not None:
 			self.X, self.y = translate_features(parse_features(features_file))
 
@@ -132,8 +127,8 @@ class Dataset():
 			self.y = y
 
 	def getdata(self, normalize=False, balance=False, translate_labels=False, shuffle=False, onehot=False, split=False):
-		X = self.X
-		y = self.y
+		X = np.asarray(self.X)
+		y = np.asarray(self.y)
 
 		labels = []
 
@@ -157,3 +152,15 @@ class Dataset():
 			return X, y, test_X, test_y, labels
 		else:
 			return X, y, labels
+
+class ImageDataset(Dataset):
+	def __init__(self, root_folder=None, labels_file=None, verbose=False):
+		X, y = None, None
+
+		if labels_file is not None and root_folder is not None:
+			X, y = parse_folder_with_labels_file(root_folder, labels_file, verbose=verbose)
+		elif root_folder is not None:
+			X, y = parse_datastructure(root_folder, verbose=verbose)
+
+		super().__init__(X=X, y=y, verbose=verbose)
+
