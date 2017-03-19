@@ -35,25 +35,6 @@ class NeuralNet(SupervisedModel):
 
 		return fc
 
-	def validate(self, X, y, sess=None, verbose=False):
-		X = np.reshape(X, [-1] + self.X_shape)
-		y = np.reshape(y, [-1, self.y_size])
-
-		X_batches = self.batch_data(X)
-		y_batches = self.batch_data(y)
-		num_batches = len(X_batches)
-		loss = 0
-		correct = 0
-
-		with self.graph.as_default():
-			with TFSession(sess, self.graph) as sess:
-				for i in range(num_batches):
-					batch_loss, batch_acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
-					loss += batch_loss
-					correct += batch_acc * len(X_batches[i])
-
-		return loss / len(X), correct / len(X)
-
 	def load(self, filename, sess=None):
 		if sess is None:
 			raise NotImplementedError('Loading outside a session is not implemented')

@@ -114,6 +114,8 @@ def parse_mnist_data(data_file, labels_file, size=None, verbose=False):
 				X[i][row][col] = tmp_pixel
 		tmp_label = labels.read(1)
 		y[i] = unpack('>B', tmp_label)[0]
+	if verbose:
+		print('Read %i images' % N)
 
 	return X, y
 

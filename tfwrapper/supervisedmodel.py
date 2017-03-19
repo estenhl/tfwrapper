@@ -4,6 +4,7 @@ import tensorflow as tf
 from abc import ABC, abstractmethod
 
 from .dataset import split_dataset
+from tfwrapper.utils.data import batch_data
 
 class TFSession():
 	def __init__(self, session=None, graph=None, init_vars=False, variables={}):
@@ -59,7 +60,6 @@ class SupervisedModel(ABC):
 				prev = layer(prev)
 			self.pred = prev
 
-			print('Loss: ' + str(sess))
 			self.loss = self.loss_function()
 			self.optimizer = self.optimizer_function()
 
@@ -79,17 +79,6 @@ class SupervisedModel(ABC):
 	def bias(self, size, name):
 		return tf.Variable(tf.random_normal([size]), name=name)
 
-	def batch_data(self, data):
-		batches = []
-
-		for i in range(0, int(len(data) / self.batch_size) + 1):
-			start = (i * self.batch_size)
-			end = min((i + 1) * self.batch_size, len(data))
-			if start != end:
-				batches.append(data[start:end])
-
-		return batches
-
 	def train(self, X, y, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=False):
 		assert len(X) == len(y)
 
@@ -98,8 +87,8 @@ class SupervisedModel(ABC):
 		if val_X is None and validate:
 			X, y, val_X, val_y = split_dataset(X, y)
 
-		X_batches = self.batch_data(X)
-		y_batches = self.batch_data(y)
+		X_batches = batch_data(X, self.batch_size)
+		y_batches = batch_data(y, self.batch_size)
 		num_batches = len(X_batches)
 
 		if verbose:
@@ -112,10 +101,6 @@ class SupervisedModel(ABC):
 					sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
 
 				if verbose:
-					preds = sess.run(self.pred, feed_dict={self.X: X[:10]})
-					for i in range(len(preds)):
-						print(str(preds[i]) + ': ' + str(y[i]))
-						
 					loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
 					print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, loss, acc))
 
@@ -123,9 +108,13 @@ class SupervisedModel(ABC):
 						loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: val_X[:100], self.y: val_y[:100]})
 						print('Epoch %d, val loss: %.3f, val acc: %2f' % (epoch + 1, loss, acc))
 
-	def predict(self, X, sess=None):
+	def predict(self, X, sess=None, verbose=False):
+		X = np.reshape(X, [-1] + self.X_shape)
 		return sess.run(self.pred, feed_dict={self.X: batch})
 
+	def validate(self, X, y, sess=None, verbose=False):
+		X = np.reshape(X, [-1] + self.X_shape)
+		return sess.run([self.loss, self.accuracy], feed_dict={self.X: X, self.y: y})
 
 	def save(self, filename, sess=None):
 		saver = tf.train.Saver()
