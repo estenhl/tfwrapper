@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 
 from .dataset import split_dataset
 from tfwrapper.utils.data import batch_data
+from tfwrapper.utils.metrics import loss
+from tfwrapper.utils.metrics import accuracy
 
 class TFSession():
 	def __init__(self, session=None, graph=None, init_vars=False, variables={}):
@@ -101,20 +103,31 @@ class SupervisedModel(ABC):
 					sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
 
 				if verbose:
-					loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
+					loss, acc = self.validate(X_batches[-1], y_batches[-1], sess=sess, verbose=verbose)
 					print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, loss, acc))
 
 					if validate:
-						loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: val_X[:100], self.y: val_y[:100]})
+						loss, acc = self.validate(val_X, val_y, sess=sess, verbose=verbose)
 						print('Epoch %d, val loss: %.3f, val acc: %2f' % (epoch + 1, loss, acc))
 
 	def predict(self, X, sess=None, verbose=False):
 		X = np.reshape(X, [-1] + self.X_shape)
-		return sess.run(self.pred, feed_dict={self.X: batch})
+		batches = batch_data(X, self.batch_size)
+		preds = None
+
+		for batch in batches:
+			batch_preds = sess.run(self.pred, feed_dict={self.X: batch})
+			if preds is not None:
+				preds = np.concatenate([preds, batch_preds])
+			else:
+				preds = batch_preds
+
+		return preds
 
 	def validate(self, X, y, sess=None, verbose=False):
-		X = np.reshape(X, [-1] + self.X_shape)
-		return sess.run([self.loss, self.accuracy], feed_dict={self.X: X, self.y: y})
+		preds = self.predict(X, sess=sess, verbose=verbose)
+
+		return loss(preds, y), accuracy(preds, y)
 
 	def save(self, filename, sess=None):
 		saver = tf.train.Saver()

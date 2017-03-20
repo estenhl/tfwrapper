@@ -23,11 +23,11 @@ def create_data():
 	for i in range(len(y)):
 		for j in range(len(y[i])):
 			loss += abs(y[i][j] - yhat[i][j])
-			if np.argmax(y[i]) == np.argmax(yhat[i]):
-				correct += 1
-			conf_matrix[np.argmax(y[i])][np.argmax(yhat[i])] = conf_matrix[np.argmax(y[i])][np.argmax(yhat[i])] + 1
+		if np.argmax(y[i]) == np.argmax(yhat[i]):
+			correct += 1
+		conf_matrix[np.argmax(y[i])][np.argmax(yhat[i])] = conf_matrix[np.argmax(y[i])][np.argmax(yhat[i])] + 1
 
-	return y, yhat, loss, correct / len(y), conf_matrix
+	return y, yhat, loss / np.prod(y.shape) , correct / len(y), conf_matrix
 
 def test_loss():
 	y, yhat, correct_loss, _, _ = create_data()

@@ -8,6 +8,7 @@ from struct import unpack
 from numpy import zeros, uint8, float32
 
 from tfwrapper import Dataset
+from tfwrapper import ImageDataset
 
 curr_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -71,7 +72,7 @@ def download_cats_and_dogs(verbose=False):
 					continue
 
 				img = cv2.imread(src_file)
-				img = cv2.resize(img, (64, 64))
+				img = cv2.resize(img, (196, 196))
 				cv2.imwrite(dest_file, img)
 				os.remove(src_file)
 
@@ -143,11 +144,11 @@ def checkboxes(verbose=False):
 	if not os.path.isdir(root_folder):
 		raise NotImplementedError('Checkboxes dataset is missing')
 
-	return Dataset(root_folder=root_folder), root_folder
+	return ImageDataset(root_folder=root_folder), root_folder
 
 def cats_and_dogs(verbose=False):
 	data_path, labels_file = download_cats_and_dogs(verbose=verbose)
-	dataset = Dataset(root_folder=data_path, labels_file=labels_file, verbose=verbose)
+	dataset = ImageDataset(root_folder=data_path, labels_file=labels_file, verbose=verbose)
 	return dataset
 
 def mnist(size=None, verbose=False):
