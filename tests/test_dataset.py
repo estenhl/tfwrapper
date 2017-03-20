@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 
 from tfwrapper import Dataset
+from tfwrapper import ImageDataset
 from tfwrapper.utils.data import write_features
 
 from utils import curr_path
@@ -52,7 +53,7 @@ def create_tmp_dir(root=os.path.join(curr_path, 'tmp'), size=10):
 def test_create_from_datastructure():
 	size = 10
 	root_folder = create_tmp_dir(size=size)
-	dataset = Dataset(root_folder=root_folder)
+	dataset = ImageDataset(root_folder=root_folder)
 	remove_dir(root_folder)
 	X, y, _ = dataset.getdata()
 
@@ -73,7 +74,7 @@ def test_create_from_labels_file():
 	labels_file = os.path.join(curr_path, 'tmp.csv')
 	labels_file = create_tmp_labels_file(root_folder, labels_file)
 
-	dataset = Dataset(root_folder=root_folder, labels_file=labels_file)
+	dataset = ImageDataset(root_folder=root_folder, labels_file=labels_file)
 	remove_dir(parent)
 	os.remove(labels_file)
 	X, y, _ = dataset.getdata()

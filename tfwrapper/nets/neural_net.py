@@ -28,12 +28,24 @@ class NeuralNet(SupervisedModel):
 	def accuracy_function(self, correct_pred):
 		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '_accuracy')
 
-	def fullyconnected(self, prev, weight, bias, name=None):
-		fc = tf.reshape(prev, [-1, weight.get_shape().as_list()[0]], name=name + '_reshape')
-		fc = tf.add(tf.matmul(fc, weight), bias, name=name + '_add')
-		fc = tf.nn.relu(fc, name=name)
+	def fullyconnected(self, weight_shape, bias_size, name='fullyconnected'):
+		weight_name = name + '_W'
+		bias_name = name + '_b'
 
-		return fc
+		def create_layer(x):
+			weight = tf.Variable(tf.random_normal(weight_shape), name=weight_name)
+			bias = tf.Variable(tf.random_normal([bias_size]), name=bias_name)
+
+			fc = tf.reshape(x, [-1, weight.get_shape().as_list()[0]], name=name + '_reshape')
+			fc = tf.add(tf.matmul(fc, weight), bias, name=name + '_add')
+			fc = tf.nn.relu(fc, name=name)
+
+			return fc
+
+		return create_layer
+
+	def dropout(self, dropout, name='dropout'):
+		return lambda x: tf.nn.dropout(x, dropout, name=name)
 
 	def load(self, filename, sess=None):
 		if sess is None:

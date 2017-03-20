@@ -26,32 +26,16 @@ class ShallowCNN(CNN):
 		height, width, channels = X_shape
 		fc_input_size = int((height/4) * (width/4) * 64)
 
-		weights = {
-			'conv1': [5, 5, channels, 32],
-			'conv2': [5, 5, 32, 64],
-			'conv3': [5, 5, 64, 64],
-			'fc': [fc_input_size, 512],
-			'out': [512, self.classes]
-		}
-
-		biases = {
-			'conv1': 32,
-			'conv2': 64,
-			'conv3': 64,
-			'fc': 512,
-			'out': self.classes
-		}
-		
 		layers = [
-			lambda x: tf.reshape(x, shape=[-1, height, width, channels]),
-			lambda x: self.conv2d(x, self.weight(weights['conv1'], name=name + '_wc1'), self.bias(biases['conv1'], name=name + '_bc1'), name=name + '_conv1'),
-			lambda x: self.maxpool2d(x, k=2, name=name + '_pool1'),
-			lambda x: self.conv2d(x, self.weight(weights['conv2'], name=name + '_wc2'), self.bias(biases['conv2'], name=name + '_bc2'), name=name + '_conv2'),
-			lambda x: self.conv2d(x, self.weight(weights['conv3'], name=name + '_wc3'), self.bias(biases['conv3'], name=name + '_bc3'), name=name + '_conv3'),
-			lambda x: self.maxpool2d(x, k=2, name=name + '_pool2'),
-			lambda x: self.fullyconnected(x, self.weight(weights['fc'], name=name + '_fc'), self.bias(biases['fc'], name=name + '_fc'), name=name + '_fc1'),
-			lambda x: tf.nn.dropout(x, 0.8, name=name + '_dropout'),
-			lambda x: tf.add(tf.matmul(x, self.weight(weights['out'], name=name + '_wout')), self.bias(biases['out'], name=name + '_bout'), name=name + '_pred')
+			self.reshape([-1, height, width, channels], name=name + '_reshape'),
+			self.conv2d([5, 5, channels, 32], 32, name=name + '_conv1'),
+			self.maxpool2d(k=2, name=name + '_pool1'),
+			self.conv2d([5, 5, 32, 64], 64, name=name + '_conv2'),
+			self.conv2d([5, 5, 64, 64], 64, name=name + '_conv3'),
+			self.maxpool2d(k=2, name=name + '_pool2'),
+			self.fullyconnected([fc_input_size, 512], 512, name=name + '_fc'),
+			self.dropout(0.8, name=name + '_dropout'),
+			self.out([512, self.classes], self.classes, name=name + '_pred')
 		]
 		
 		return layers
