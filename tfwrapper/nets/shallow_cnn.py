@@ -7,7 +7,6 @@ class ShallowCNN(CNN):
 	learning_rate = 0.001
 
 	def __init__(self, X_shape, classes, sess=None, graph=None, name='ShallowCNN'):
-
 		if len(X_shape) == 3:
 			height, width, self.channels = X_shape
 		elif len(X_shape) == 2:
@@ -17,12 +16,7 @@ class ShallowCNN(CNN):
 
 		if not (height % 4 == 0 and width % 4 == 0):
 			raise Exception('Height and width must be multiples of 4!')
-		
-		layers = self.layers(X_shape, name)
 
-		super().__init__(X_shape, classes, layers, sess=sess, graph=graph, name=name)
-
-	def layers(self, X_shape, name):
 		height, width, channels = X_shape
 		fc_input_size = int((height/4) * (width/4) * 64)
 
@@ -37,5 +31,5 @@ class ShallowCNN(CNN):
 			self.dropout(0.8, name=name + '_dropout'),
 			self.out([512, self.classes], self.classes, name=name + '_pred')
 		]
-		
-		return layers
+
+		super().__init__(X_shape, classes, layers, sess=sess, graph=graph, name=name)
