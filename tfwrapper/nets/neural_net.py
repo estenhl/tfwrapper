@@ -28,31 +28,24 @@ class NeuralNet(SupervisedModel):
 	def accuracy_function(self, correct_pred):
 		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '_accuracy')
 
-	def fullyconnected(self, prev, weight, bias, name=None):
-		fc = tf.reshape(prev, [-1, weight.get_shape().as_list()[0]], name=name + '_reshape')
-		fc = tf.add(tf.matmul(fc, weight), bias, name=name + '_add')
-		fc = tf.nn.relu(fc, name=name)
+	def fullyconnected(self, weight_shape, bias_size, name='fullyconnected'):
+		weight_name = name + '_W'
+		bias_name = name + '_b'
 
-		return fc
+		def create_layer(x):
+			weight = tf.Variable(tf.random_normal(weight_shape), name=weight_name)
+			bias = tf.Variable(tf.random_normal([bias_size]), name=bias_name)
 
-	def validate(self, X, y, sess=None, verbose=False):
-		X = np.reshape(X, [-1] + self.X_shape)
-		y = np.reshape(y, [-1, self.y_size])
+			fc = tf.reshape(x, [-1, weight.get_shape().as_list()[0]], name=name + '_reshape')
+			fc = tf.add(tf.matmul(fc, weight), bias, name=name + '_add')
+			fc = tf.nn.relu(fc, name=name)
 
-		X_batches = self.batch_data(X)
-		y_batches = self.batch_data(y)
-		num_batches = len(X_batches)
-		loss = 0
-		correct = 0
+			return fc
 
-		with self.graph.as_default():
-			with TFSession(sess, self.graph) as sess:
-				for i in range(num_batches):
-					batch_loss, batch_acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
-					loss += batch_loss
-					correct += batch_acc * len(X_batches[i])
+		return create_layer
 
-		return loss / len(X), correct / len(X)
+	def dropout(self, dropout, name='dropout'):
+		return lambda x: tf.nn.dropout(x, dropout, name=name)
 
 	def load(self, filename, sess=None):
 		if sess is None:

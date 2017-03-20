@@ -16,9 +16,9 @@ class DualLayerNeuralNet(NeuralNet):
 				X_size = np.prod(X_shape)
 
 				layers = [
-					lambda x: self.fullyconnected(x, self.weight([X_size, hidden1], name=name + '_hidden1_weight'), self.bias(hidden, name=name + '_hidden1_bias'), name=name + '_hidden1'),
-					lambda x: self.fullyconnected(x, self.weight([hidden1, hidden2], name=name + '_hidden2_weight'), self.bias(hidden2, name=name + '_hidden2_bias'), name=name + '_hidden2'),
-					lambda x: tf.add(tf.matmul(x, self.weight([hidden2, y_size], name=name + '_out_weight')), self.bias(y_size, name=name + '_out_bias'), name=name + '_pred')
+					self.fullyconnected([X_size, hidden1], hidden, name=name + '_hidden1'),
+					self.fullyconnected([hidden1, hidden2], hidden2, name=name + '_hidden2'),
+					self.out([hidden2, y_size], y_size, name=name + '_pred')
 				]
 
 				super().__init__(X_shape, y_size, layers, sess=sess, graph=graph, name=name)

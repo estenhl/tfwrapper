@@ -4,6 +4,9 @@ import tensorflow as tf
 from abc import ABC, abstractmethod
 
 from .dataset import split_dataset
+from tfwrapper.utils.data import batch_data
+from tfwrapper.utils.metrics import loss
+from tfwrapper.utils.metrics import accuracy
 
 class TFSession():
 	def __init__(self, session=None, graph=None, init_vars=False, variables={}):
@@ -59,7 +62,6 @@ class SupervisedModel(ABC):
 				prev = layer(prev)
 			self.pred = prev
 
-			print('Loss: ' + str(sess))
 			self.loss = self.loss_function()
 			self.optimizer = self.optimizer_function()
 
@@ -73,22 +75,11 @@ class SupervisedModel(ABC):
 	def optimizer_function(self):
 		raise NotImplementedError('SupervisedModel is a generic class')
 
-	def weight(self, shape, name):
-		return tf.Variable(tf.random_normal(shape), name=name)
+	def reshape(self, shape, name):
+		return lambda x: tf.reshape(x, shape=shape)
 
-	def bias(self, size, name):
-		return tf.Variable(tf.random_normal([size]), name=name)
-
-	def batch_data(self, data):
-		batches = []
-
-		for i in range(0, int(len(data) / self.batch_size) + 1):
-			start = (i * self.batch_size)
-			end = min((i + 1) * self.batch_size, len(data))
-			if start != end:
-				batches.append(data[start:end])
-
-		return batches
+	def out(self, weight_shape, bias_size, name):
+		return lambda x: tf.add(tf.matmul(x, tf.Variable(tf.random_normal(weight_shape))), tf.Variable(tf.random_normal([bias_size])), name=name)
 
 	def train(self, X, y, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=False):
 		assert len(X) == len(y)
@@ -98,8 +89,8 @@ class SupervisedModel(ABC):
 		if val_X is None and validate:
 			X, y, val_X, val_y = split_dataset(X, y)
 
-		X_batches = self.batch_data(X)
-		y_batches = self.batch_data(y)
+		X_batches = batch_data(X, self.batch_size)
+		y_batches = batch_data(y, self.batch_size)
 		num_batches = len(X_batches)
 
 		if verbose:
@@ -112,26 +103,31 @@ class SupervisedModel(ABC):
 					sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
 
 				if verbose:
-					preds = sess.run(self.pred, feed_dict={self.X: X[:10]})
-					loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
+					loss, acc = self.validate(X_batches[-1], y_batches[-1], sess=sess, verbose=verbose)
 					print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, loss, acc))
 
 					if validate:
-						loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.X: val_X[:100], self.y: val_y[:100]})
+						loss, acc = self.validate(val_X, val_y, sess=sess, verbose=verbose)
 						print('Epoch %d, val loss: %.3f, val acc: %2f' % (epoch + 1, loss, acc))
 
-	def predict(self, X, sess=None):
-		batches = self.batch_data(X)
+	def predict(self, X, sess=None, verbose=False):
+		X = np.reshape(X, [-1] + self.X_shape)
+		batches = batch_data(X, self.batch_size)
 		preds = None
 
-		with TFSession(sess, self.graph) as sess:
-			for batch in batches:
-				batch_preds = sess.run(self.pred, feed_dict={self.X: batch})
-				if preds is not None:
-					preds = np.concatenate([preds, batch_preds])
-				else:
-					preds = batch_preds
+		for batch in batches:
+			batch_preds = sess.run(self.pred, feed_dict={self.X: batch})
+			if preds is not None:
+				preds = np.concatenate([preds, batch_preds])
+			else:
+				preds = batch_preds
+
 		return preds
+
+	def validate(self, X, y, sess=None, verbose=False):
+		preds = self.predict(X, sess=sess, verbose=verbose)
+
+		return loss(preds, y), accuracy(preds, y)
 
 	def save(self, filename, sess=None):
 		saver = tf.train.Saver()
