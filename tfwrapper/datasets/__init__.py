@@ -1,6 +1,7 @@
 import os
 import cv2
 import gzip
+import tarfile
 import zipfile
 import urllib.request
 
@@ -8,22 +9,41 @@ from struct import unpack
 from numpy import zeros, uint8, float32
 
 from tfwrapper import Dataset
+from tfwrapper import TokensDataset
 from tfwrapper import ImageDataset
 
 curr_path = os.path.dirname(os.path.realpath(__file__))
 
-def setup_structure(name):
+def setup_structure(name, create_data_folder=True):
 	root_path = os.path.join(curr_path, name)
 	if not os.path.isdir(root_path):
 		os.mkdir(root_path)
 
 	data_path = os.path.join(root_path, 'data')
-	if not os.path.isdir(data_path):
+	if create_data_folder and not os.path.isdir(data_path):
 		os.mkdir(data_path)
 
 	labels_file = os.path.join(root_path, 'labels.txt')
 
 	return root_path, data_path, labels_file
+
+def recursive_delete(path, skip=[]):
+	ret_val = True
+	if os.path.isdir(path):
+		for filename in os.listdir(path):
+			ret_val = recursive_delete(os.path.join(path, filename), skip=skip) and ret_val
+
+
+		if ret_val:
+			os.rmdir(path)
+
+		return ret_val
+	elif os.path.isfile(path) and path not in skip:
+		os.remove(path)
+
+		return True
+
+	return False
 
 def download_file(url, path, verbose=False):
 	if verbose:
@@ -139,6 +159,29 @@ def download_mnist(size=None, verbose=False):
 	
 	return X, y
 
+def download_ptb(verbose=False):
+	url = 'http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz'
+	root_path, _, labels_file = setup_structure('penn_tree_bank', create_data_folder=False)
+	local_tar = os.path.join(root_path, 'simple-examples.tgz')
+
+	examples_path = os.path.join(root_path, 'simple-examples')
+	data_path = os.path.join(examples_path, 'data')
+	data_file = os.path.join(data_path, 'ptb.train.txt')
+	if not (os.path.isdir(examples_path) and os.path.isdir(data_path) and os.path.isfile(data_file)):
+		if not os.path.isfile(local_tar):
+			download_file(url, local_tar, verbose=verbose)
+
+		with tarfile.open(local_tar, 'r') as f:
+			if verbose:
+				print('Extracting penn_tree_bank data')
+			for item in f:
+				f.extract(item, root_path)
+
+		for folder in os.listdir(root_path):
+			recursive_delete(os.path.join(root_path, folder), skip=[data_file])
+
+	return data_file
+
 def checkboxes(verbose=False):
 	root_folder=os.path.join(curr_path, 'checkboxes')
 	if not os.path.isdir(root_folder):
@@ -154,4 +197,9 @@ def cats_and_dogs(verbose=False):
 def mnist(size=None, verbose=False):
 	X, y = download_mnist(size=size, verbose=verbose)
 	dataset = Dataset(X=X, y=y)
+	return dataset
+
+def penn_tree_bank(verbose=False):
+	data_file = download_ptb(verbose=verbose)
+	dataset = TokensDataset(tokens_file=data_file)
 	return dataset
