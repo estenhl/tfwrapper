@@ -174,7 +174,7 @@ class ImageTransformer():
 		suffixes = ['']
 
 		if self.resize_to is not None:
-			img = cv2.resize(img, resize_to)
+			img = cv2.resize(img, self.resize_to)
 
 		if self.bw:
 			img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -198,44 +198,50 @@ class ImageTransformer():
 class ImageDataset(Dataset):
 	names = None
 
-	def __init__(self, root_folder=None, labels_file=None, verbose=False):
-		X, y = None, None
-
+	def __init__(self, X=None, y=None, names=None, root_folder=None, labels_file=None, verbose=False):
 		if labels_file is not None and root_folder is not None:
-			X, y, self.names = parse_folder_with_labels_file(root_folder, labels_file, verbose=verbose)
+			X, y, names = parse_folder_with_labels_file(root_folder, labels_file, verbose=verbose)
 		elif root_folder is not None:
-			X, y, self.names = parse_datastructure(root_folder, verbose=verbose)
+			X, y, names = parse_datastructure(root_folder, verbose=verbose)
 
 		super().__init__(X=X, y=y, verbose=verbose)
+		self.names = names
 
 	def getdata(self, normalize=False, balance=False, translate_labels=False, 
 				shuffle=False, onehot=False, split=False, transformer=None):
-		y = np.asarray(self.y)
 		if transformer:
 			X = []
+			y = []
 			names = []
 
 			for i in range(len(self.X)):
 				variants, suffixes = transformer.transform(self.X[i])
 				X += variants
+				y += [self.y[i]] * len(variants)
 
-				basename = names[i]
-				if basename.split('.') > 2:
+				basename = self.names[i]
+				if len(basename.split('.')) > 2:
 					raise NotImplementedError('Filenames with . not allowed')
 
 				prefix, filetype = basename.split('.')
 				names += [prefix + suffix + '.' + filetype for suffix in suffixes]
 
 			X = np.asarray(X)
-			names = npasarray(y)
+			y = np.asarray(y)
+			names = np.asarray(names)
 		else:
 			X = np.asarray(self.X)
+			y = np.asarray(self.y)
 			names = np.asarray(self.names)
 
 		if shuffle:
 			X, y, names = shuffle_dataset(X, y, names)
 
-		X, y, labels = super().getdata(X=X, y=np.asarray(self.y), normalize=normalize, balance=balance, 
-			translate_labels=translate_labels, onehot=onehot, split=split)
-
-		return X, y, labels, names
+		if split:
+			X, y, test_X, test_y, labels = super().getdata(X=X, y=y, normalize=normalize, balance=balance, 
+				translate_labels=translate_labels, onehot=onehot, split=split)
+			return X, y, test_X, test_y, labels, names
+		else:
+			X, y, labels = super().getdata(X=X, y=y, normalize=normalize, balance=balance, 
+				translate_labels=translate_labels, onehot=onehot, split=split)
+			return X, y, labels, names

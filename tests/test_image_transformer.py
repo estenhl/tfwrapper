@@ -3,6 +3,7 @@ import cv2
 import pytest
 import numpy as np
 
+from tfwrapper import ImageDataset
 from tfwrapper import ImageTransformer
 
 from utils import curr_path
@@ -16,6 +17,16 @@ def test_no_transformations():
 
 	assert 1 == len(transformed_imgs)
 	assert np.array_equal(img, transformed_imgs[0])
+	assert 1 == len(suffixes)
+	assert '' == suffixes[0]
+
+def test_transform_resize():
+	img = cv2.imread(cat_img)
+	transformer = ImageTransformer(resize_to=(64, 64))
+	transformed_imgs, suffixes = transformer.transform(img)
+
+	assert 1 == len(transformed_imgs)
+	assert (64, 64, 3) == transformed_imgs[0].shape
 	assert 1 == len(suffixes)
 	assert '' == suffixes[0]
 
@@ -76,3 +87,30 @@ def test_combinations():
 	assert '_vflip' in suffixes
 	assert '_hflip' in suffixes
 	assert '_hvflip' in suffixes
+
+def test_dataset_with_transformation():
+	X = []
+	y = []
+	names = []
+
+	for i in range(1, 6):
+		X.append(cv2.resize(cv2.imread(cat_img), (64*i, 64*i)))
+		y.append(i)
+		names.append('cat' + str(i) + '.jpg')
+
+	dataset = ImageDataset(X=X, y=y, names=names)
+	X, y, labels, names = dataset.getdata(transformer=ImageTransformer(resize_to=(64, 64), bw=True, hflip=True))
+
+	assert 10 == len(X)
+	assert 10 == len(y)
+	assert 10 == len(names)
+
+	for img in X:
+		assert img.shape[0] == 64
+		assert img.shape[1] == 64
+		assert len(img.shape) == 2 or img.shape[2] == 1
+
+	for i in range(0, 10, 2):
+		assert y[i] == y[i + 1]
+
+
