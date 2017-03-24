@@ -1,51 +1,83 @@
 import numpy as np
 import tensorflow as tf
 
-from tfwrapper.datasets import penn_tree_bank
+import tensorflow as tf
+from tensorflow.contrib import rnn
+
+from tfwrapper.datasets import mnist
 from tfwrapper.utils.data import batch_data
 
-dataset = penn_tree_bank(verbose=True)
-X, y, test_X, test_y, _ = dataset.getdata(sequence_length=20, onehot=True, split=True)
-X = np.reshape(X, [-1, 20, 1])
+dataset = mnist(verbose=True)
+X, y, test_X, test_y, _ = dataset.getdata(normalize=True, onehot=True, split=True, )
 
-x_p = tf.placeholder(tf.float32, [None, 20, 1], name='x_placeholder')
-y_p = tf.placeholder(tf.float32, [None, len(dataset.indexes)], name='y_placeholder')
-
-num_hidden = 24
-cell = tf.contrib.rnn.BasicLSTMCell(num_hidden, forget_bias=1.0)
-
-val, state = tf.nn.dynamic_rnn(cell, x_p, dtype=tf.float32)
-
-val = tf.transpose(val, [1, 0, 2])
-last = tf.gather(val, int(val.get_shape()[0]) - 1)
-
-weight = tf.Variable(tf.truncated_normal([num_hidden, int(y_p.get_shape()[1])]))
-bias = tf.Variable(tf.constant(0.1, shape=[y_p.get_shape()[1]]))
-
-pred = tf.nn.softmax(tf.matmul(last, weight) + bias)
-cross_entropy = -tf.reduce_sum(y_p * tf.log(tf.clip_by_value(pred,1e-10,1.0)))
-
-optimizer = tf.train.AdamOptimizer()
-minimize = optimizer.minimize(cross_entropy)
-
-correct_pred = tf.not_equal(tf.argmax(y_p, 1), tf.argmax(pred, 1))
-cost = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
-
-train_len = len(X) - 128
-val_X = X[train_len:]
-val_y = y[train_len:]
-X = X[:train_len]
-y = y[:train_len]
 X_batches = batch_data(X, 128)
 y_batches = batch_data(y, 128)
 
-with tf.Session() as sess:
-	sess.run(tf.global_variables_initializer())
-	for i in range(0, 20000):
-		for j in range(len(X_batches)):
-			sess.run(minimize,{x_p: X_batches[i], y_p: y_batches[i]})
-		print("Epoch - " + str(i))
-		train_incorrect = sess.run(cost, feed_dict={x_p: X_batches[-2], y_p: y_batches[-2]})
-		incorrect = sess.run(cost,{x_p: val_X, y_p: val_y})
-		print('Epoch %d train error %.2f val error %.2f' % (i + 1, train_incorrect, 100 * incorrect))
+'''
+To classify images using a recurrent neural network, we consider every image
+row as a sequence of pixels. Because MNIST image shape is 28*28px, we will then
+handle 28 sequences of 28 steps for every sample.
+'''
 
+# Parameters
+learning_rate = 0.001
+
+# Network Parameters
+n_input = 28 # MNIST data input (img shape: 28*28)
+n_steps = 28 # timesteps
+n_hidden = 128 # hidden layer num of features
+n_classes = 10 # MNIST total classes (0-9 digits)
+
+# tf Graph input
+x = tf.placeholder("float", [None, n_steps, n_input])
+y = tf.placeholder("float", [None, n_classes])
+
+# Define weights
+weights = {
+	'out': tf.Variable(tf.random_normal([n_hidden, n_classes]))
+}
+biases = {
+	'out': tf.Variable(tf.random_normal([n_classes]))
+}
+
+
+def RNN(x, weights, biases):
+	x = tf.transpose(x, [1, 0, 2])
+	x = tf.reshape(x, [-1, n_input])
+	x = tf.split(x, n_steps, 0)
+
+	lstm_cell = rnn.BasicLSTMCell(n_hidden, forget_bias=1.0)
+
+	outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
+
+	return tf.matmul(outputs[-1], weights['out']) + biases['out']
+
+pred = RNN(x, weights, biases)
+
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+
+correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
+accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+
+init = tf.global_variables_initializer()
+
+with tf.Session() as sess:
+	sess.run(init)
+	step = 1
+	# Keep training until reach max iterations
+	for epoch in range(1000):
+		for i in range(len(X_batches)):
+			batch_x, batch_y = X_batches[i], y_batches[i]
+			# Reshape data to get 28 seq of 28 elements
+			# Run optimization op (backprop)
+			sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
+		acc, loss = sess.run([accuracy, cost], feed_dict={x: batch_x, y: batch_y})
+		# Calculate batch loss
+		print("Epoch " + str(epoch + 1) + ", Minibatch Loss= " + \
+			  "{:.6f}".format(loss) + ", Training Accuracy= " + \
+				  "{:.5f}".format(acc))
+	print("Optimization Finished!")
+
+	print("Testing Accuracy:", \
+		sess.run(accuracy, feed_dict={x: test_X[:500], y: test_y[:500]}))
