@@ -55,7 +55,7 @@ def test_create_from_datastructure():
 	root_folder = create_tmp_dir(size=size)
 	dataset = ImageDataset(root_folder=root_folder)
 	remove_dir(root_folder)
-	X, y, _ = dataset.getdata()
+	X, y, _, _ = dataset.getdata()
 
 	assert size == len(X)
 	assert size == len(y)
@@ -77,7 +77,7 @@ def test_create_from_labels_file():
 	dataset = ImageDataset(root_folder=root_folder, labels_file=labels_file)
 	remove_dir(parent)
 	os.remove(labels_file)
-	X, y, _ = dataset.getdata()
+	X, y, _, _ = dataset.getdata()
 
 	assert size / 2 == len(X)
 	assert size / 2 == len(y)
