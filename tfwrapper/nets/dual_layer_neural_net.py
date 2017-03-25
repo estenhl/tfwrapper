@@ -16,8 +16,8 @@ class DualLayerNeuralNet(NeuralNet):
 				X_size = np.prod(X_shape)
 
 				layers = [
-					self.fullyconnected([X_size, hidden1], hidden, name=name + '_hidden1'),
-					self.fullyconnected([hidden1, hidden2], hidden2, name=name + '_hidden2'),
+					self.fullyconnected(input_size=X_size, output_size=hidden, name=name + '_hidden1'),
+					self.fullyconnected(input_size=hidden1, output_size=hidden2, name=name + '_hidden2'),
 					self.out([hidden2, y_size], y_size, name=name + '_pred')
 				]
 

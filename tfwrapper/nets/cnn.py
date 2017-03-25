@@ -6,7 +6,12 @@ class CNN(NeuralNet):
 	def __init__(self, X_shape, y_size, layers, sess=None, graph=None, name='NeuralNet'):
 		super().__init__(X_shape, y_size, layers, sess=sess, graph=graph, name=name)
 
-	def conv2d(self, weight_shape, bias_size, strides=1, padding='SAME', name='conv2d'):
+	def conv2d(self, *, filter, input_depth, depth, strides=1, padding='SAME', name='conv2d'):
+		if len(filter) != 2:
+			raise ValueError('conv2d takes filters with exactly 2 dimensions (e.g. [3, 3])')
+
+		weight_shape = filter + [input_depth, depth]
+		bias_size = depth
 		weight_name = name + '_W'
 		bias_name = name + '_b'
 
@@ -20,5 +25,5 @@ class CNN(NeuralNet):
 
 		return create_layer
 
-	def maxpool2d(self, k=2, padding='SAME', name='maxpool2d'):
+	def maxpool2d(self, *, k=2, padding='SAME', name='maxpool2d'):
 		return lambda x: tf.nn.max_pool(x, ksize=[1, k, k, 1], strides=[1, k, k, 1], padding=padding, name=name)

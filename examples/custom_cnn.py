@@ -11,11 +11,11 @@ class CustomCNN(CNN):
 	def __init__(self, X_shape, classes, sess=None, graph=None, name='CustomCNN'):
 		layers = [
 			self.reshape([-1, 28, 28, 1], name=name + '_reshape'),
-			self.conv2d([5, 5, 1, 32], 32, name=name + '_conv1'),
+			self.conv2d(filter=[5, 5], input_depth=1, depth=32, name=name + '_conv1'),
 			self.maxpool2d(k=2, name=name + '_pool1'),
-			self.conv2d([5, 5, 32, 64], 64, name=name + '_conv2'),
+			self.conv2d(filter=[5, 5], input_depth=32, depth=64, name=name + '_conv2'),
 			self.maxpool2d(k=2, name=name + '_pool2'),
-			self.fullyconnected([7*7*64, 512], 512, name=name + '_fc'),
+			self.fullyconnected(input_size=7*7*64, output_size=512, name=name + '_fc'),
 			self.out([512, 10], 10, name=name + '_pred')
 		]
 

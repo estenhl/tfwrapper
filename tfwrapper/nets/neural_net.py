@@ -28,16 +28,17 @@ class NeuralNet(SupervisedModel):
 	def accuracy_function(self, correct_pred):
 		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '_accuracy')
 
-	def fullyconnected(self, weight_shape, bias_size, name='fullyconnected'):
+	def fullyconnected(self, *, input_size, output_size, name='fullyconnected'):
+		weight_shape = [input_size, output_size]
 		weight_name = name + '_W'
 		bias_name = name + '_b'
 
 		def create_layer(x):
 			weight = tf.Variable(tf.random_normal(weight_shape), name=weight_name)
-			bias = tf.Variable(tf.random_normal([bias_size]), name=bias_name)
+			bias = tf.Variable(tf.random_normal([output_size]), name=bias_name)
 
 			fc = tf.reshape(x, [-1, weight.get_shape().as_list()[0]], name=name + '_reshape')
-			fc = tf.add(tf.matmul(fc, weight), bias, name=name + '_add')
+			fc = tf.add(tf.matmul(fc, weight), output_size, name=name + '_add')
 			fc = tf.nn.relu(fc, name=name)
 
 			return fc

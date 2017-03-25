@@ -16,7 +16,7 @@ class SingleLayerNeuralNet(NeuralNet):
 				X_size = np.prod(X_shape)
 
 				layers = [
-					self.fullyconnected([X_size, hidden], hidden, name=name + '_hidden'),
+					self.fullyconnected(input_size=X_size, output_size=hidden, name=name + '_hidden'),
 					self.out([hidden, y_size], y_size, name=name + '_pred')
 				]
 
