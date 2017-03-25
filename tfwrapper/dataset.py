@@ -38,7 +38,8 @@ def balance_dataset(X, y):
 def onehot_array(arr):
 	shape = (len(arr), np.amax(arr) + 1)
 	onehot = np.zeros(shape)
-	onehot[np.arange(shape[0]), arr] = 1
+	for i in range(len(arr)):
+		onehot[i][arr[i]] = 1
 
 	return onehot
 

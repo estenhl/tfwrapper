@@ -14,6 +14,6 @@ with graph.as_default():
 		cnn = ShallowCNN([28, 28, 1], 10, sess=sess, graph=graph, name='ExampleShallowCNN')
 		cnn.train(X, y, epochs=5, sess=sess, verbose=True)
 		_, acc = cnn.validate(test_X, test_y, sess=sess)
-		print('Test accuracy: %.2f' % acc)
+		print('Test accuracy: %d%%' % (acc*100))
 
 
