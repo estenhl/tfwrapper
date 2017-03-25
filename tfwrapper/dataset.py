@@ -191,8 +191,9 @@ class Dataset():
 		return X, y, test_X, test_y, labels
 
 class ImageTransformer():
-	def __init__(self, resize_to=None, bw=False, hflip=False, vflip=False):
+	def __init__(self, resize_to=None, rgb=False, bw=False, hflip=False, vflip=False):
 		self.resize_to = resize_to
+		self.rgb = rgb
 		self.bw = bw
 		self.hflip = hflip
 		self.vflip = vflip
@@ -203,6 +204,9 @@ class ImageTransformer():
 
 		if self.resize_to is not None:
 			img = cv2.resize(img, self.resize_to)
+
+		if self.rgb:
+			img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
 		if self.bw:
 			img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -233,7 +237,9 @@ class ImageDataset(Dataset):
 			X, y, names = parse_datastructure(root_folder, verbose=verbose)
 
 		super().__init__(X=X, y=y, verbose=verbose)
-		self.names = names
+
+		if names is not None:
+			self.names = names
 
 	def getdata(self, normalize=False, balance=False, translate_labels=False, 
 				shuffle=False, onehot=False, split=False, transformer=None):
@@ -247,12 +253,13 @@ class ImageDataset(Dataset):
 				X += variants
 				y += [self.y[i]] * len(variants)
 
-				basename = self.names[i]
-				if len(basename.split('.')) > 2:
-					raise NotImplementedError('Filenames with . not allowed')
+				if self.names is not None:
+					basename = self.names[i]
+					if len(basename.split('.')) > 2:
+						raise NotImplementedError('Filenames with . not allowed')
 
-				prefix, filetype = basename.split('.')
-				names += [prefix + suffix + '.' + filetype for suffix in suffixes]
+					prefix, filetype = basename.split('.')
+					names += [prefix + suffix + '.' + filetype for suffix in suffixes]
 
 			X = np.asarray(X)
 			y = np.asarray(y)
