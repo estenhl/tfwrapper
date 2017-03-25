@@ -8,11 +8,14 @@ from tfwrapper.utils.data import parse_features
 def normalize_array(arr):
 	return (arr - arr.mean()) / arr.std()
 
-def shuffle_dataset(X, y):
+def shuffle_dataset(X, y, names=None):
 	idx = np.arange(len(X))
 	np.random.shuffle(idx)
 
-	return np.squeeze(X[idx]), np.squeeze(y[idx])
+	if names is None:
+		return np.squeeze(X[idx]), np.squeeze(y[idx])
+	else:
+		return np.squeeze(X[idx]), np.squeeze(y[idx]), np.squeeze(names[idx])
 
 def balance_dataset(X, y):
 	assert len(X) == len(y)
@@ -76,6 +79,7 @@ def split_dataset(X, y, val_split=0.8):
 def parse_datastructure(root, suffix='.jpg', verbose=False):
 	X = []
 	y = []
+	names = []
 
 	for foldername in os.listdir(root):
 		src = os.path.join(root, foldername)
@@ -86,16 +90,18 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
 					img = cv2.imread(src_file)
 					X.append(img)
 					y.append(foldername)
+					names.append(filename)
 				elif verbose:
 					print('Skipping filename ' + filename)
 		elif verbose:
 			print('Skipping foldername ' + foldername)
 
-	return X, y
+	return X, y, names
 
 def parse_folder_with_labels_file(root, labels_file, verbose=False):
 	X = []
 	y = []
+	names = []
 
 	with open(labels_file, 'r') as f:
 		for line in f.readlines():
@@ -105,10 +111,11 @@ def parse_folder_with_labels_file(root, labels_file, verbose=False):
 				img = cv2.imread(src_file)
 				X.append(img)
 				y.append(label)
+				names.append(filename)
 			elif verbose:
 				print('Skipping filename ' + src_file)
 
-	return X, y
+	return X, y, names
 
 def parse_tokens_file(filename):
 	tokens = []
@@ -154,9 +161,10 @@ class Dataset():
 			self.y = y
 
 	def getdata(self, X=None, y=None, normalize=False, balance=False, translate_labels=False, shuffle=False, onehot=False, split=False):
-		if X is None or y is None:
-			X, y = self.X, self.y
-		X, y = np.asarray(X), np.asarray(y)
+		if X is None:
+			X = np.asarray(self.X)
+		if y is None:
+			y = np.asarray(self.y)
 
 		labels = []
 
@@ -182,16 +190,87 @@ class Dataset():
 
 		return X, y, test_X, test_y, labels
 
-class ImageDataset(Dataset):
-	def __init__(self, root_folder=None, labels_file=None, verbose=False):
-		X, y = None, None
+class ImageTransformer():
+	def __init__(self, resize_to=None, bw=False, hflip=False, vflip=False):
+		self.resize_to = resize_to
+		self.bw = bw
+		self.hflip = hflip
+		self.vflip = vflip
 
+	def transform(self, img):
+		img_variants = []
+		suffixes = ['']
+
+		if self.resize_to is not None:
+			img = cv2.resize(img, self.resize_to)
+
+		if self.bw:
+			img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+		img_variants.append(img)
+
+		if self.hflip:
+			img_variants.append(np.fliplr(img))
+			suffixes.append('_hflip')
+
+		if self.vflip:
+			img_variants.append(np.flipud(img))
+			suffixes.append('_vflip')
+
+		if self.hflip and self.vflip:
+			img_variants.append(np.fliplr(np.flipud(img)))
+			suffixes.append('_hvflip')
+
+		return img_variants, suffixes
+
+class ImageDataset(Dataset):
+	names = None
+
+	def __init__(self, X=None, y=None, names=None, root_folder=None, labels_file=None, verbose=False):
 		if labels_file is not None and root_folder is not None:
-			X, y = parse_folder_with_labels_file(root_folder, labels_file, verbose=verbose)
+			X, y, names = parse_folder_with_labels_file(root_folder, labels_file, verbose=verbose)
 		elif root_folder is not None:
-			X, y = parse_datastructure(root_folder, verbose=verbose)
+			X, y, names = parse_datastructure(root_folder, verbose=verbose)
 
 		super().__init__(X=X, y=y, verbose=verbose)
+		self.names = names
+
+	def getdata(self, normalize=False, balance=False, translate_labels=False, 
+				shuffle=False, onehot=False, split=False, transformer=None):
+		if transformer:
+			X = []
+			y = []
+			names = []
+
+			for i in range(len(self.X)):
+				variants, suffixes = transformer.transform(self.X[i])
+				X += variants
+				y += [self.y[i]] * len(variants)
+
+				basename = self.names[i]
+				if len(basename.split('.')) > 2:
+					raise NotImplementedError('Filenames with . not allowed')
+
+				prefix, filetype = basename.split('.')
+				names += [prefix + suffix + '.' + filetype for suffix in suffixes]
+
+			X = np.asarray(X)
+			y = np.asarray(y)
+			names = np.asarray(names)
+		else:
+			X = np.asarray(self.X)
+			y = np.asarray(self.y)
+			names = np.asarray(self.names)
+
+
+		if shuffle:
+			X, y, names = shuffle_dataset(X, y, names)
+
+
+		X, y, test_X, test_y, labels = super().getdata(X=X, y=y, normalize=normalize, balance=balance, 
+			translate_labels=translate_labels, onehot=onehot, split=split)
+		return X, y, test_X, test_y, labels, names
+
 
 class TokensDataset(Dataset):
 	tokens = []
@@ -241,8 +320,3 @@ class TokensDataset(Dataset):
 			y.append(self.tokens[i + sequence_length])
 
 		return super().getdata(X=X, y=y, onehot=onehot, shuffle=shuffle, split=split)
-
-
-
-
-
