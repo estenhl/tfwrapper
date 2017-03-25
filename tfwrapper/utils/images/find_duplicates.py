@@ -1,7 +1,7 @@
 import os
+import cv2
 import sys
 import numpy as np
-from scipy.misc import imread
 
 def find_duplicates(folder, verbose=False):
 	images = []
@@ -9,7 +9,7 @@ def find_duplicates(folder, verbose=False):
 		if not (filename.endswith('.jpg') or filename.endswith('.png')):
 			continue
 
-		images.append({'filename': filename, 'img': imread(os.path.join(folder, filename))})
+		images.append({'filename': filename, 'img': cv2.imread(os.path.join(folder, filename))})
 	images = sorted(images, key=lambda x: np.sum(x['img']))
 
 	duplicates = []

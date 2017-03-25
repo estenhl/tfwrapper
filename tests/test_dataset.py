@@ -15,7 +15,7 @@ def test_create_from_data():
 	X = np.asarray([1, 2, 3])
 	y = np.asarray([2, 4, 6])
 	dataset = Dataset(X=X, y=y)
-	test_X, test_y, [] = dataset.getdata()
+	test_X, test_y, _, _, [] = dataset.getdata()
 
 	assert np.array_equal(X, test_X)
 	assert np.array_equal(y, test_y)
@@ -23,7 +23,7 @@ def test_create_from_data():
 def test_create_from_features():
 	X, y, features = generate_features()
 	dataset = Dataset(features=features)
-	test_X, test_y, _ = dataset.getdata()
+	test_X, test_y, _, _, _ = dataset.getdata()
 
 	assert np.array_equal(X, test_X)
 	assert np.array_equal(y, test_y)
@@ -34,7 +34,7 @@ def test_create_from_feature_file():
 	write_features(tmp_file, features)
 	dataset = Dataset(features_file=tmp_file)
 	os.remove(tmp_file)
-	test_X, test_y, _ = dataset.getdata()
+	test_X, test_y, _, _, _ = dataset.getdata()
 
 	assert np.array_equal(X, test_X)
 	assert np.array_equal(y, test_y)
@@ -55,7 +55,7 @@ def test_create_from_datastructure():
 	root_folder = create_tmp_dir(size=size)
 	dataset = ImageDataset(root_folder=root_folder)
 	remove_dir(root_folder)
-	X, y, _ = dataset.getdata()
+	X, y, _, _, _ = dataset.getdata()
 
 	assert size == len(X)
 	assert size == len(y)
@@ -77,7 +77,7 @@ def test_create_from_labels_file():
 	dataset = ImageDataset(root_folder=root_folder, labels_file=labels_file)
 	remove_dir(parent)
 	os.remove(labels_file)
-	X, y, _ = dataset.getdata()
+	X, y, _, _, _ = dataset.getdata()
 
 	assert size / 2 == len(X)
 	assert size / 2 == len(y)
@@ -86,7 +86,7 @@ def test_normalize():
 	X = np.asarray([5, 4, 3])
 	y = np.asarray([1, 1, 1])
 	dataset = Dataset(X=X, y=y)
-	test_X, test_y, _ = dataset.getdata(normalize=True)
+	test_X, test_y, _, _, _ = dataset.getdata(normalize=True)
 	
 	assert 0 < test_X[0]
 	assert 0 == test_X[1]
@@ -98,7 +98,7 @@ def test_balance():
 	X = np.zeros(100)
 	y = np.concatenate([np.zeros(10), np.ones(90)])
 	dataset = Dataset(X=X, y=y)
-	test_X, test_y, _ = dataset.getdata(balance=True)
+	test_X, test_y, _, _, _ = dataset.getdata(balance=True)
 
 	assert 20 == len(test_X)
 	assert 20 == len(test_y)
@@ -108,7 +108,7 @@ def test_translate_labels():
 	X = np.asarray([0, 1, 2])
 	y = np.asarray(['Zero', 'One', 'Two'])
 	dataset = Dataset(X=X, y=y)
-	_, test_y, labels = dataset.getdata(translate_labels=True)
+	_, test_y, _, _, labels = dataset.getdata(translate_labels=True)
 
 	assert 3 == len(labels)
 	assert 'Zero' == labels[np.where(test_y==0)[0][0]]
@@ -119,7 +119,7 @@ def test_shuffle():
 	X = np.concatenate([np.zeros(100), np.ones(100)])
 	y = np.concatenate([np.zeros(100), np.ones(100)])
 	dataset = Dataset(X=X, y=y)
-	test_X, test_y, _ = dataset.getdata(shuffle=True)
+	test_X, test_y, _, _, _ = dataset.getdata(shuffle=True)
 
 	assert not np.array_equal(X, test_X)
 	assert np.array_equal(test_X, test_y)
@@ -128,7 +128,7 @@ def test_onehot():
 	X = np.zeros(10)
 	y = np.arange(10)
 	dataset = Dataset(X=X, y=y)
-	test_X, test_y, _ = dataset.getdata(onehot=True)
+	test_X, test_y, _, _, _ = dataset.getdata(onehot=True)
 
 	assert (10, 10) == test_y.shape
 	for i in range(10):

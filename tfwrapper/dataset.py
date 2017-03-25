@@ -38,7 +38,8 @@ def balance_dataset(X, y):
 def onehot_array(arr):
 	shape = (len(arr), np.amax(arr) + 1)
 	onehot = np.zeros(shape)
-	onehot[np.arange(shape[0]), arr] = 1
+	for i in range(len(arr)):
+		onehot[i][arr[i]] = 1
 
 	return onehot
 
@@ -109,6 +110,32 @@ def parse_folder_with_labels_file(root, labels_file, verbose=False):
 
 	return X, y
 
+def parse_tokens_file(filename):
+	tokens = []
+
+	with open(filename, 'r') as f:
+		for line in f.readlines():
+			tokens += [x.strip() for x in line.split(' ') if len(x.strip()) > 0]
+
+	return tokens
+
+def tokens_to_indexes(tokens, add_none=True):
+	tokenized_sequence = []
+	indexes = []
+	tokens_dict = {}
+
+	if add_none:
+		indexes.append(None)
+		tokens_dict[None] = 0
+
+	for token in tokens:
+		if token not in tokens_dict:
+			tokens_dict[token] = len(indexes)
+			indexes.append(token)
+		tokenized_sequence.append(tokens_dict[token])
+
+	return tokenized_sequence, indexes, tokens_dict
+	
 class Dataset():
 	X = []
 	y = []
@@ -126,9 +153,10 @@ class Dataset():
 		if y is not None:
 			self.y = y
 
-	def getdata(self, normalize=False, balance=False, translate_labels=False, shuffle=False, onehot=False, split=False):
-		X = np.asarray(self.X)
-		y = np.asarray(self.y)
+	def getdata(self, X=None, y=None, normalize=False, balance=False, translate_labels=False, shuffle=False, onehot=False, split=False):
+		if X is None or y is None:
+			X, y = self.X, self.y
+		X, y = np.asarray(X), np.asarray(y)
 
 		labels = []
 
@@ -147,11 +175,12 @@ class Dataset():
 		if onehot:
 			y = onehot_array(y)
 
+		test_X, test_y = None, None
+
 		if split:
 			X, y, test_X, test_y = split_dataset(X, y)
-			return X, y, test_X, test_y, labels
-		else:
-			return X, y, labels
+
+		return X, y, test_X, test_y, labels
 
 class ImageDataset(Dataset):
 	def __init__(self, root_folder=None, labels_file=None, verbose=False):
@@ -163,4 +192,57 @@ class ImageDataset(Dataset):
 			X, y = parse_datastructure(root_folder, verbose=verbose)
 
 		super().__init__(X=X, y=y, verbose=verbose)
+
+class TokensDataset(Dataset):
+	tokens = []
+	indexes = []
+	tokens_dict = {}
+
+	def __init__(self, tokens=None, tokens_file=None):
+		if tokens_file is not None:
+			tokens = parse_tokens_file(tokens_file)
+
+		if tokens is not None:
+			self.tokens, self.indexes, self.tokens_dict = tokens_to_indexes(tokens)
+
+	def token_to_index(self, token):
+		return self.tokens_dict[token]
+
+	def index_to_token(self, index):
+		return self.indexes[index]
+
+	def tokens_to_indexes(self, tokens):
+		indexes = []
+
+		for token in tokens:
+			indexes.append(self.token_to_index(token))
+
+		return np.asarray(indexes)
+
+	def indexes_to_tokens(self, indexes):
+		tokens = []
+
+		for index in indexes:
+			tokens.append(self.index_to_token(index))
+
+		return np.asarray(tokens)
+
+	def getdata(self, sequence_length, onehot=False, shuffle=False, split=False):
+		X = []
+		y = []
+
+		for i in range(sequence_length):
+			x = [self.token_to_index(None)] * ((sequence_length - 1) - i) + self.tokens[:i + 1]
+			X.append(x)
+			y.append(self.tokens[i + 1])
+
+		for i in range(len(self.tokens) - sequence_length):
+			X.append(self.tokens[i:i + sequence_length])
+			y.append(self.tokens[i + sequence_length])
+
+		return super().getdata(X=X, y=y, onehot=onehot, shuffle=shuffle, split=split)
+
+
+
+
 
