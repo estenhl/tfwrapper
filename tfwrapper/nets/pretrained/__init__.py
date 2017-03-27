@@ -1,2 +1,2 @@
-from .ssd300 import SSD300
+from .vgg16 import PretrainedVGG16
 from .inception_v3 import InceptionV3

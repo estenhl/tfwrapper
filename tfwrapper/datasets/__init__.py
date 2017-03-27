@@ -11,6 +11,7 @@ from numpy import zeros, uint8, float32
 from tfwrapper import Dataset
 from tfwrapper import TokensDataset
 from tfwrapper import ImageDataset
+from tfwrapper.utils.files import download_file
 
 curr_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -44,12 +45,6 @@ def recursive_delete(path, skip=[]):
 		return True
 
 	return False
-
-def download_file(url, path, verbose=False):
-	if verbose:
-		print('Downloading ' + url  + ' to ' + path)
-
-	urllib.request.urlretrieve(url, path)
 
 def download_cats_and_dogs(verbose=False):
 	root_path, data_path, labels_file = setup_structure('cats_and_dogs')

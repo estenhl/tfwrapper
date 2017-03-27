@@ -30,8 +30,8 @@ class NeuralNet(SupervisedModel):
 
 	def fullyconnected(self, *, input_size, output_size, name='fullyconnected'):
 		weight_shape = [input_size, output_size]
-		weight_name = name + '_W'
-		bias_name = name + '_b'
+		weight_name = name + '/weights'
+		bias_name = name + '/biases'
 
 		def create_layer(x):
 			weight = tf.Variable(tf.random_normal(weight_shape), name=weight_name)

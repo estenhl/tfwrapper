@@ -79,8 +79,11 @@ class SupervisedModel(ABC):
 		return lambda x: tf.reshape(x, shape=shape)
 
 	def out(self, weight_shape, bias_size, name):
-		return lambda x: tf.add(tf.matmul(x, tf.Variable(tf.random_normal(weight_shape))), tf.Variable(tf.random_normal([bias_size])), name=name)
+		return lambda x: tf.add(tf.matmul(x, tf.Variable(tf.random_normal(weight_shape), name=name + '/weights')), tf.Variable(tf.random_normal([bias_size]), name=name + '/biases'), name=name)
 
+	def relu(self, name):
+		return lambda x: tf.nn.relu(x, name=name)
+		
 	def train(self, X, y, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=False):
 		assert len(X) == len(y)
 
