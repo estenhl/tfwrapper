@@ -44,7 +44,7 @@ def onehot_array(arr):
 	for i in range(len(arr)):
 		onehot[i][arr[i]] = 1
 
-	return onehot
+	return np.asarray(onehot)
 
 def translate_features(all_features):
 	X = []
@@ -54,7 +54,7 @@ def translate_features(all_features):
 		X.append(features['features'])
 		y.append(features['label'])
 
-	return X, y
+	return np.asarray(X), np.asarray(y)
 
 def labels_to_indexes(y):
 	labels = []
@@ -65,16 +65,16 @@ def labels_to_indexes(y):
 			labels.append(label)
 		indices.append(labels.index(label))
 
-	return np.asarray(indices), labels
+	return np.asarray(indices), np.asarray(labels)
 
-def split_dataset(X, y, val_split=0.8):
-	train_len = int(len(X) * val_split)
+def split_dataset(X, y, ratio=0.8):
+	train_len = int(len(X) * ratio)
 	train_X = X[:train_len]
 	train_y = y[:train_len]
-	val_X = X[train_len:]
-	val_y = y[train_len:]
+	test_X = X[train_len:]
+	test_y = y[train_len:]
 
-	return train_X, train_y, val_X, val_y
+	return np.asarray(train_X), np.asarray(train_y), np.asarray(test_X), np.asarray(test_y)
 
 def parse_datastructure(root, suffix='.jpg', verbose=False):
 	X = []
@@ -96,7 +96,7 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
 		elif verbose:
 			print('Skipping foldername ' + foldername)
 
-	return X, y, names
+	return np.asarray(X), np.asarray(y), np.asarray(names)
 
 def parse_folder_with_labels_file(root, labels_file, verbose=False):
 	X = []
@@ -115,7 +115,7 @@ def parse_folder_with_labels_file(root, labels_file, verbose=False):
 			elif verbose:
 				print('Skipping filename ' + src_file)
 
-	return X, y, names
+	return np.asarray(X), np.asarray(y), np.asarray(names)
 
 def parse_tokens_file(filename):
 	tokens = []
@@ -141,87 +141,52 @@ def tokens_to_indexes(tokens, add_none=True):
 			indexes.append(token)
 		tokenized_sequence.append(tokens_dict[token])
 
-	return tokenized_sequence, indexes, tokens_dict
+	return np.asarray(tokenized_sequence), np.asarray(indexes), np.asarray(tokens_dict)
 	
 class Dataset():
-	X = []
-	y = []
+	def __init__(self, X=np.asarray([]), y=np.asarray([]), labels=np.asarray([]), features=None, features_file=None, verbose=False):
+		self.X = X
+		self.y = y
+		self.labels = labels
 
-	def __init__(self, X=None, y=None, features=None, features_file=None, verbose=False):
 		if features_file is not None:
 			self.X, self.y = translate_features(parse_features(features_file))
 
 		if features is not None:
 			self.X, self.y = translate_features(features)
 
-		if X is not None:
-			self.X = X
+	def normalize(self):
+		return Dataset(X=normalize_array(self.X), y=self.y, labels=self.labels)
 
-		if y is not None:
-			self.y = y
+	def shuffle(self):
+		X, y = shuffle_dataset(self.X, self.y)
 
-	def getdata(self, X=None, y=None, normalize=False, balance=False, translate_labels=False, shuffle=False, onehot=False, split=False):
-		if X is None:
-			X = np.asarray(self.X)
-		if y is None:
-			y = np.asarray(self.y)
+		return Dataset(X=X, y=y, labels=self.labels)
 
-		labels = []
+	def balance(self):
+		X, y = balance_dataset(self.X, self.y)
 
-		if normalize:
-			X = normalize_array(X)
+		return Dataset(X=X, y=y, labels=self.labels)
 
-		if translate_labels:
-			y, labels = labels_to_indexes(y)
+	def translate_labels(self):
+		y, labels = labels_to_indexes(self.y)
 
-		if shuffle:
-			X, y = shuffle_dataset(X, y)
+		return Dataset(X=self.X, y=y, labels=labels)
 
-		if balance:
-			X, y = balance_dataset(X, y)
+	def onehot(self):
+		return Dataset(X=self.X, y=onehot_array(self.y), labels=self.labels)
 
-		if onehot:
-			y = onehot_array(y)
+	def split(self, ratio=0.8):
+		X, y, test_X, test_y = split_dataset(self.X, self.y, ratio=ratio)
+		train_dataset = Dataset(X=X, y=y, labels=self.labels)
+		test_dataset = Dataset(X=test_X, y=test_y, labels=self.labels)
 
-		test_X, test_y = None, None
-
-		if split:
-			X, y, test_X, test_y = split_dataset(X, y)
-
-		return X, y, test_X, test_y, labels
+		return train_dataset, test_dataset
 
 class ImageTransformer():
-	def __init__(self, resize_to=None, bw=False, hflip=False, vflip=False):
-		self.resize_to = resize_to
-		self.bw = bw
-		self.hflip = hflip
-		self.vflip = vflip
+	resize_to = None
+	black_and_white = False
 
-	def transform(self, img):
-		img_variants = []
-		suffixes = ['']
-
-		if self.resize_to is not None:
-			img = cv2.resize(img, self.resize_to)
-
-		if self.bw:
-			img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-		img_variants.append(img)
-
-		if self.hflip:
-			img_variants.append(np.fliplr(img))
-			suffixes.append('_hflip')
-
-		if self.vflip:
-			img_variants.append(np.flipud(img))
-			suffixes.append('_vflip')
-
-		if self.hflip and self.vflip:
-			img_variants.append(np.fliplr(np.flipud(img)))
-			suffixes.append('_hvflip')
-
-		return img_variants, suffixes
 
 class ImageDataset(Dataset):
 	names = None
