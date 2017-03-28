@@ -7,6 +7,7 @@ from .dataset import split_dataset
 from tfwrapper.utils.data import batch_data
 from tfwrapper.utils.metrics import loss
 from tfwrapper.utils.metrics import accuracy
+from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class TFSession():
 	def __init__(self, session=None, graph=None, init_vars=False, variables={}):
@@ -83,10 +84,22 @@ class SupervisedModel(ABC):
 		return lambda x: tf.add(tf.matmul(x, tf.Variable(tf.random_normal(weight_shape))), tf.Variable(tf.random_normal([bias_size])), name=name)
 
 	def train(self, X, y, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=False):
-		assert len(X) == len(y)
+		if not len(X) == len(y):
+			raise InvalidArgumentException('X and y must be same length, not %d and %d' % (len(X), len(y)))
+		
+		if not (len(X.shape) >= 2 and list(X.shape[1:]) == self.X_shape):
+			raise InvalidArgumentException('X with shape %s does not match given X_shape %s' % (str(X.shape), str(self.X_shape)))
+		else:
+			X = np.reshape(X, [-1] + self.X_shape)
 
-		X = np.reshape(X, [-1] + self.X_shape)
-		y = np.reshape(y, [-1, self.y_size])
+		if not len(y.shape) == 2:
+			raise InvalidArgumentException('y must be a onehot array')
+
+		if not y.shape[1] == self.y_size:
+			raise InvalidArgumentException('y with %d classes does not match given y_size %d' % (y.shape[1], self.y_size))
+		else:
+			y = np.reshape(y, [-1, self.y_size])
+
 		if val_X is None and validate:
 			X, y, val_X, val_y = split_dataset(X, y)
 
