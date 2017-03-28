@@ -54,8 +54,9 @@ class SupervisedModel(ABC):
 			self.input_size = np.prod(X_shape)
 			self.output_size = y_size
 
-			self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '_X_placeholder')
-			self.y = tf.placeholder(tf.float32, [None, y_size], name=self.name + '_y_placeholder')
+			self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '/X_placeholder')
+			self.y = tf.placeholder(tf.float32, [None, y_size], name=self.name + '/y_placeholder')
+			self.lr = tf.placeholder(tf.float32, [], name=self.name + '/learning_rate_placeholder')
 
 			prev = self.X
 			for layer in layers:
@@ -100,7 +101,7 @@ class SupervisedModel(ABC):
 			sess.run(tf.global_variables_initializer())
 			for epoch in range(epochs):
 				for i in range(num_batches):
-					sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i]})
+					sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i], self.lr: self.learning_rate})
 
 				if verbose:
 					loss, acc = self.validate(X_batches[-1], y_batches[-1], sess=sess, verbose=verbose)
@@ -143,6 +144,7 @@ class SupervisedModel(ABC):
 			saver.restore(sess, filename)
 
 			self.graph = sess.graph
-			self.X = sess.graph.get_tensor_by_name(self.name + '_X_placeholder:0')
-			self.y = sess.graph.get_tensor_by_name(self.name + '_y_placeholder:0')
+			self.X = sess.graph.get_tensor_by_name(self.name + '/X_placeholder:0')
+			self.y = sess.graph.get_tensor_by_name(self.name + '/y_placeholder:0')
+			self.lr = sess.graph.get_tensor_by_name(self.name + '/learning_rate_placeholder:0')
 			self.pred = sess.graph.get_tensor_by_name(self.name + '_pred:0')

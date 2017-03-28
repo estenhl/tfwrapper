@@ -20,13 +20,13 @@ class NeuralNet(SupervisedModel):
 		self.graph = graph
 
 	def loss_function(self):
-		return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '_softmax'), name=self.name + '_loss')
+		return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '/softmax'), name=self.name + '/loss')
 
 	def optimizer_function(self):
-		return tf.train.AdamOptimizer(learning_rate=self.learning_rate, name=self.name + '_adam').minimize(self.loss, name=self.name + '_optimizer')
+		return tf.train.AdamOptimizer(learning_rate=self.lr, name=self.name + '_adam').minimize(self.loss, name=self.name + '/optimizer')
 
 	def accuracy_function(self, correct_pred):
-		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '_accuracy')
+		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '/accuracy')
 
 	def fullyconnected(self, *, input_size, output_size, name='fullyconnected'):
 		weight_shape = [input_size, output_size]
@@ -37,8 +37,8 @@ class NeuralNet(SupervisedModel):
 			weight = tf.Variable(tf.random_normal(weight_shape), name=weight_name)
 			bias = tf.Variable(tf.random_normal([output_size]), name=bias_name)
 
-			fc = tf.reshape(x, [-1, weight.get_shape().as_list()[0]], name=name + '_reshape')
-			fc = tf.add(tf.matmul(fc, weight), output_size, name=name + '_add')
+			fc = tf.reshape(x, [-1, weight.get_shape().as_list()[0]], name=name + '/reshape')
+			fc = tf.add(tf.matmul(fc, weight), output_size, name=name + '/add')
 			fc = tf.nn.relu(fc, name=name)
 
 			return fc
@@ -54,5 +54,5 @@ class NeuralNet(SupervisedModel):
 
 		with TFSession(sess) as sess:
 			super().load(filename, sess=sess)
-			self.loss = sess.graph.get_tensor_by_name(self.name + '_loss:0')
-			self.accuracy = sess.graph.get_tensor_by_name(self.name + '_accuracy:0')
+			self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
+			self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')
