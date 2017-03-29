@@ -21,6 +21,7 @@ class CustomCNN(CNN):
 
 		super().__init__(X_shape, classes, layers, sess=sess, graph=graph, name=name)
 
+
 dataset = mnist(size=10000, verbose=True)
 X, y, test_X, test_y, _ = dataset.getdata(normalize=True, balance=True, shuffle=True, onehot=True, split=True)
 X = np.reshape(X, [-1, 28, 28, 1])

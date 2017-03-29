@@ -34,8 +34,8 @@ class VGG16(CNN):
 			self.fullyconnected(input_size=4096, output_size=4096, name=name + '/fc7'),
 			self.relu(name=name + '/relu2'),
 			self.dropout(0.5),
-			self.reshape([1, 1, 4096, 1000], name=name + '/reshape'),
-			self.out([1, 1, 4096, 1000], 1000, name=name + '/fc8')
+			self.fullyconnected(input_size=4096, output_size=1000, name=name + '/fc8'),
+			self.softmax(name=name + '/pred')
 		]
 
 		super().__init__(X_shape, 1000, layers, sess=sess, graph=graph, name=name)

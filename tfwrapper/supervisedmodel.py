@@ -83,6 +83,9 @@ class SupervisedModel(ABC):
 
 	def relu(self, name):
 		return lambda x: tf.nn.relu(x, name=name)
+
+	def softmax(self, name):
+		return lambda x: tf.nn.softmax(x, name=name)
 		
 	def train(self, X, y, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=False):
 		assert len(X) == len(y)

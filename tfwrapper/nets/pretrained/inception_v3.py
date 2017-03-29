@@ -6,7 +6,7 @@ from tfwrapper import TFSession
 from tfwrapper.utils.data import parse_features
 from tfwrapper.utils.data import write_features
 
-INCEPTION_PB_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),'models','inception_v3.pb')
+from .utils import inceptionv3_pb_path
 
 class InceptionV3():
 	core_layer_names = [
@@ -34,7 +34,7 @@ class InceptionV3():
 		'softmax:0'
 	]
 	
-	def __init__(self,graph_file=INCEPTION_PB_PATH):
+	def __init__(self,graph_file=inceptionv3_pb_path()):
 		if not os.path.isfile(graph_file):
 			raise Exception('Invalid path to inception v3 pb file')
 

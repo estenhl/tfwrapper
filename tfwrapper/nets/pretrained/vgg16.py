@@ -6,17 +6,17 @@ from tfwrapper.utils import get_variable_by_name
 from .utils import vgg16_ckpt_path
 
 class PretrainedVGG16(VGG16):
-	def __init__(self, X_shape, *, ckpt_path=vgg16_ckpt_path(verbose=True), sess=None, graph=None, name='vgg_16'):
+	def __init__(self, X_shape, *, ckpt_path=vgg16_ckpt_path(), sess=None, graph=None, name='vgg_16'):
 		super().__init__(X_shape, sess=sess, graph=graph, name='vgg_16')
 		self.load_from_checkpoint(ckpt_path, sess=sess)
 
 	def load_from_checkpoint(self, ckpt_path, sess=None):
 		#tf.reset_default_graph()
 		variables = [
-			'vgg_16/fc7/weights',
-			'vgg_16/fc6/weights',
+			#'vgg_16/fc7/weights',
+			#'vgg_16/fc6/weights',
 			'vgg_16/conv5/conv5_3/biases',
-			'vgg_16/fc8/weights',
+			#'vgg_16/fc8/weights',
 			'vgg_16/conv5/conv5_2/weights',
 			'vgg_16/conv5/conv5_2/biases',
 			'vgg_16/conv5/conv5_1/biases',
