@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 from collections import Counter
-
+from random import shuffle
 from tfwrapper.utils.data import parse_features
 
 def normalize_array(arr):
@@ -200,7 +200,7 @@ class ImageDataset(Dataset):
 		super().__init__(X=X, y=y, verbose=verbose)
 		self.names = names
 
-	def getdata(self, normalize=False, balance=False, translate_labels=False, 
+	def getdata(self, normalize=False, balance=False, translate_labels=False,
 				shuffle=False, onehot=False, split=False, transformer=None):
 		if transformer:
 			X = []
@@ -232,7 +232,7 @@ class ImageDataset(Dataset):
 			X, y, names = shuffle_dataset(X, y, names)
 
 
-		X, y, test_X, test_y, labels = super().getdata(X=X, y=y, normalize=normalize, balance=balance, 
+		X, y, test_X, test_y, labels = super().getdata(X=X, y=y, normalize=normalize, balance=balance,
 			translate_labels=translate_labels, onehot=onehot, split=split)
 		return X, y, test_X, test_y, labels, names
 

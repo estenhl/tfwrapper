@@ -10,3 +10,4 @@ tfwrapper/datasets/**/*
 !tfwrapper/datasets/__init__.py
 examples/inception_v3_features.csv
 examples/data/**/*
+.idea
