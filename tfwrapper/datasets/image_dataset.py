@@ -2,7 +2,10 @@ import os
 from random import shuffle
 import numpy as np
 class ImageDataset():
-    def __init__(self, dir_path=None, names=None, labels=None, img_path=None):
+    def __init__(self, dir_path=None, names=None, labels=None, img_path=None, one_hot=None):
+
+        self.one_hot = one_hot
+
         if dir_path is None:
             self.names = names
             self.labels = labels
@@ -48,12 +51,14 @@ class ImageDataset():
         dataset1 = ImageDataset(
             names=self.names[:split_index],
             labels=self.labels[:split_index],
-            img_path=self.img_path[:split_index]
+            img_path=self.img_path[:split_index],
+            one_hot=self.one_hot
         )
         dataset2 = ImageDataset(
             names=self.names[split_index:],
             labels=self.labels[split_index:],
-            img_path=self.img_path[split_index:]
+            img_path=self.img_path[split_index:],
+            one_hot=self.one_hot
         )
         if len(shape) == 3:
             normalize = shape[0] * 0.5
@@ -72,7 +77,30 @@ class ImageDataset():
             labels = self.labels
         return self.names, self.img_path, labels
 
+    def balance_dataset(self, max_value=None):
 
+        #write max_value_counter
+
+        if not self.one_hot:
+            print ("NEED TO ONE HOT")
+
+        class_count = self.one_hot.get_class_count()
+        counter = [0 for i in range(class_count)]
+
+        names = []
+        labels = []
+        img_paths = []
+        for i in enumerate(self.names):
+            label = self.labels[i]
+            id = self.one_hot.get_label_id(label)
+            if counter[id] < max_value:
+                names.append(self.names[i])
+                labels.append(self.labels[i])
+                img_paths.append(self.img_path[i])
+                counter[id] += 1
+
+        return ImageDataset(names=names, labels=labels, img_paths=img_paths)
+    
 
 class OneHot():
     def __init__(self, labels):
@@ -95,3 +123,9 @@ class OneHot():
         for i, number in enumerate(number_value):
             one_hots[i][number] = 1
         return one_hots.tolist()
+
+    def get_class_count(self):
+        return len(self.labels)
+
+    def get_label_id(self, label):
+        return self.label_to_onehot[label]
