@@ -43,7 +43,6 @@ class Inception_v4(PretrainedModel):
 
         tensor = sess.graph.get_tensor_by_name(layer)
         try:
-            print('Extracting features for ' + image_file)
             # image_data = tf.gfile.FastGFile(image_file, 'rb').read()
             img = twimage.imread(image_file)
             feature = sess.run(tensor, {'input:0': img})

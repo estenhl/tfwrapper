@@ -6,7 +6,6 @@ import matplotlib.image as mpimage
 
 def imread(file_path):
     #Add try
-    print(file_path)
     image = cv2.imread(file_path)
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
