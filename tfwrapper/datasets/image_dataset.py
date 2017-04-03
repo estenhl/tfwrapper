@@ -35,7 +35,6 @@ class ImageDataset():
         return len(self.names)
 
     def shuffle(self):
-        print(len(self.names))
         index_shuf = list(range(len(self.names)))
         shuffle(index_shuf)
         self.names = [self.names[i] for i in index_shuf]

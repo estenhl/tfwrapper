@@ -39,13 +39,9 @@ class CachedFeatureGenerator(BatchGenerator):
             if (i % counter_log_interval) == 0:
                 print("{}% parsed".format(i / counter_log_interval))
             if name in self.cache:
-                #print("Already in cache: {}".format(name))
                 features.append(self.cache[name])
             else:
-                #print("PARSING FEATURE")
-                print(img.shape)
                 feature = self.model.get_feature(img, sess=sess, layer=self.layer)
-                print(feature)
                 features.append(feature)
                 self.cache[name] = feature
 
