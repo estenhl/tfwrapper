@@ -90,7 +90,7 @@ class ImageDataset():
         names = []
         labels = []
         img_paths = []
-        for i in enumerate(self.names):
+        for i, _ in enumerate(self.names):
             label = self.labels[i]
             id = self.one_hot.get_label_id(label)
             if counter[id] < max_value:
@@ -100,7 +100,7 @@ class ImageDataset():
                 counter[id] += 1
 
         return ImageDataset(names=names, labels=labels, img_paths=img_paths)
-    
+
 
 class OneHot():
     def __init__(self, labels):
