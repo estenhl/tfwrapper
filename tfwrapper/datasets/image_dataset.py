@@ -99,7 +99,7 @@ class ImageDataset():
                 img_paths.append(self.img_path[i])
                 counter[id] += 1
 
-        return ImageDataset(names=names, labels=labels, img_paths=img_paths)
+        return ImageDataset(names=names, labels=labels, img_path=img_paths)
 
 
 class OneHot():
