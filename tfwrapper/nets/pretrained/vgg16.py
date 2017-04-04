@@ -13,10 +13,10 @@ class PretrainedVGG16(VGG16):
 	def load_from_checkpoint(self, ckpt_path, sess=None):
 		#tf.reset_default_graph()
 		variables = [
-			#'vgg_16/fc7/weights',
-			#'vgg_16/fc6/weights',
+			'vgg_16/fc7/weights',
+			'vgg_16/fc6/weights',
 			'vgg_16/conv5/conv5_3/biases',
-			#'vgg_16/fc8/weights',
+			'vgg_16/fc8/weights',
 			'vgg_16/conv5/conv5_2/weights',
 			'vgg_16/conv5/conv5_2/biases',
 			'vgg_16/conv5/conv5_1/biases',

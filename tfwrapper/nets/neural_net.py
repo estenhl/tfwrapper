@@ -38,7 +38,7 @@ class NeuralNet(SupervisedModel):
 			bias = tf.Variable(tf.random_normal([output_size]), name=bias_name)
 
 			fc = tf.reshape(x, [-1, weight.get_shape().as_list()[0]], name=name + '/reshape')
-			fc = tf.add(tf.matmul(fc, weight), output_size, name=name + '/add')
+			fc = tf.add(tf.matmul(fc, weight), bias, name=name + '/add')
 			fc = tf.nn.relu(fc, name=name)
 
 
