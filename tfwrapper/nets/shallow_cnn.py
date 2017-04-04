@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
+from tfwrapper import TFSession
+
 from .cnn import CNN
 
 class ShallowCNN(CNN):
@@ -32,4 +34,5 @@ class ShallowCNN(CNN):
 			self.out([512, self.classes], self.classes, name=name + '_pred')
 		]
 
-		super().__init__(X_shape, classes, layers, sess=sess, graph=graph, name=name)
+		with TFSession(sess) as sess:
+			super().__init__(X_shape, classes, layers, sess=sess, name=name)

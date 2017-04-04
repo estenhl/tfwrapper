@@ -11,27 +11,28 @@ from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class TFSession():
 	def __init__(self, session=None, graph=None, init_vars=False, variables={}):
-		self.has_local_session = (session is None)
+		self.is_local_session = session is None
 		self.session = session
-		self.graph = graph
+		
+		if session:
+			print('TFSession with session!')
+			self.graph = session.graph
+		elif graph:
+			print('TFSession with graph!')
+			self.graph = graph
+		else:
+			print('Empty TFSession!')
+			self.graph = tf.Graph()
 
-		if self.has_local_session:
-			print('Initing new session with graph ' + str(graph))
+		if self.is_local_session:
+			self.graph.as_default()
 			self.session = tf.Session(graph=graph)
-
-			if len(variables) > 0:
-				for name in variables:
-					print('Initialized ' + name)
-					tf.Variable(variables[name], name=name)
-			if init_vars:
-				print('Initializing vars!')
-				self.session.run(tf.global_variables_initializer())
 
 	def __enter__(self):
 		return self.session
 
 	def __exit__(self, type, value, traceback):
-		if self.has_local_session:
+		if self.is_local_session:
 			self.session.close()
 
 
@@ -42,13 +43,8 @@ class SupervisedModel(ABC):
 	learning_rate = 0.1
 	batch_size = 128
 
-	def __init__(self, X_shape, y_size, layers, sess=None, graph=None, src=None, name='SupervisedModel'):
-		if graph is None:
-			if sess is not None:
-				raise Exception('When a session is passed, a graph must be passed aswell')
-			graph = tf.Graph()
-
-		with TFSession(sess, graph) as sess:
+	def __init__(self, X_shape, y_size, layers, sess=None, name='SupervisedModel'):
+		with TFSession(sess) as sess:
 			self.X_shape = X_shape
 			self.y_size = y_size
 			self.name = name
@@ -67,7 +63,7 @@ class SupervisedModel(ABC):
 			self.loss = self.loss_function()
 			self.optimizer = self.optimizer_function()
 
-		self.graph = graph
+			self.graph = sess.graph
 
 	@abstractmethod
 	def loss_function(self):
