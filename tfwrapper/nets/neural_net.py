@@ -28,7 +28,8 @@ class NeuralNet(SupervisedModel):
 	def accuracy_function(self, correct_pred):
 		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '/accuracy')
 
-	def fullyconnected(self, *, input_size, output_size, name='fullyconnected'):
+	@staticmethod
+	def fullyconnected(*, input_size, output_size, name='fullyconnected'):
 		weight_shape = [input_size, output_size]
 		weight_name = name + '_W'
 		bias_name = name + '_b'
@@ -45,7 +46,8 @@ class NeuralNet(SupervisedModel):
 
 		return create_layer
 
-	def dropout(self, dropout, name='dropout'):
+	@staticmethod
+	def dropout(dropout, name='dropout'):
 		return lambda x: tf.nn.dropout(x, dropout, name=name)
 
 	def load(self, filename, sess=None):

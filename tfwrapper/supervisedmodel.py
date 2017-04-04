@@ -77,10 +77,12 @@ class SupervisedModel(ABC):
 	def optimizer_function(self):
 		raise NotImplementedError('SupervisedModel is a generic class')
 
-	def reshape(self, shape, name):
+	@staticmethod
+	def reshape(shape, name):
 		return lambda x: tf.reshape(x, shape=shape)
 
-	def out(self, weight_shape, bias_size, name):
+	@staticmethod
+	def out(weight_shape, bias_size, name):
 		return lambda x: tf.add(tf.matmul(x, tf.Variable(tf.random_normal(weight_shape))), tf.Variable(tf.random_normal([bias_size])), name=name)
 
 	def train(self, X, y, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=False):
