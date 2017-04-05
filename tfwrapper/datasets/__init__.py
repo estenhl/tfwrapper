@@ -196,7 +196,7 @@ def cats_and_dogs(verbose=False):
 
 def mnist(size=None, verbose=False):
 	X, y = download_mnist(size=size, verbose=verbose)
-	dataset = Dataset(X=X, y=y)
+	dataset = ImageDataset(X=X, y=y)
 	return dataset
 
 def penn_tree_bank(verbose=False):

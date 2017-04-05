@@ -1,15 +1,19 @@
 import numpy as np
 import tensorflow as tf
 
+from tfwrapper import ImageTransformer
 from tfwrapper.nets import CNN
 from tfwrapper.datasets import mnist
+
 
 h = 28
 w = 28
 c = 1
 
-dataset = mnist(size=10000, verbose=True)
-X, y, test_X, test_y, _ = dataset.getdata(normalize=True, balance=True, shuffle=True, onehot=True, split=True)
+dataset = mnist(size=1000, verbose=True)
+transformer = ImageTransformer(rotation_steps=2, max_rotation_angle=15, blur_steps=2, max_blur_sigma=2.5, hflip=True, vflip=True)
+X, y, test_X, test_y, _, _ = dataset.getdata(normalize=True, balance=False, shuffle=True, onehot=True,
+                                              split=True, translate_labels=True, transformer=transformer)
 X = np.reshape(X, [-1, h, w, c])
 num_classes = y.shape[1]
 
