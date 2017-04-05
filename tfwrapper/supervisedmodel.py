@@ -108,7 +108,7 @@ class SupervisedModel(ABC):
 		if verbose:
 			print('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
 
-		with TFSession(sess, self.graph, init_vars=True) as sess:
+		with TFSession(sess, self.graph) as sess:
 			sess.run(tf.global_variables_initializer())
 			for epoch in range(epochs):
 				for i in range(num_batches):
@@ -116,28 +116,31 @@ class SupervisedModel(ABC):
 
 				if verbose:
 					loss, acc = self.validate(X_batches[-1], y_batches[-1], sess=sess, verbose=verbose)
-					print('Epoch %d, train loss: %.3f, train acc: %2f' % (epoch + 1, loss, acc))
+					print('Epoch %d, train loss: %.3f, train acc: %.3f' % (epoch + 1, loss, acc))
 
 					if validate:
 						loss, acc = self.validate(val_X, val_y, sess=sess, verbose=verbose)
-						print('Epoch %d, val loss: %.3f, val acc: %2f' % (epoch + 1, loss, acc))
+						print('Epoch %d, val loss: %.3f, val acc: %.3f' % (epoch + 1, loss, acc))
 
+			for variable
 	def predict(self, X, sess=None, verbose=False):
-		X = np.reshape(X, [-1] + self.X_shape)
-		batches = batch_data(X, self.batch_size)
-		preds = None
+		with TFSession(sess, self.graph) as sess:
+			X = np.reshape(X, [-1] + self.X_shape)
+			batches = batch_data(X, self.batch_size)
+			preds = None
 
-		for batch in batches:
-			batch_preds = sess.run(self.pred, feed_dict={self.X: batch})
-			if preds is not None:
-				preds = np.concatenate([preds, batch_preds])
-			else:
-				preds = batch_preds
+			for batch in batches:
+				batch_preds = sess.run(self.pred, feed_dict={self.X: batch})
+				if preds is not None:
+					preds = np.concatenate([preds, batch_preds])
+				else:
+					preds = batch_preds
 
 		return preds
 
 	def validate(self, X, y, sess=None, verbose=False):
-		preds = self.predict(X, sess=sess, verbose=verbose)
+		with TFSession(sess, self.graph) as sess:
+			preds = self.predict(X, sess=sess, verbose=verbose)
 
 		return loss(preds, y), accuracy(preds, y)
 
