@@ -16,11 +16,11 @@ def test_parse_written_features():
 	assert len(features) == len(parsed_features)
 
 	features = sorted(features, key=lambda x: x['filename'])
-	parsed_features = sorted(parsed_features, key=lambda x: x['filename'])
+	parsed_features = parsed_features.sort_values(by=['filename'])
 
 	for i in range(len(features)):
-		assert features[i]['filename'] == parsed_features[i]['filename']
-		assert features[i]['label'] == parsed_features[i]['label']
-		assert np.array_equal(features[i]['features'], parsed_features[i]['features'])
+		assert features[i]['filename'] == parsed_features.ix['filename', i]
+		assert features[i]['label'] == parsed_features.ix['label', i]
+		assert np.array_equal(features[i]['features'], parsed_features.ix['features', i])
 
 

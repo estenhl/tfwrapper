@@ -1,5 +1,6 @@
-import os
 import numpy as np
+import os
+import pandas as pd
 import tensorflow as tf
 
 from tfwrapper import TFSession
@@ -93,36 +94,35 @@ class InceptionV3():
 		return np.asarray(features)
 
 	def extract_features_from_folder(self,folder,label=None,skip=[],layer='pool_3:0',sess=None):
-		all_features = []
 
-		with TFSession(sess,self.graph) as sess:
-			for filename in os.listdir(folder):
-				if filename not in skip:
-					src = os.path.join(folder,filename)
-					features = self.extract_features_from_file(src,layer=layer,sess=sess)
-					if features is not None:
-						m = {'filename': filename,'features': features}
-						if label is not None:
-							m['label'] = label
-						all_features.append(m)
-				else:
-					print('Skipping ' + filename)
+		filenames_to_skip = set(os.listdir(folder)) & set(skip)
+		filenames_to_include = set(os.listdir(folder)) - set(skip)
+		all_features = pd.DataFrame(list(filenames_to_include), columns=['filename'])
+		for filename in filenames_to_skip:
+			print('Skipping ' + filename)
+		all_features['label'] = label
+		with TFSession(sess, self.graph) as sess:
+			all_features['features'] = (all_features['filename']
+										.apply(lambda x: self.extract_features_from_file(os.path.join(folder,x)
+																						 ,layer=layer
+																						 ,sess=sess))
+										)
 
 		return all_features
 
 	def extract_features_from_datastructure(self,root,skip=[],feature_file=None,layer='pool_3:0',sess=None):
-		all_features = []
+		all_features = pd.DataFrame()
 
 		if feature_file:
 			all_features = parse_features(feature_file)
-			skip += [x['filename'] for x in all_features]
+			skip += all_features['filename'].tolist()
 
 		with TFSession(sess,self.graph) as sess:
 			for foldername in os.listdir(root):
 				folder = os.path.join(root,foldername)
 				
 				if os.path.isdir(folder):
-					all_features += self.extract_features_from_folder(folder,label=foldername,skip=skip,layer=layer,sess=sess)
+					all_features = all_features.append(self.extract_features_from_folder(folder,label=foldername,skip=skip,layer=layer,sess=sess))
 
 		if feature_file:
 			write_features(feature_file,all_features)

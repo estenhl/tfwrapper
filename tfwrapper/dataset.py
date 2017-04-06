@@ -147,10 +147,13 @@ class Dataset():
 
 	def __init__(self, X=None, y=None, features=None, features_file=None, verbose=False):
 		if features_file is not None:
-			self.X, self.y = translate_features(parse_features(features_file))
+			parsed_features = parse_features(features_file)
+			self.X = parsed_features['features'].tolist()
+			self.y = parsed_features['label'].tolist()
 
 		if features is not None:
-			self.X, self.y = translate_features(features)
+			self.X = features['features'].tolist()
+			self.y = features['label'].tolist()
 
 		if X is not None:
 			self.X = X
