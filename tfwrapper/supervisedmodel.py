@@ -10,12 +10,14 @@ from tfwrapper.utils.metrics import accuracy
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class TFSession():
-	def __init__(self, session=None, graph=None, variables={}):
+	def __init__(self, session=None, graph=None, init=False, variables={}):
 		self.is_local_session = session is None
 		self.session = session
 		
 		if session:
 			self.graph = session.graph
+			if init:
+				self.session.run(tf.global_variables_initializer())
 		elif graph:
 			self.graph = graph
 		else:
@@ -24,7 +26,8 @@ class TFSession():
 		if self.is_local_session:
 			self.graph.as_default()
 			self.session = tf.Session(graph=graph)
-			self.session.run(tf.global_variables_initializer())
+			if init:
+				self.session.run(tf.global_variables_initializer())
 			if len(variables) > 0:
 				for name in variables:
 					variable = [v for v in tf.global_variables() if v.name == name][0]
@@ -114,8 +117,7 @@ class SupervisedModel(ABC):
 		if verbose:
 			print('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
 
-		with TFSession(sess, self.graph) as sess:
-			sess.run(tf.global_variables_initializer())
+		with TFSession(sess, self.graph, init=True) as sess:
 			for epoch in range(epochs):
 				for i in range(num_batches):
 					sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i], self.lr: self.learning_rate})
@@ -131,7 +133,7 @@ class SupervisedModel(ABC):
 			self.checkpoint_variables(sess)
 
 	def predict(self, X, sess=None, verbose=False):
-		with TFSession(sess, self.graph, self.variables) as sess:
+		with TFSession(sess, self.graph, variables=self.variables) as sess:
 			X = np.reshape(X, [-1] + self.X_shape)
 			batches = batch_data(X, self.batch_size)
 			preds = None
@@ -146,20 +148,20 @@ class SupervisedModel(ABC):
 		return preds
 
 	def validate(self, X, y, sess=None, verbose=False):
-		with TFSession(sess, self.graph, self.variables) as sess:
+		with TFSession(sess, self.graph, variables=self.variables) as sess:
 			preds = self.predict(X, sess=sess, verbose=verbose)
 
 		return loss(preds, y), accuracy(preds, y)
 
 	def save(self, filename, sess=None):
-		with TFSession(sess, self.graph, self.variables) as sess:
+		with TFSession(sess, self.graph, variables=self.variables) as sess:
 			saver = tf.train.Saver()
 			saver.save(sess, filename)
 
 	def load(self, filename, sess=None):
 		with TFSession(sess, sess.graph) as sess:
 			graph_path = filename + '.meta'
-			saver = tf.train.import_meta_graph(graph_path)
+			saver = tf.train.Saver()
 			saver.restore(sess, filename)
 
 			self.graph = sess.graph
