@@ -3,12 +3,13 @@ import numpy as np
 import tensorflow as tf
 
 from tfwrapper import TFSession
+from tfwrapper.nets.pretrained.pretrained_model import PretrainedModel
 from tfwrapper.utils.data import parse_features
 from tfwrapper.utils.data import write_features
 
 INCEPTION_PB_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),'models','inception_v3.pb')
 
-class InceptionV3():
+class InceptionV3(PretrainedModel):
 	core_layer_names = [
 		'DecodeJpeg/contents:0',
 		'Cast:0',

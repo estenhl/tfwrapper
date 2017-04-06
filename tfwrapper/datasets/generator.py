@@ -34,13 +34,17 @@ class CachedFeatureGenerator(BatchGenerator):
         sess = tf.Session(graph=self.model.graph)
 
         counter_log_interval = len(names)/10
-
+        print(len(names))
+        print(counter_log_interval)
         for i, (name, img) in enumerate(zip(names, imgs)):
+            print(name)
             if (i % counter_log_interval) == 0:
                 print("{}% parsed".format(i / counter_log_interval))
             if name in self.cache:
                 features.append(self.cache[name])
+                print("Already cached")
             else:
+                print("Loading feature")
                 feature = self.model.get_feature(img, sess=sess, layer=self.layer)
                 features.append(feature)
                 self.cache[name] = feature

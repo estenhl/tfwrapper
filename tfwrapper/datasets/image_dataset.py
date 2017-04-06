@@ -81,10 +81,11 @@ class ImageDataset():
 
         #write max_value_counter
 
-        if not self.one_hot:
-            print ("NEED TO ONE HOT")
+        one_hot = self.one_hot
+        if not one_hot:
+            one_hot = OneHot(self.labels)
 
-        class_count = self.one_hot.get_class_count()
+        class_count = one_hot.get_class_count()
         counter = [0 for i in range(class_count)]
 
         names = []
@@ -92,14 +93,14 @@ class ImageDataset():
         img_paths = []
         for i, _ in enumerate(self.names):
             label = self.labels[i]
-            id = self.one_hot.get_label_id(label)
+            id = one_hot.get_label_id(label)
             if counter[id] < max_value:
                 names.append(self.names[i])
                 labels.append(self.labels[i])
                 img_paths.append(self.img_path[i])
                 counter[id] += 1
 
-        return ImageDataset(names=names, labels=labels, img_path=img_paths)
+        return ImageDataset(names=names, labels=labels, img_path=img_paths, one_hot=self.one_hot)
 
 
 class OneHot():
