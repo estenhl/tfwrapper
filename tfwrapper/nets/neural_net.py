@@ -47,10 +47,8 @@ class NeuralNet(SupervisedModel):
 		return lambda x: tf.nn.dropout(x, dropout, name=name)
 
 	def load(self, filename, sess=None):
-		if sess is None:
-			raise NotImplementedError('Loading outside a session is not implemented')
-
-		with TFSession(sess) as sess:
+		with TFSession(sess, self.graph, self.variables) as sess:
 			super().load(filename, sess=sess)
+
 			self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
 			self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')

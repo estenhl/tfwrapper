@@ -10,23 +10,25 @@ from tfwrapper.utils.metrics import accuracy
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class TFSession():
-	def __init__(self, session=None, graph=None, init_vars=False, variables={}):
+	def __init__(self, session=None, graph=None, variables={}):
 		self.is_local_session = session is None
 		self.session = session
 		
 		if session:
-			print('TFSession with session!')
 			self.graph = session.graph
 		elif graph:
-			print('TFSession with graph!')
 			self.graph = graph
 		else:
-			print('Empty TFSession!')
 			self.graph = tf.Graph()
 
 		if self.is_local_session:
 			self.graph.as_default()
 			self.session = tf.Session(graph=graph)
+			self.session.run(tf.global_variables_initializer())
+			if len(variables) > 0:
+				for name in variables:
+					variable = [v for v in tf.global_variables() if v.name == name][0]
+					self.session.run(variable.assign(variables[name]))
 
 	def __enter__(self):
 		return self.session
@@ -81,6 +83,10 @@ class SupervisedModel(ABC):
 	def out(weight_shape, bias_size, name):
 		return lambda x: tf.add(tf.matmul(x, tf.Variable(tf.random_normal(weight_shape))), tf.Variable(tf.random_normal([bias_size])), name=name)
 
+	def checkpoint_variables(self, sess):
+		for variable in tf.global_variables():
+			self.variables[variable.name] = sess.run(variable)
+
 	def train(self, X, y, val_X=None, val_y=None, validate=True, epochs=5000, sess=None, verbose=False):
 		if not len(X) == len(y):
 			raise InvalidArgumentException('X and y must be same length, not %d and %d' % (len(X), len(y)))
@@ -122,9 +128,10 @@ class SupervisedModel(ABC):
 						loss, acc = self.validate(val_X, val_y, sess=sess, verbose=verbose)
 						print('Epoch %d, val loss: %.3f, val acc: %.3f' % (epoch + 1, loss, acc))
 
-			for variable
+			self.checkpoint_variables(sess)
+
 	def predict(self, X, sess=None, verbose=False):
-		with TFSession(sess, self.graph) as sess:
+		with TFSession(sess, self.graph, self.variables) as sess:
 			X = np.reshape(X, [-1] + self.X_shape)
 			batches = batch_data(X, self.batch_size)
 			preds = None
@@ -139,19 +146,17 @@ class SupervisedModel(ABC):
 		return preds
 
 	def validate(self, X, y, sess=None, verbose=False):
-		with TFSession(sess, self.graph) as sess:
+		with TFSession(sess, self.graph, self.variables) as sess:
 			preds = self.predict(X, sess=sess, verbose=verbose)
 
 		return loss(preds, y), accuracy(preds, y)
 
 	def save(self, filename, sess=None):
-		saver = tf.train.Saver()
-		saver.save(sess, filename)
+		with TFSession(sess, self.graph, self.variables) as sess:
+			saver = tf.train.Saver()
+			saver.save(sess, filename)
 
 	def load(self, filename, sess=None):
-		if sess is None:
-			raise NotImplementedError('Loading outside a session is not implemented')
-
 		with TFSession(sess, sess.graph) as sess:
 			graph_path = filename + '.meta'
 			saver = tf.train.import_meta_graph(graph_path)
@@ -161,4 +166,6 @@ class SupervisedModel(ABC):
 			self.X = sess.graph.get_tensor_by_name(self.name + '/X_placeholder:0')
 			self.y = sess.graph.get_tensor_by_name(self.name + '/y_placeholder:0')
 			self.lr = sess.graph.get_tensor_by_name(self.name + '/learning_rate_placeholder:0')
-			self.pred = sess.graph.get_tensor_by_name(self.name + '_pred:0')
+			self.pred = sess.graph.get_tensor_by_name(self.name + '/pred:0')
+
+			self.checkpoint_variables(sess)

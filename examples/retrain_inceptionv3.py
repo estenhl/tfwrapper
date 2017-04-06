@@ -6,7 +6,8 @@ from tfwrapper.nets import SingleLayerNeuralNet
 from tfwrapper.nets.pretrained import InceptionV3
 from tfwrapper.datasets import checkboxes
 
-curr_path = os.path.dirname(os.path.realpath(__file__))
+from .utils import curr_path
+
 inception_path = os.path.join(curr_path, 'data', 'inception_v3_features.csv')
 model_path = os.path.join(curr_path, 'data', 'inception')
 if not os.path.isdir(os.path.join(curr_path, 'data')):

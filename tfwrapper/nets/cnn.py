@@ -16,8 +16,8 @@ class CNN(NeuralNet):
 
 		weight_shape = filter + [input_depth, depth]
 		bias_size = depth
-		weight_name = name + '_W'
-		bias_name = name + '_b'
+		weight_name = name + '/W'
+		bias_name = name + '/b'
 
 		def create_layer(x):
 			weight = tf.Variable(tf.random_normal(weight_shape), name=weight_name)
