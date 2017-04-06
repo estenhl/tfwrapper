@@ -173,7 +173,7 @@ class Dataset():
 			y, labels = labels_to_indexes(y)
 
 		if shuffle:
-			X, y = shuffle_dataset(X, y)
+			X, y, _ = shuffle_dataset(X, y)
 
 		if balance:
 			X, y = balance_dataset(X, y)
