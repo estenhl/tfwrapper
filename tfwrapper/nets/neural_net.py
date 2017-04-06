@@ -5,19 +5,15 @@ from tfwrapper import TFSession
 from tfwrapper import SupervisedModel
 
 class NeuralNet(SupervisedModel):
-	def __init__(self, X_shape, classes, layers, sess=None, graph=None, name='NeuralNet'):
-		if graph is None:
-			if sess is not None:
-				raise Exception('When a session is passed, a graph must be passed aswell')
-			graph = tf.Graph()
+	def __init__(self, X_shape, classes, layers, sess=None, name='NeuralNet'):
 
-		with TFSession(sess, graph) as sess:
-			super().__init__(X_shape, classes, layers, sess=sess, graph=graph, name=name)
+		with TFSession(sess) as sess:
+			super().__init__(X_shape, classes, layers, sess=sess, name=name)
 
 			correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
 			self.accuracy = self.accuracy_function(correct_pred)
 
-		self.graph = graph
+			self.graph = sess.graph
 
 	def loss_function(self):
 		return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '/softmax'), name=self.name + '/loss')
@@ -35,8 +31,8 @@ class NeuralNet(SupervisedModel):
 		bias_name = name + '_b'
 
 		def create_layer(x):
-			weight = tf.Variable(tf.random_normal(weight_shape), name=weight_name)
-			bias = tf.Variable(tf.random_normal([output_size]), name=bias_name)
+			weight = tf.Variable(tf.truncated_normal(weight_shape), name=weight_name)
+			bias = tf.Variable(tf.truncated_normal([output_size]), name=bias_name)
 
 			fc = tf.reshape(x, [-1, weight.get_shape().as_list()[0]], name=name + '/reshape')
 			fc = tf.add(tf.matmul(fc, weight), bias, name=name + '/add')
@@ -51,10 +47,8 @@ class NeuralNet(SupervisedModel):
 		return lambda x: tf.nn.dropout(x, dropout, name=name)
 
 	def load(self, filename, sess=None):
-		if sess is None:
-			raise NotImplementedError('Loading outside a session is not implemented')
-
-		with TFSession(sess) as sess:
+		with TFSession(sess, self.graph, self.variables) as sess:
 			super().load(filename, sess=sess)
+
 			self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
 			self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')

@@ -1,10 +1,13 @@
 import tensorflow as tf
 
+from tfwrapper import TFSession
+
 from .neural_net import NeuralNet
 
 class CNN(NeuralNet):
-	def __init__(self, X_shape, y_size, layers, sess=None, graph=None, name='NeuralNet'):
-		super().__init__(X_shape, y_size, layers, sess=sess, graph=graph, name=name)
+	def __init__(self, X_shape, y_size, layers, sess=None, name='NeuralNet'):
+		with TFSession(sess) as sess:
+			super().__init__(X_shape, y_size, layers, sess=sess, name=name)
 
 	@staticmethod
 	def conv2d(*, filter, input_depth, depth, strides=1, padding='SAME', name='conv2d'):
@@ -13,8 +16,8 @@ class CNN(NeuralNet):
 
 		weight_shape = filter + [input_depth, depth]
 		bias_size = depth
-		weight_name = name + '_W'
-		bias_name = name + '_b'
+		weight_name = name + '/W'
+		bias_name = name + '/b'
 
 		def create_layer(x):
 			weight = tf.Variable(tf.random_normal(weight_shape), name=weight_name)

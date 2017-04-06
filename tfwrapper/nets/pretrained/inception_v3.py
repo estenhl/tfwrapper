@@ -86,7 +86,7 @@ class InceptionV3():
 
 	def extract_features_from_files(self,filenames,layer='pool_3:0',sess=None):
 		features = []
-		with TFSession(sess,self.graph) as sess:
+		with TFSession(sess, self.graph) as sess:
 			for filename in filenames:
 				features.append(self.extract_features_from_file(filename,layer=layer,sess=sess))
 
@@ -117,7 +117,7 @@ class InceptionV3():
 			all_features = parse_features(feature_file)
 			skip += all_features['filename'].tolist()
 
-		with TFSession(sess,self.graph) as sess:
+		with TFSession(sess, self.graph) as sess:
 			for foldername in os.listdir(root):
 				folder = os.path.join(root,foldername)
 				
