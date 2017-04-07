@@ -9,11 +9,11 @@ from tfwrapper.utils.data import parse_features
 def normalize_array(arr):
 	return (arr - arr.mean()) / arr.std()
 
-def shuffle_dataset(X, y, names=None):
+def shuffle_dataset(X, y):
 	idx = np.arange(len(X))
 	np.random.shuffle(idx)
 
-	return np.squeeze(X[idx]), np.squeeze(y[idx]), np.squeeze(names[idx]) if names is not None else None
+	return np.squeeze(X[idx]), np.squeeze(y[idx])
 
 def balance_dataset(X, y):
 	assert len(X) == len(y)
@@ -238,49 +238,49 @@ class ImageTransformer():
 
 		return img_variants, suffixes
 
-class ImageDataset(Dataset):
-	names = None
-
-	def __init__(self, X=None, y=None, names=None):
-		super().__init__(X=X, y=y)
-		self.names = names
-
-
-	def getdata(self, normalize=False, balance=False, shuffle=False, onehot=False, split=False, transformer=None):
-		if transformer:
-			X = []
-			y = []
-			names = []
-
-			for i in range(len(self.X)):
-				variants, suffixes = transformer.transform(self.X[i])
-				X += variants
-				y += [self.y[i]] * len(variants)
-
-				if self.names:
-					basename = self.names[i]
-					if len(basename.split('.')) > 2:
-						raise NotImplementedError('Filenames with . not allowed')
-
-					prefix, filetype = basename.split('.')
-					names += [prefix + suffix + '.' + filetype for suffix in suffixes]
-
-			X = np.asarray(X)
-			y = np.asarray(y)
-			names = np.asarray(names) if self.names is not None else None
-		else:
-			X = np.asarray(self.X)
-			y = np.asarray(self.y)
-			names = np.asarray(self.names) if self.names is not None else None
-
-
-		if shuffle:
-			X, y, names = shuffle_dataset(X, y, names)
-
-
-		X, y, test_X, test_y, labels = super().getdata(X=X, y=y, normalize=normalize, balance=balance,
-													   onehot=onehot, split=split)
-		return X, y, test_X, test_y, labels, names
+# class ImageDataset(Dataset):
+# 	names = None
+#
+# 	def __init__(self, X=None, y=None, names=None):
+# 		super().__init__(X=X, y=y)
+# 		self.names = names
+#
+#
+# 	def getdata(self, normalize=False, balance=False, shuffle=False, onehot=False, split=False, transformer=None):
+# 		if transformer:
+# 			X = []
+# 			y = []
+# 			names = []
+#
+# 			for i in range(len(self.X)):
+# 				variants, suffixes = transformer.transform(self.X[i])
+# 				X += variants
+# 				y += [self.y[i]] * len(variants)
+#
+# 				if self.names:
+# 					basename = self.names[i]
+# 					if len(basename.split('.')) > 2:
+# 						raise NotImplementedError('Filenames with . not allowed')
+#
+# 					prefix, filetype = basename.split('.')
+# 					names += [prefix + suffix + '.' + filetype for suffix in suffixes]
+#
+# 			X = np.asarray(X)
+# 			y = np.asarray(y)
+# 			names = np.asarray(names) if self.names is not None else None
+# 		else:
+# 			X = np.asarray(self.X)
+# 			y = np.asarray(self.y)
+# 			names = np.asarray(self.names) if self.names is not None else None
+#
+#
+# 		if shuffle:
+# 			X, y, names = shuffle_dataset(X, y, names)
+#
+#
+# 		X, y, test_X, test_y, labels = super().getdata(X=X, y=y, normalize=normalize, balance=balance,
+# 													   onehot=onehot, split=split)
+# 		return X, y, test_X, test_y, labels, names
 
 
 class TokensDataset(Dataset):

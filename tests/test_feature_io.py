@@ -5,7 +5,7 @@ import numpy as np
 from tfwrapper.utils.data import parse_features
 from tfwrapper.utils.data import write_features
 
-from utils import generate_features
+from .utils import generate_features
 
 def test_parse_written_features():
 	_, _, features = generate_features()
