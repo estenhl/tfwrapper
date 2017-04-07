@@ -1,7 +1,7 @@
 from .cnn import CNN
 
 class VGG16(CNN):
-	def __init__(self, X_shape, sess=None, graph=None, name='VGG16'):
+	def __init__(self, X_shape, classes=1000, sess=None, name='VGG16'):
 		height, width, channels = X_shape
 		
 		if not ((height % 2 ** 5) == 0 and (width % 2 ** 5) == 0):
@@ -34,9 +34,9 @@ class VGG16(CNN):
 			self.fullyconnected(input_size=4096, output_size=4096, name=name + '/fc7'),
 			self.relu(name=name + '/relu2'),
 			self.dropout(0.5),
-			self.fullyconnected(input_size=4096, output_size=1000, name=name + '/fc8'),
+			self.fullyconnected(input_size=4096, output_size=classes, name=name + '/fc8'),
 			self.softmax(name=name + '/pred')
 		]
 
-		super().__init__(X_shape, 1000, layers, sess=sess, graph=graph, name=name)
+		super().__init__(X_shape, classes, layers, sess=sess, name=name)
 

@@ -41,8 +41,6 @@ class NeuralNet(SupervisedModel):
 			fc = tf.add(tf.matmul(fc, weight), bias, name=name + '/add')
 			fc = tf.nn.relu(fc, name=name)
 
-
-			print('Created FC layer with shape: ' + str(weight_shape))
 			return fc
 
 		return create_layer
