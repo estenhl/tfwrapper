@@ -19,14 +19,18 @@ class NeuralNet(SupervisedModel):
 
 		self.graph = graph
 
+
 	def loss_function(self):
 		return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '_softmax'), name=self.name + '_loss')
+
 
 	def optimizer_function(self):
 		return tf.train.AdamOptimizer(learning_rate=self.learning_rate, name=self.name + '_adam').minimize(self.loss, name=self.name + '_optimizer')
 
+
 	def accuracy_function(self, correct_pred):
 		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '_accuracy')
+
 
 	def fullyconnected(self, *, input_size, output_size, name='fullyconnected'):
 		weight_shape = [input_size, output_size]
@@ -45,8 +49,10 @@ class NeuralNet(SupervisedModel):
 
 		return create_layer
 
+
 	def dropout(self, dropout, name='dropout'):
 		return lambda x: tf.nn.dropout(x, dropout, name=name)
+
 
 	def load(self, filename, sess=None):
 		if sess is None:

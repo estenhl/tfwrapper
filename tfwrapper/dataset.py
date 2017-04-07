@@ -142,7 +142,8 @@ def tokens_to_indexes(tokens, add_none=True):
 		tokenized_sequence.append(tokens_dict[token])
 
 	return np.asarray(tokenized_sequence), np.asarray(indexes), np.asarray(tokens_dict)
-	
+
+
 class Dataset():
 	def __init__(self, X=np.asarray([]), y=np.asarray([]), labels=np.asarray([]), features=None, features_file=None, verbose=False):
 		self.X = X
@@ -191,17 +192,12 @@ class ImageTransformer():
 class ImageDataset(Dataset):
 	names = None
 
-	def __init__(self, X=None, y=None, names=None, root_folder=None, labels_file=None, verbose=False):
-		if labels_file is not None and root_folder is not None:
-			X, y, names = parse_folder_with_labels_file(root_folder, labels_file, verbose=verbose)
-		elif root_folder is not None:
-			X, y, names = parse_datastructure(root_folder, verbose=verbose)
-
-		super().__init__(X=X, y=y, verbose=verbose)
+	def __init__(self, X=None, y=None, names=None):
+		super().__init__(X=X, y=y)
 		self.names = names
 
-	def getdata(self, normalize=False, balance=False, translate_labels=False,
-				shuffle=False, onehot=False, split=False, transformer=None):
+
+	def getdata(self, normalize=False, balance=False, shuffle=False, onehot=False, split=False, transformer=None):
 		if transformer:
 			X = []
 			y = []
@@ -233,7 +229,7 @@ class ImageDataset(Dataset):
 
 
 		X, y, test_X, test_y, labels = super().getdata(X=X, y=y, normalize=normalize, balance=balance,
-			translate_labels=translate_labels, onehot=onehot, split=split)
+													   onehot=onehot, split=split)
 		return X, y, test_X, test_y, labels, names
 
 

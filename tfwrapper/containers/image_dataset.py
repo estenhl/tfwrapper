@@ -1,7 +1,9 @@
 import os
 from random import shuffle
 import numpy as np
-class ImageDataset():
+
+
+class ImageContainer():
     def __init__(self, dir_path=None, names=None, labels=None, img_path=None, one_hot=None):
 
         self.one_hot = one_hot
@@ -47,14 +49,16 @@ class ImageDataset():
     def split(self, shape=[0.9, 0.1]):
         size = len(self.names)
 
+        if size > 3:
+            raise NotImplementedError("Size over 3 not handled yet")
         split_index = int(size * shape[0])
-        dataset1 = ImageDataset(
+        dataset1 = ImageContainer(
             names=self.names[:split_index],
             labels=self.labels[:split_index],
             img_path=self.img_path[:split_index],
             one_hot=self.one_hot
         )
-        dataset2 = ImageDataset(
+        dataset2 = ImageContainer(
             names=self.names[split_index:],
             labels=self.labels[split_index:],
             img_path=self.img_path[split_index:],
@@ -70,17 +74,14 @@ class ImageDataset():
     def one_hot_encode(self):
         self.one_hot = OneHot(self.labels)
 
-    def get_data(self, one_hot=True):
+    def get_data(self):
         if self.one_hot:
             labels = self.one_hot.one_hot_encode(self.labels)
         else:
             labels = self.labels
         return self.names, self.img_path, labels
 
-    def balance_dataset(self, max_value=None):
-
-        #write max_value_counter
-
+    def balance(self, max_value=None):
         one_hot = self.one_hot
         if not one_hot:
             one_hot = OneHot(self.labels)
@@ -100,7 +101,7 @@ class ImageDataset():
                 img_paths.append(self.img_path[i])
                 counter[id] += 1
 
-        return ImageDataset(names=names, labels=labels, img_path=img_paths, one_hot=self.one_hot)
+        return ImageContainer(names=names, labels=labels, img_path=img_paths, one_hot=self.one_hot)
 
 
 class OneHot():
