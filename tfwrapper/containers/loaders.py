@@ -99,6 +99,3 @@ class ImageLoader():
                     yield batch_X, batch_Y
                     batch_X = []
                     batch_Y = []
-
-
-class BatchLoader
