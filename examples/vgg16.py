@@ -15,4 +15,4 @@ for i in range(len(X)):
 X = X_reshaped
 with tf.Session() as sess:
 	cnn = VGG16(X_shape, classes=10, sess=sess)
-	cnn.train(X, y, epochs=10, sess=sess)
+	cnn.train(X, y, epochs=10, sess=sess, verbose=True)

@@ -12,7 +12,7 @@ def copy_image(src_file, dest_folder, size=None, bw=False, h_flip=False, v_flip=
 	if verbose:
 		print('Moving ' + src_file + ' to ' + dest_folder)
 	filename = os.path.basename(src_file)
-	name, suffix = filename.split('.')
+	name, suffix = os.path.splitext(filename)
 
 	img = cv2.imread(src_file)
 
@@ -22,15 +22,15 @@ def copy_image(src_file, dest_folder, size=None, bw=False, h_flip=False, v_flip=
 	if bw:
 		img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-	dest = os.path.join(dest_folder, name + '.' + suffix)
+	dest = os.path.join(dest_folder, name + suffix)
 	cv2.imwrite(dest, img)
 
 	if h_flip:
-		dest = os.path.join(dest_folder, name + '_hflip.' + suffix)
+		dest = os.path.join(dest_folder, name + '_hflip' + suffix)
 		cv2.imwrite(dest, np.fliplr(img))
 	if v_flip:
-		dest = os.path.join(dest_folder, name + '_vflip.' + suffix)
+		dest = os.path.join(dest_folder, name + '_vflip' + suffix)
 		cv2.imwrite(dest, np.flipud(img))
 	if h_flip and v_flip:
-		dest = os.path.join(dest_folder, name + '_hvflip.' + suffix)
+		dest = os.path.join(dest_folder, name + '_hvflip' + suffix)
 		cv2.imwrite(dest, np.flipud(np.fliplr(img)))

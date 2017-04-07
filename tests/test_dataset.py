@@ -6,9 +6,9 @@ import numpy as np
 from tfwrapper import Dataset
 from tfwrapper import ImageDataset
 from tfwrapper.utils.data import write_features
+from tfwrapper.utils.files import remove_dir
 
 from utils import curr_path
-from utils import remove_dir
 from utils import generate_features
 
 def test_create_from_data():

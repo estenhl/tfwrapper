@@ -1,6 +1,7 @@
 import os
 import cv2
 import numpy as np
+import scipy as sp
 from collections import Counter
 
 from tfwrapper.utils.data import parse_features
@@ -12,10 +13,7 @@ def shuffle_dataset(X, y, names=None):
 	idx = np.arange(len(X))
 	np.random.shuffle(idx)
 
-	if names is None:
-		return np.squeeze(X[idx]), np.squeeze(y[idx])
-	else:
-		return np.squeeze(X[idx]), np.squeeze(y[idx]), np.squeeze(names[idx])
+	return np.squeeze(X[idx]), np.squeeze(y[idx]), np.squeeze(names[idx]) if names is not None else None
 
 def balance_dataset(X, y):
 	assert len(X) == len(y)
@@ -149,10 +147,13 @@ class Dataset():
 
 	def __init__(self, X=None, y=None, features=None, features_file=None, verbose=False):
 		if features_file is not None:
-			self.X, self.y = translate_features(parse_features(features_file))
+			parsed_features = parse_features(features_file)
+			self.X = parsed_features['features'].tolist()
+			self.y = parsed_features['label'].tolist()
 
 		if features is not None:
-			self.X, self.y = translate_features(features)
+			self.X = features['features'].tolist()
+			self.y = features['label'].tolist()
 
 		if X is not None:
 			self.X = X
@@ -175,7 +176,7 @@ class Dataset():
 			y, labels = labels_to_indexes(y)
 
 		if shuffle:
-			X, y = shuffle_dataset(X, y)
+			X, y, _ = shuffle_dataset(X, y)
 
 		if balance:
 			X, y = balance_dataset(X, y)
@@ -191,12 +192,15 @@ class Dataset():
 		return X, y, test_X, test_y, labels
 
 class ImageTransformer():
-	def __init__(self, resize_to=None, rgb=False, bw=False, hflip=False, vflip=False):
+	def __init__(self, resize_to=None, bw=False, hflip=False, vflip=False, rotation_steps=0, max_rotation_angle=0, blur_steps=0, max_blur_sigma=0):
 		self.resize_to = resize_to
-		self.rgb = rgb
 		self.bw = bw
 		self.hflip = hflip
 		self.vflip = vflip
+		self.rotation_steps = rotation_steps
+		self.max_rotation_angle = max_rotation_angle
+		self.blur_steps = blur_steps
+		self.max_blur_sigma = max_blur_sigma
 
 	def transform(self, img):
 		img_variants = []
@@ -224,6 +228,22 @@ class ImageTransformer():
 		if self.hflip and self.vflip:
 			img_variants.append(np.fliplr(np.flipud(img)))
 			suffixes.append('_hvflip')
+
+		if self.rotation_steps > 0 and self.max_rotation_angle > 0:
+			for i in range(self.rotation_steps):
+				angle = self.max_rotation_angle * (i+1)/self.rotation_steps
+				img_variants.append(sp.ndimage.interpolation.rotate(img, angle, reshape=False))
+				suffixes.append('_rotate_' + str(angle))
+				img_variants.append(sp.ndimage.interpolation.rotate(img, -angle, reshape=False))
+				suffixes.append('_rotate_' + str(-angle))
+
+		if self.blur_steps > 0 and self.max_blur_sigma > 0:
+			for i in range(self.blur_steps):
+				sigma = self.max_blur_sigma * (i+1)/self.blur_steps
+				img_variants.append(sp.ndimage.filters.gaussian_filter(img, sigma))
+				suffixes.append('_blur_' + str(sigma))
+
+		# TODO: generate combinations of flip, rotation and blur
 
 		return img_variants, suffixes
 
@@ -253,7 +273,7 @@ class ImageDataset(Dataset):
 				X += variants
 				y += [self.y[i]] * len(variants)
 
-				if self.names is not None:
+				if self.names:
 					basename = self.names[i]
 					if len(basename.split('.')) > 2:
 						raise NotImplementedError('Filenames with . not allowed')
@@ -263,11 +283,11 @@ class ImageDataset(Dataset):
 
 			X = np.asarray(X)
 			y = np.asarray(y)
-			names = np.asarray(names)
+			names = np.asarray(names) if self.names is not None else None
 		else:
 			X = np.asarray(self.X)
 			y = np.asarray(self.y)
-			names = np.asarray(self.names)
+			names = np.asarray(self.names) if self.names is not None else None
 
 
 		if shuffle:
