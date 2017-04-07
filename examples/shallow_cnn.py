@@ -5,7 +5,7 @@ from tfwrapper.nets import ShallowCNN
 from tfwrapper.datasets import mnist
 
 dataset = mnist(size=10000, verbose=True)
-X, y, test_X, test_y, _ = dataset.getdata(normalize=True, balance=True, shuffle=True, onehot=True, split=True)
+X, y, test_X, test_y, _, _ = dataset.getdata(normalize=True, balance=True, shuffle=True, onehot=True, split=True)
 X = np.reshape(X, [-1, 28, 28, 1])
 
 cnn = ShallowCNN([28, 28, 1], 10, name='ExampleShallowCNN')

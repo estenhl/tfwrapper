@@ -8,7 +8,7 @@ from tfwrapper.datasets import mnist
 from utils import curr_path
 
 dataset = mnist(size=10000, verbose=True)
-X, y, test_X, test_y, _ = dataset.getdata(normalize=True, balance=True, shuffle=True, onehot=True, split=True)
+X, y, test_X, test_y, _, _ = dataset.getdata(normalize=True, balance=True, shuffle=True, onehot=True, split=True)
 X = np.reshape(X, [-1, 28, 28, 1])
 
 with tf.Session() as sess:

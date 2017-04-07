@@ -1,7 +1,7 @@
 import os
 import cv2
+import scipy.ndimage
 import numpy as np
-import scipy as sp
 from collections import Counter
 
 from tfwrapper.utils.data import parse_features
@@ -229,15 +229,15 @@ class ImageTransformer():
 		if self.rotation_steps > 0 and self.max_rotation_angle > 0:
 			for i in range(self.rotation_steps):
 				angle = self.max_rotation_angle * (i+1)/self.rotation_steps
-				img_variants.append(sp.ndimage.interpolation.rotate(img, angle, reshape=False))
+				img_variants.append(scipy.ndimage.interpolation.rotate(img, angle, reshape=False))
 				suffixes.append('_rotate_' + str(angle))
-				img_variants.append(sp.ndimage.interpolation.rotate(img, -angle, reshape=False))
+				img_variants.append(scipy.ndimage.interpolation.rotate(img, -angle, reshape=False))
 				suffixes.append('_rotate_' + str(-angle))
 
 		if self.blur_steps > 0 and self.max_blur_sigma > 0:
 			for i in range(self.blur_steps):
 				sigma = self.max_blur_sigma * (i+1)/self.blur_steps
-				img_variants.append(sp.ndimage.filters.gaussian_filter(img, sigma))
+				img_variants.append(scipy.ndimage.filters.gaussian_filter(img, sigma))
 				suffixes.append('_blur_' + str(sigma))
 
 		# TODO: generate combinations of flip, rotation and blur
