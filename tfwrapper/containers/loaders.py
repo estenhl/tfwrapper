@@ -1,9 +1,9 @@
 import numpy as np
 import tensorflow as tf
 from tfwrapper import Dataset
+from tfwrapper.containers import ImageContainer
 from tfwrapper.containers import features
 from tfwrapper.containers.image_augment import ImagePreprocess
-from tfwrapper.containers.image_dataset import ImageContainer
 from tfwrapper.nets.pretrained.pretrained_model import PretrainedModel
 
 
@@ -99,3 +99,6 @@ class ImageLoader():
                     yield batch_X, batch_Y
                     batch_X = []
                     batch_Y = []
+
+
+class BatchLoader

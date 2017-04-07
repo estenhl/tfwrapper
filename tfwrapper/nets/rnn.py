@@ -6,11 +6,11 @@ from .neural_net import NeuralNet
 from tfwrapper.utils.data import batch_data
 
 class RNN(NeuralNet):
-	def __init__(self, seq_shape, seq_length, num_hidden, classes, sess=None, graph=None, name='RNN'):
+	def __init__(self, seq_shape, seq_length, num_hidden, classes, sess=None, name='RNN'):
 		X_shape = seq_shape + [seq_length]
 		layers = [self.rnn(seq_shape, seq_length, num_hidden, classes)]
 
-		super().__init__(X_shape, classes, layers, sess=sess, graph=graph, name=name)
+		super().__init__(X_shape, classes, layers, sess=sess, name=name)
 
 	def rnn(self, seq_shape, seq_length, num_hidden, classes, name='rnn'):
 		def create_layer(x):
