@@ -8,11 +8,11 @@ from tfwrapper.utils.data import batch_data
 class RNN(NeuralNet):
 	def __init__(self, seq_shape, seq_length, num_hidden, classes, sess=None, name='RNN'):
 		X_shape = seq_shape + [seq_length]
-		layers = [self.rnn(seq_shape, seq_length, num_hidden, classes)]
+		layers = [self.rnn(seq_shape, seq_length, num_hidden, classes, name=name)]
 
 		super().__init__(X_shape, classes, layers, sess=sess, name=name)
 
-	def rnn(self, seq_shape, seq_length, num_hidden, classes, name='rnn'):
+	def rnn(self, seq_shape, seq_length, num_hidden, classes, name):
 		def create_layer(x):
 			x = tf.transpose(x, [1, 0, 2])
 			x = tf.reshape(x, [-1] + seq_shape)
@@ -23,7 +23,7 @@ class RNN(NeuralNet):
 
 			weight = tf.Variable(tf.random_normal([num_hidden, classes]), name=name + '_W')
 			bias = tf.Variable(tf.random_normal([classes]), name=name + '_b')
-			return tf.add(tf.matmul(outputs[-1], weight), bias, name=name)
+			return tf.add(tf.matmul(outputs[-1], weight), bias, name=name + '/pred')
 
 		return create_layer
 
