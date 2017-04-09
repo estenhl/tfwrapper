@@ -4,9 +4,9 @@ import tensorflow as tf
 from abc import ABC, abstractmethod
 
 from .dataset import split_dataset
+from tfwrapper.metrics import loss
+from tfwrapper.metrics import accuracy
 from tfwrapper.utils.data import batch_data
-from tfwrapper.utils.metrics import loss
-from tfwrapper.utils.metrics import accuracy
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class TFSession():

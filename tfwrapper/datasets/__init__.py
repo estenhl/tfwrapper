@@ -5,8 +5,9 @@ import tarfile
 import zipfile
 import urllib.request
 
-from struct import unpack
 from numpy import zeros, uint8, float32
+from shutil import copyfile
+from struct import unpack
 
 from tfwrapper import Dataset
 from tfwrapper import TokensDataset
@@ -182,8 +183,49 @@ def download_ptb(verbose=False):
 
 	return data_file
 
+def download_flowers(verbose=False):
+	url = 'http://www.robots.ox.ac.uk/~vgg/data/flowers/17/17flowers.tgz'
+
+	root_path, data_folder, labels_file = setup_structure('flowers')
+
+	if not len(os.listdir(data_folder)) > 1000:
+		tgz_file = os.path.join(root_path, '17flowers.tgz')
+		if not os.path.isfile(tgz_file):
+			download_file(url, tgz_file, verbose=verbose)
+
+		with tarfile.open(tgz_file, 'r') as f:
+			if verbose:
+				print('Extracting flowers data')
+			for item in f:
+				f.extract(item, root_path)
+
+		tmp_folder = os.path.join(root_path, 'jpg')
+		for filename in os.listdir(tmp_folder):
+			src = os.path.join(tmp_folder, filename)
+
+			if filename.endswith('.jpg'):
+				dest = os.path.join(data_folder, filename)
+				copyfile(src, dest)
+
+			os.remove(src)
+		os.rmdir(tmp_folder)
+		os.remove(tgz_file)
+
+	if not os.path.isfile(labels_file):
+		labels = ['flower' + str(x) for x in range(17)]
+		with open(labels_file, 'w') as f:
+			for i in range(0, 17):
+				for j in range(1, 80):
+					index = str((i * 80) + j)
+					while len(index) < 4:
+						index = '0' + index
+					f.write('%s,image_%s.jpg\r\n' % (labels[i], index))
+
+	return data_folder, labels_file
+
+
 def checkboxes(verbose=False):
-	root_folder=os.path.join(curr_path, 'checkboxes')
+	root_folder = os.path.join(curr_path, 'checkboxes')
 	if not os.path.isdir(root_folder):
 		raise NotImplementedError('Checkboxes dataset is missing')
 
@@ -202,4 +244,9 @@ def mnist(size=None, verbose=False):
 def penn_tree_bank(verbose=False):
 	data_file = download_ptb(verbose=verbose)
 	dataset = TokensDataset(tokens_file=data_file)
+	return dataset
+
+def flowers(verbose=False):
+	data_path, labels_file = download_flowers(verbose=verbose)
+	dataset = ImageDataset(root_folder=data_path, labels_file=labels_file, verbose=verbose)
 	return dataset
