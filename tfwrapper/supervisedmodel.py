@@ -84,7 +84,7 @@ class SupervisedModel(ABC):
 
 	@staticmethod
 	def out(weight_shape, bias_size, name):
-		return lambda x: tf.add(tf.matmul(x, tf.Variable(tf.random_normal(weight_shape))), tf.Variable(tf.random_normal([bias_size])), name=name)
+		return lambda x: tf.add(tf.matmul(x, tf.Variable(tf.truncated_normal(weight_shape, stddev=0.02))), tf.Variable(tf.zeros([bias_size])), name=name)
 
 	def checkpoint_variables(self, sess):
 		for variable in tf.global_variables():
