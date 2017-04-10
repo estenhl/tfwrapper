@@ -1,8 +1,8 @@
 import numpy as np
 
-from tfwrapper.utils.metrics import loss
-from tfwrapper.utils.metrics import accuracy
-from tfwrapper.utils.metrics import confusion_matrix
+from tfwrapper.metrics import loss
+from tfwrapper.metrics import accuracy
+from tfwrapper.metrics import confusion_matrix
 
 def create_data():
 	y = np.asarray([
