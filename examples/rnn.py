@@ -12,5 +12,3 @@ X, y, test_X, test_y, _, _ = dataset.getdata(normalize=True, onehot=True, split=
 with tf.Session() as sess:
 	rnn = RNN([28], 28, 128, 10, sess=sess, name='ExampleRNN')
 	rnn.train(X, y, epochs=10, sess=sess, verbose=True)
-	_, acc = rnn.validate(test_X, test_y, sess=sess)
-	print('Test accuracy: %d%%' % (acc*100))
