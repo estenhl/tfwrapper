@@ -54,9 +54,15 @@ def translate_features(all_features):
 
 	return np.asarray(X), np.asarray(y)
 
-def labels_to_indexes(y):
+def labels_to_indexes(y, sort=True):
 	labels = []
 	indices = []
+
+	if sort:
+		for label in y:
+			if label not in labels:
+				labels.append(label)
+		labels = sorted(labels)
 
 	for label in y:
 		if label not in labels:
@@ -77,7 +83,6 @@ def split_dataset(X, y, ratio=0.8):
 def parse_datastructure(root, suffix='.jpg', verbose=False):
 	X = []
 	y = []
-	names = []
 
 	for foldername in os.listdir(root):
 		src = os.path.join(root, foldername)
@@ -85,67 +90,55 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
 			for filename in os.listdir(src):
 				if filename.endswith(suffix):
 					src_file = os.path.join(src, filename)
-					img = cv2.imread(src_file)
-					X.append(img)
+					X.append(src_file)
 					y.append(foldername)
-					names.append(filename)
 				elif verbose:
 					print('Skipping filename ' + filename)
 		elif verbose:
 			print('Skipping foldername ' + foldername)
 
-	return np.asarray(X), np.asarray(y), np.asarray(names)
+	return np.asarray(X), np.asarray(y)
 
 def parse_folder_with_labels_file(root, labels_file, verbose=False):
 	X = []
 	y = []
-	names = []
 
 	with open(labels_file, 'r') as f:
 		for line in f.readlines():
 			label, filename = line.split(',')
 			src_file = os.path.join(root, filename).strip()
 			if os.path.isfile(src_file):
-				img = cv2.imread(src_file)
-				X.append(img)
+				X.append(src_file)
 				y.append(label)
-				names.append(filename)
 			elif verbose:
 				print('Skipping filename ' + src_file)
 
-	return np.asarray(X), np.asarray(y), np.asarray(names)
+	return np.asarray(X), np.asarray(y)
 
-def parse_tokens_file(filename):
-	tokens = []
+def drop_classes(X, y, *, keep):
+	filtered_X = []
+	filtered_y = []
 
-	with open(filename, 'r') as f:
-		for line in f.readlines():
-			tokens += [x.strip() for x in line.split(' ') if len(x.strip()) > 0]
+	for i in range(len(X)):
+		if y[i] in keep:
+			filtered_X.append(X[i])
+			filtered_y.append(y[i])
 
-	return tokens
-
-def tokens_to_indexes(tokens, add_none=True):
-	tokenized_sequence = []
-	indexes = []
-	tokens_dict = {}
-
-	if add_none:
-		indexes.append(None)
-		tokens_dict[None] = 0
-
-	for token in tokens:
-		if token not in tokens_dict:
-			tokens_dict[token] = len(indexes)
-			indexes.append(token)
-		tokenized_sequence.append(tokens_dict[token])
-
-	return np.asarray(tokenized_sequence), np.asarray(indexes), np.asarray(tokens_dict)
-
+	return np.asarray(filtered_X), np.asarray(filtered_y)
 
 class Dataset():
+
+	@property
+	def X(self):
+		return self._X
+
+	@property
+	def y(self):
+		return self._y
+
 	def __init__(self, X=np.asarray([]), y=np.asarray([]), labels=np.asarray([]), features=None, features_file=None, verbose=False):
-		self.X = X
-		self.y = y
+		self._X = X
+		self._y = y
 		self.labels = labels
 
 		if features_file is not None:
@@ -158,176 +151,213 @@ class Dataset():
 			self.y = features['label'].tolist()
 
 	def normalize(self):
-		return Dataset(X=normalize_array(self.X), y=self.y, labels=self.labels)
+		return self.__class__(X=normalize_array(self._X), y=self._y, labels=self.labels)
 
 	def shuffle(self):
-		X, y = shuffle_dataset(self.X, self.y)
+		X, y = shuffle_dataset(self._X, self._y)
 
-		return Dataset(X=X, y=y, labels=self.labels)
+		return self.__class__(X=X, y=y, labels=self.labels)
 
 	def balance(self):
-		X, y = balance_dataset(self.X, self.y)
+		X, y = balance_dataset(self._X, self._y)
 
-		return Dataset(X=X, y=y, labels=self.labels)
+		return self.__class__(X=X, y=y, labels=self.labels)
 
 	def translate_labels(self):
-		y, labels = labels_to_indexes(self.y)
+		y, labels = labels_to_indexes(self._y)
 
-		return Dataset(X=self.X, y=y, labels=labels)
+		return self.__class__(X=self._X, y=y, labels=labels)
 
 	def onehot(self):
-		return Dataset(X=self.X, y=onehot_array(self.y), labels=self.labels)
+		return self.__class__(X=self._X, y=onehot_array(self._y), labels=self.labels)
 
 	def split(self, ratio=0.8):
-		X, y, test_X, test_y = split_dataset(self.X, self.y, ratio=ratio)
-		train_dataset = Dataset(X=X, y=y, labels=self.labels)
-		test_dataset = Dataset(X=test_X, y=test_y, labels=self.labels)
+		X, y, test_X, test_y = split_dataset(self._X, self._y, ratio=ratio)
+		train_dataset = self.__class__(X=X, y=y, labels=self.labels)
+		test_dataset = self.__class__(X=test_X, y=test_y, labels=self.labels)
 
 		return train_dataset, test_dataset
 
-class ImageTransformer():
-	def __init__(self, resize_to=None, bw=False, hflip=False, vflip=False, rotation_steps=0, max_rotation_angle=0, blur_steps=0, max_blur_sigma=0):
-		self.resize_to = resize_to
-		self.bw = bw
-		self.hflip = hflip
-		self.vflip = vflip
-		self.rotation_steps = rotation_steps
-		self.max_rotation_angle = max_rotation_angle
-		self.blur_steps = blur_steps
-		self.max_blur_sigma = max_blur_sigma
+	def drop_classes(self, *, drop=None, keep=None):
+		if drop is None and keep is None:
+			raise InvalidArgumentException('When dropping classes, either a list of classes to drop or a list of classes to keep must be supplied')
+		elif drop is None:
+			_keep = set(self._y) & set(keep)
+		else:
+			_keep = set(self._y) - set(drop)
 
-	def transform(self, img):
-		img_variants = []
-		suffixes = ['']
+		X, y = drop_classes(self._X, self._y, keep=_keep)
 
-		if self.resize_to is not None:
-			img = cv2.resize(img, self.resize_to)
+		return self.__class__(X=X, y=y, labels=self.labels)
 
-		if self.bw:
-			img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	def __len__(self):
+		return len(self._X)
 
-		img_variants.append(img)
+from tfwrapper import twimage
 
-		if self.hflip:
-			img_variants.append(np.fliplr(img))
-			suffixes.append('_hflip')
+RESIZE = "resize"
+TRANSFORM_BW = "bw"
+FLIP_LR = "fliplr"
+FLIP_UD = "flipud"
 
-		if self.vflip:
-			img_variants.append(np.flipud(img))
-			suffixes.append('_vflip')
+def create_name(name, suffixes):
+    img_part = name.rsplit(".", 1)
 
-		if self.hflip and self.vflip:
-			img_variants.append(np.fliplr(np.flipud(img)))
-			suffixes.append('_hvflip')
+    suffix_string = "_".join(suffixes)
 
-		if self.rotation_steps > 0 and self.max_rotation_angle > 0:
-			for i in range(self.rotation_steps):
-				angle = self.max_rotation_angle * (i+1)/self.rotation_steps
-				img_variants.append(scipy.ndimage.interpolation.rotate(img, angle, reshape=False))
-				suffixes.append('_rotate_' + str(angle))
-				img_variants.append(scipy.ndimage.interpolation.rotate(img, -angle, reshape=False))
-				suffixes.append('_rotate_' + str(-angle))
-
-		if self.blur_steps > 0 and self.max_blur_sigma > 0:
-			for i in range(self.blur_steps):
-				sigma = self.max_blur_sigma * (i+1)/self.blur_steps
-				img_variants.append(scipy.ndimage.filters.gaussian_filter(img, sigma))
-				suffixes.append('_blur_' + str(sigma))
-
-		# TODO: generate combinations of flip, rotation and blur
-
-		return img_variants, suffixes
-
-# class ImageDataset(Dataset):
-# 	names = None
-#
-# 	def __init__(self, X=None, y=None, names=None):
-# 		super().__init__(X=X, y=y)
-# 		self.names = names
-#
-#
-# 	def getdata(self, normalize=False, balance=False, shuffle=False, onehot=False, split=False, transformer=None):
-# 		if transformer:
-# 			X = []
-# 			y = []
-# 			names = []
-#
-# 			for i in range(len(self.X)):
-# 				variants, suffixes = transformer.transform(self.X[i])
-# 				X += variants
-# 				y += [self.y[i]] * len(variants)
-#
-# 				if self.names:
-# 					basename = self.names[i]
-# 					if len(basename.split('.')) > 2:
-# 						raise NotImplementedError('Filenames with . not allowed')
-#
-# 					prefix, filetype = basename.split('.')
-# 					names += [prefix + suffix + '.' + filetype for suffix in suffixes]
-#
-# 			X = np.asarray(X)
-# 			y = np.asarray(y)
-# 			names = np.asarray(names) if self.names is not None else None
-# 		else:
-# 			X = np.asarray(self.X)
-# 			y = np.asarray(self.y)
-# 			names = np.asarray(self.names) if self.names is not None else None
-#
-#
-# 		if shuffle:
-# 			X, y, names = shuffle_dataset(X, y, names)
-#
-#
-# 		X, y, test_X, test_y, labels = super().getdata(X=X, y=y, normalize=normalize, balance=balance,
-# 													   onehot=onehot, split=split)
-# 		return X, y, test_X, test_y, labels, names
+    return "{}_{}.{}".format(img_part[0], suffix_string, img_part[1])
 
 
-class TokensDataset(Dataset):
-	tokens = []
-	indexes = []
-	tokens_dict = {}
+class ImagePreprocess():
+    def __init__(self):
+        self.augs = {}
 
-	def __init__(self, tokens=None, tokens_file=None):
-		if tokens_file is not None:
-			tokens = parse_tokens_file(tokens_file)
+    # (width, heiht)
+    def resize(self, img_size=(299, 299)):
+        print('SAT RESIZE IN ' + str(self))
+        self.augs[RESIZE] = img_size
 
-		if tokens is not None:
-			self.tokens, self.indexes, self.tokens_dict = tokens_to_indexes(tokens)
+    def bw(self):
+        self.augs[TRANSFORM_BW] = True
 
-	def token_to_index(self, token):
-		return self.tokens_dict[token]
+    def append_flip_lr(self):
+        self.augs[FLIP_LR] = True
 
-	def index_to_token(self, index):
-		return self.indexes[index]
+    def append_flip_ud(self):
+        self.augs[FLIP_UD] = True
 
-	def tokens_to_indexes(self, tokens):
-		indexes = []
+    def apply_file(self, image_path, name):
+        img = twimage.imread(image_path)
+        return self.apply(img, name)
 
-		for token in tokens:
-			indexes.append(self.token_to_index(token))
+    def apply(self, img, name):
+        img_versions = []
+        img_names = []
 
-		return np.asarray(indexes)
+        org_suffixes = []
 
-	def indexes_to_tokens(self, indexes):
-		tokens = []
+        if RESIZE in self.augs:
+            img = twimage.resize(img, self.augs[RESIZE])
+            #Should check for size
+            org_suffixes.append(RESIZE)
+        if TRANSFORM_BW in self.augs:
+            img = twimage.bw(img, shape=3)
+            org_suffixes.append(TRANSFORM_BW)
 
-		for index in indexes:
-			tokens.append(self.index_to_token(index))
+        img_versions.append(img)
+        img_names.append(create_name(name, org_suffixes))
 
-		return np.asarray(tokens)
+        # img_versions.append(img)
+        # img_names.append(org_suffixes)
+        # #Append
+        if FLIP_LR in self.augs:
+            img_versions.append(np.fliplr(img))
+            org_suffixes.append(FLIP_LR)
+            img_names.append(create_name(name, org_suffixes))
+            org_suffixes.remove(FLIP_LR)
 
-	def getdata(self, sequence_length, onehot=False, shuffle=False, split=False):
-		X = []
-		y = []
+        if FLIP_UD in self.augs:
+            img_versions.append(np.flipud(img))
+            org_suffixes.append(FLIP_UD)
+            img_names.append(create_name(name, org_suffixes))
+            org_suffixes.remove(FLIP_UD)
 
-		for i in range(sequence_length):
-			x = [self.token_to_index(None)] * ((sequence_length - 1) - i) + self.tokens[:i + 1]
-			X.append(x)
-			y.append(self.tokens[i + 1])
+        return img_names, img_versions
 
-		for i in range(len(self.tokens) - sequence_length):
-			X.append(self.tokens[i:i + sequence_length])
-			y.append(self.tokens[i + sequence_length])
+class ImageDataset(Dataset):
 
-		return super().getdata(X=X, y=y, onehot=onehot, shuffle=shuffle, split=split)
+	@property
+	def X(self):
+		X, _, _ = self.read_batch(0)
+		return X
+
+	@property
+	def y(self):
+		_, y, _ = self.read_batch(0)
+		return y
+
+	def __init__(self, X=np.asarray([]), y=np.asarray([]), labels=np.asarray([]), root_folder=None, labels_file=None):
+		_X = X
+		_y = y
+
+		if labels_file is not None and root_folder is not None:
+			_X, _y = parse_folder_with_labels_file(root_folder, labels_file)
+		elif root_folder is not None:
+			_X, _y = parse_datastructure(root_folder)
+
+		self.cursor = 0
+		super().__init__(X=_X, y=_y, labels=labels)
+
+	def next_batch(self, batch_size=128):
+		while self.cursor + batch_size < len(self):
+			batch_X, batch_y, cursor = self.read_batch(self.cursor)
+			self.cursor = cursor
+			yield Dataset(X=batch_X, y=batch_y, labels=self.labels)
+
+	def read_batch(self, cursor, batch_size=float('inf')):
+		batch_X = []
+		batch_y = []
+
+		while len(batch_X) < batch_size and cursor < len(self):
+			_, imgs = self.preprocessor.apply_file(self._X[cursor], 'Fucknames.jpg')
+			batch_X += imgs
+			batch_y += [self._y[cursor]] * len(imgs)
+			cursor += 1
+
+		X = np.asarray(batch_X)
+		y = np.asarray(batch_y)
+
+		return X, y, cursor
+
+# class ImageTransformer():
+# 	def __init__(self, resize_to=None, bw=False, hflip=False, vflip=False, rotation_steps=0, max_rotation_angle=0, blur_steps=0, max_blur_sigma=0):
+# 		self.resize_to = resize_to
+# 		self.bw = bw
+# 		self.hflip = hflip
+# 		self.vflip = vflip
+# 		self.rotation_steps = rotation_steps
+# 		self.max_rotation_angle = max_rotation_angle
+# 		self.blur_steps = blur_steps
+# 		self.max_blur_sigma = max_blur_sigma
+
+# 	def transform(self, img):
+# 		img_variants = []
+# 		suffixes = ['']
+
+# 		if self.resize_to is not None:
+# 			img = cv2.resize(img, self.resize_to)
+
+# 		if self.bw:
+# 			img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# 		img_variants.append(img)
+
+# 		if self.hflip:
+# 			img_variants.append(np.fliplr(img))
+# 			suffixes.append('_hflip')
+
+# 		if self.vflip:
+# 			img_variants.append(np.flipud(img))
+# 			suffixes.append('_vflip')
+
+# 		if self.hflip and self.vflip:
+# 			img_variants.append(np.fliplr(np.flipud(img)))
+# 			suffixes.append('_hvflip')
+
+# 		if self.rotation_steps > 0 and self.max_rotation_angle > 0:
+# 			for i in range(self.rotation_steps):
+# 				angle = self.max_rotation_angle * (i+1)/self.rotation_steps
+# 				img_variants.append(scipy.ndimage.interpolation.rotate(img, angle, reshape=False))
+# 				suffixes.append('_rotate_' + str(angle))
+# 				img_variants.append(scipy.ndimage.interpolation.rotate(img, -angle, reshape=False))
+# 				suffixes.append('_rotate_' + str(-angle))
+
+# 		if self.blur_steps > 0 and self.max_blur_sigma > 0:
+# 			for i in range(self.blur_steps):
+# 				sigma = self.max_blur_sigma * (i+1)/self.blur_steps
+# 				img_variants.append(scipy.ndimage.filters.gaussian_filter(img, sigma))
+# 				suffixes.append('_blur_' + str(sigma))
+
+# 		# TODO: generate combinations of flip, rotation and blur
+
+# 		return img_variants, suffixes
