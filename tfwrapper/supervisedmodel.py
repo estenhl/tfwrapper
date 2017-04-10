@@ -110,15 +110,16 @@ class SupervisedModel(ABC):
 		if val_X is None and validate:
 			X, y, val_X, val_y = split_dataset(X, y)
 
-		X_batches = batch_data(X, self.batch_size)
-		y_batches = batch_data(y, self.batch_size)
-		num_batches = len(X_batches)
-
 		if verbose:
 			print('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
 
 		with TFSession(sess, self.graph, init=True) as sess:
 			for epoch in range(epochs):
+				rand_idx = np.arange(len(X))
+				np.random.shuffle(rand_idx)
+				X_batches = batch_data(X[rand_idx], self.batch_size)
+				y_batches = batch_data(y[rand_idx], self.batch_size)
+				num_batches = len(X_batches)
 				for i in range(num_batches):
 					sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i], self.lr: self.learning_rate})
 
