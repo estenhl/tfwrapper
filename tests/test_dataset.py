@@ -145,3 +145,64 @@ def test_split():
 	assert np.array_equal(train_dataset.y, np.zeros(80))
 	assert np.array_equal(test_dataset.X, np.ones(20))
 	assert np.array_equal(test_dataset.y, np.ones(20))
+
+def test_length():
+	X = np.zeros(100)
+	y = np.zeros(100)
+	dataset = Dataset(X=X, y=y)
+
+	assert len(X) == len(dataset)
+
+def test_drop_classes():
+	X = np.asarray([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+	y = np.asarray([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+	dataset = Dataset(X=X, y=y)
+	dataset = dataset.drop_classes(drop=[2, 3])
+
+	assert 6 == len(dataset.X)
+	assert 6 == len(dataset.y)
+
+def test_keep_classes():
+	X = np.asarray([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+	y = np.asarray([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+	dataset = Dataset(X=X, y=y)
+	dataset = dataset.drop_classes(keep=[1, 2, 3])
+
+	assert 9 == len(dataset.X)
+	assert 9 == len(dataset.y)
+
+def test_add_datasets():
+	X1 = np.arange(10)
+	y1 = np.arange(10)
+	X2 = np.arange(10) + 10
+	y2 = np.arange(10) + 10
+
+	dataset1 = Dataset(X=X1, y=y1)
+	dataset2 = Dataset(X=X2, y=y2)
+	dataset = dataset1 + dataset2
+
+	assert len(X1) + len(X2) == len(dataset)
+	for i in range(20):
+		assert i in dataset.X
+		assert dataset.X[i] == dataset.y[i]
+
+def test_slice_datasets():
+	X = np.arange(10)
+	y = np.arange(10)
+	dataset = Dataset(X=X, y=y)
+	dataset = dataset[:5]
+
+	assert 5 == len(dataset)
+	for i in range(5):
+		assert i in dataset.X
+		assert dataset.X[i] == dataset.y[i]
+
+def test_index_datasets():
+	X = np.arange(10)
+	y = np.arange(10)
+	dataset = Dataset(X=X, y=y)
+	dataset = dataset[5]
+
+	assert 1 == len(dataset)
+	assert np.array_equal(np.asarray([5]), dataset.X)
+	assert np.array_equal(np.asarray([5]), dataset.y)

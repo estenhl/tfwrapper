@@ -225,11 +225,7 @@ def download_flowers(verbose=False):
 
 
 def checkboxes(verbose=False):
-	root_folder = os.path.join(curr_path, 'checkboxes')
-	if not os.path.isdir(root_folder):
-		raise NotImplementedError('Checkboxes dataset is missing')
-
-	return ImageDataset(root_folder=root_folder), root_folder
+	raise NotImplementedError('Deprecated dataset')
 
 def cats_and_dogs(verbose=False):
 	data_path, labels_file = download_cats_and_dogs(verbose=verbose)
@@ -241,10 +237,8 @@ def mnist(size=None, verbose=False):
 	dataset = Dataset(X=X, y=np.asarray(y).flatten())
 	return dataset
 
-"""
 def flowers(verbose=False):
 	data_path, labels_file = download_flowers(verbose=verbose)
 	dataset = ImageDataset(root_folder=data_path, labels_file=labels_file, verbose=verbose)
 	return dataset
 
-"""

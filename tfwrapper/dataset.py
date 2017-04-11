@@ -192,6 +192,25 @@ class Dataset():
 	def __len__(self):
 		return len(self._X)
 
+	def __add__(self, other):
+		X = np.concatenate((self._X, other._X))
+		y = np.concatenate((self._y, other._y))
+
+		return self.__class__(X=X, y=y, labels=self.labels)
+
+	def __getitem__(self, val):
+		if type(val) not in [slice, int]:
+			raise NotImplementedError('Dataset only handles slices and ints')
+
+		X = self._X[val]
+		y = self._y[val]
+
+		if type(val) is int:
+			X = np.asarray([X])
+			y = np.asarray([y])
+
+		return Dataset(X=X, y=y)
+
 from tfwrapper import twimage
 
 RESIZE = "resize"
