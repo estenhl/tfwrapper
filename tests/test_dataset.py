@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 
 from tfwrapper import Dataset
+from tfwrapper import ImageDataset
 from tfwrapper.utils.data import write_features
 
 from .utils import curr_path
@@ -45,16 +46,17 @@ def create_tmp_dir(root=os.path.join(curr_path, 'tmp'), size=10):
 			cv2.imwrite(path, img)
 
 	return root
-"""
+
 def test_create_from_datastructure():
 	size = 10
 	root_folder = create_tmp_dir(size=size)
 	dataset = ImageDataset(root_folder=root_folder)
-	remove_dir(root_folder)
 
-
+	assert size == len(dataset)
 	assert size == len(dataset.X)
 	assert size == len(dataset.y)
+
+	remove_dir(root_folder)
 
 def create_tmp_labels_file(root_folder, name):
 	with open(name, 'w') as f:
@@ -71,14 +73,13 @@ def test_create_from_labels_file():
 	labels_file = create_tmp_labels_file(root_folder, labels_file)
 
 	dataset = ImageDataset(root_folder=root_folder, labels_file=labels_file)
+
+	assert size / 2 == len(dataset.X)
+	assert size / 2 == len(dataset.y)
+
 	remove_dir(parent)
 	os.remove(labels_file)
-	X, y, _, _, _, _ = dataset.getdata()
 
-
-	assert size / 2 == len(X)
-	assert size / 2 == len(y)
-"""
 def test_normalize():
 	X = np.asarray([5, 4, 3])
 	y = np.asarray([1, 1, 1])
@@ -106,11 +107,12 @@ def test_translate_labels():
 	y = np.asarray(['Zero', 'One', 'Two'])
 	dataset = Dataset(X=X, y=y)
 	dataset = dataset.translate_labels()
+	labels = dataset.labels
 
 	assert 3 == len(dataset.labels)
-	assert 'Zero' == dataset.labels[np.where(dataset.y==0)[0][0]]
-	assert 'One' == dataset.labels[np.where(dataset.y==1)[0][0]]
-	assert 'Two' == dataset.labels[np.where(dataset.y==2)[0][0]]
+	assert 'Zero' == labels[dataset.y[np.where(dataset.X==0)[0][0]]]
+	assert 'One' == labels[dataset.y[np.where(dataset.X==1)[0][0]]]
+	assert 'Two' == labels[dataset.y[np.where(dataset.X==2)[0][0]]]
 
 def test_shuffle():
 	X = np.concatenate([np.zeros(100), np.ones(100)])

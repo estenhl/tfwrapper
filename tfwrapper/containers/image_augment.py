@@ -1,6 +1,6 @@
 import numpy as np
 from tfwrapper import twimage
-from tfwrapper.containers.image_dataset import ImageContainer
+from tfwrapper.containers.image_container import ImageContainer
 
 
 RESIZE = "resize"

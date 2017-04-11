@@ -18,6 +18,12 @@ def shuffle_dataset(X, y):
 def balance_dataset(X, y):
 	assert len(X) == len(y)
 
+	is_onehot = False
+	if len(y.shape) > 1 and y.shape[-1] > 1:
+		is_onehot = True
+		print('TRANSLATING')
+		y = [np.argmax(y_) for y_ in y]
+
 	counts = Counter(y)
 	min_count = min([counts[x] for x in counts])
 
@@ -34,6 +40,9 @@ def balance_dataset(X, y):
 			balanced_y.append(y[i])
 		counters[y[i]] = counters[y[i]] + 1
 
+	if is_onehot:
+		y = onehot(y)
+
 	return np.asarray(balanced_X), np.asarray(balanced_y)
 
 def onehot_array(arr):
@@ -43,16 +52,6 @@ def onehot_array(arr):
 		onehot[i][arr[i]] = 1
 
 	return np.asarray(onehot)
-
-def translate_features(all_features):
-	X = []
-	y = []
-
-	for features in all_features:
-		X.append(features['features'])
-		y.append(features['label'])
-
-	return np.asarray(X), np.asarray(y)
 
 def labels_to_indexes(y, sort=True):
 	labels = []
@@ -143,12 +142,12 @@ class Dataset():
 
 		if features_file is not None:
 			parsed_features = parse_features(features_file)
-			self.X = parsed_features['features'].tolist()
-			self.y = parsed_features['label'].tolist()
+			self._X = np.asarray(parsed_features['features'].tolist())
+			self._y = np.asarray(parsed_features['label'].tolist())
 
 		if features is not None:
-			self.X = features['features'].tolist()
-			self.y = features['label'].tolist()
+			self._X = np.asarray(features['features'].tolist())
+			self._y = np.asarray(features['label'].tolist())
 
 	def normalize(self):
 		return self.__class__(X=normalize_array(self._X), y=self._y, labels=self.labels)
@@ -265,6 +264,7 @@ class ImagePreprocess():
         return img_names, img_versions
 
 class ImageDataset(Dataset):
+	preprocessor = ImagePreprocess()
 
 	@property
 	def X(self):
