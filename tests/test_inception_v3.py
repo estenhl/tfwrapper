@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from tfwrapper.nets.pretrained import InceptionV3
 
-from utils import curr_path
+from .utils import curr_path
 
 cat_img = os.path.join(curr_path, 'data', 'cat.jpg')
 

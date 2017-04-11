@@ -7,26 +7,24 @@ from tfwrapper import Dataset
 from tfwrapper import ImageDataset
 from tfwrapper.utils.data import write_features
 
-from utils import curr_path
-from utils import remove_dir
-from utils import generate_features
+from .utils import curr_path
+from .utils import remove_dir
+from .utils import generate_features
 
 def test_create_from_data():
 	X = np.asarray([1, 2, 3])
 	y = np.asarray([2, 4, 6])
 	dataset = Dataset(X=X, y=y)
-	test_X, test_y, _, _, [] = dataset.getdata()
 
-	assert np.array_equal(X, test_X)
-	assert np.array_equal(y, test_y)
+	assert np.array_equal(X, dataset.X)
+	assert np.array_equal(y, dataset.y)
 
 def test_create_from_features():
 	X, y, features = generate_features()
 	dataset = Dataset(features=features)
-	test_X, test_y, _, _, _ = dataset.getdata()
 
-	assert np.array_equal(X, test_X)
-	assert np.array_equal(y, test_y)
+	assert np.array_equal(X, dataset.X)
+	assert np.array_equal(y, dataset.y)
 
 def test_create_from_feature_file():
 	X, y, features = generate_features()
@@ -34,10 +32,9 @@ def test_create_from_feature_file():
 	write_features(tmp_file, features)
 	dataset = Dataset(features_file=tmp_file)
 	os.remove(tmp_file)
-	test_X, test_y, _, _, _ = dataset.getdata()
 
-	assert np.array_equal(X, test_X)
-	assert np.array_equal(y, test_y)
+	assert np.array_equal(X, dataset.X)
+	assert np.array_equal(y, dataset.y)
 
 def create_tmp_dir(root=os.path.join(curr_path, 'tmp'), size=10):
 	os.mkdir(root)
@@ -54,12 +51,12 @@ def test_create_from_datastructure():
 	size = 10
 	root_folder = create_tmp_dir(size=size)
 	dataset = ImageDataset(root_folder=root_folder)
+
+	assert size == len(dataset)
+	assert size == len(dataset.X)
+	assert size == len(dataset.y)
+
 	remove_dir(root_folder)
-	X, y, _, _, _, _ = dataset.getdata()
-
-
-	assert size == len(X)
-	assert size == len(y)
 
 def create_tmp_labels_file(root_folder, name):
 	with open(name, 'w') as f:
@@ -76,75 +73,75 @@ def test_create_from_labels_file():
 	labels_file = create_tmp_labels_file(root_folder, labels_file)
 
 	dataset = ImageDataset(root_folder=root_folder, labels_file=labels_file)
+
+	assert size / 2 == len(dataset.X)
+	assert size / 2 == len(dataset.y)
+
 	remove_dir(parent)
 	os.remove(labels_file)
-	X, y, _, _, _, _ = dataset.getdata()
-
-
-	assert size / 2 == len(X)
-	assert size / 2 == len(y)
 
 def test_normalize():
 	X = np.asarray([5, 4, 3])
 	y = np.asarray([1, 1, 1])
 	dataset = Dataset(X=X, y=y)
-	test_X, test_y, _, _, _ = dataset.getdata(normalize=True)
+	dataset = dataset.normalize()
 	
-	assert 0 < test_X[0]
-	assert 0 == test_X[1]
-	assert 0 > test_X[2]
-	assert test_X[0] == -test_X[2]
-	assert np.array_equal(y, test_y)
+	assert 0 < dataset.X[0]
+	assert 0 == dataset.X[1]
+	assert 0 > dataset.X[2]
+	assert dataset.X[0] == -dataset.X[2]
+	assert np.array_equal(y, dataset.y)
 
 def test_balance():
 	X = np.zeros(100)
 	y = np.concatenate([np.zeros(10), np.ones(90)])
 	dataset = Dataset(X=X, y=y)
-	test_X, test_y, _, _, _ = dataset.getdata(balance=True)
+	dataset = dataset.balance()
 
-	assert 20 == len(test_X)
-	assert 20 == len(test_y)
-	assert 10 == np.sum(test_y)
+	assert 20 == len(dataset.X)
+	assert 20 == len(dataset.y)
+	assert 10 == np.sum(dataset.y)
 
 def test_translate_labels():
 	X = np.asarray([0, 1, 2])
 	y = np.asarray(['Zero', 'One', 'Two'])
 	dataset = Dataset(X=X, y=y)
-	_, test_y, _, _, labels = dataset.getdata(translate_labels=True)
+	dataset = dataset.translate_labels()
+	labels = dataset.labels
 
-	assert 3 == len(labels)
-	assert 'Zero' == labels[np.where(test_y==0)[0][0]]
-	assert 'One' == labels[np.where(test_y==1)[0][0]]
-	assert 'Two' == labels[np.where(test_y==2)[0][0]]
+	assert 3 == len(dataset.labels)
+	assert 'Zero' == labels[dataset.y[np.where(dataset.X==0)[0][0]]]
+	assert 'One' == labels[dataset.y[np.where(dataset.X==1)[0][0]]]
+	assert 'Two' == labels[dataset.y[np.where(dataset.X==2)[0][0]]]
 
 def test_shuffle():
 	X = np.concatenate([np.zeros(100), np.ones(100)])
 	y = np.concatenate([np.zeros(100), np.ones(100)])
 	dataset = Dataset(X=X, y=y)
-	test_X, test_y, _, _, _ = dataset.getdata(shuffle=True)
+	dataset = dataset.shuffle()
 
-	assert not np.array_equal(X, test_X)
-	assert np.array_equal(test_X, test_y)
+	assert not np.array_equal(X, dataset.X)
+	assert np.array_equal(dataset.X, dataset.y)
 
 def test_onehot():
 	X = np.zeros(10)
 	y = np.arange(10)
 	dataset = Dataset(X=X, y=y)
-	test_X, test_y, _, _, _ = dataset.getdata(onehot=True)
+	dataset = dataset.onehot()
 
-	assert (10, 10) == test_y.shape
+	assert (10, 10) == dataset.y.shape
 	for i in range(10):
 		arr = np.zeros(10)
 		arr[i] = 1
-		assert np.array_equal(arr, test_y[i])
+		assert np.array_equal(arr, dataset.y[i])
 
 def test_split():
 	X = np.concatenate([np.zeros(80), np.ones(20)])
 	y = np.concatenate([np.zeros(80), np.ones(20)])
 	dataset = Dataset(X=X, y=y)
-	test_X, test_y, val_X, val_y, labels = dataset.getdata(split=True)
+	train_dataset, test_dataset = dataset.split(ratio=0.8)
 
-	assert np.array_equal(test_X, np.zeros(80))
-	assert np.array_equal(test_y, np.zeros(80))
-	assert np.array_equal(val_X, np.ones(20))
-	assert np.array_equal(val_y, np.ones(20))
+	assert np.array_equal(train_dataset.X, np.zeros(80))
+	assert np.array_equal(train_dataset.y, np.zeros(80))
+	assert np.array_equal(test_dataset.X, np.ones(20))
+	assert np.array_equal(test_dataset.y, np.ones(20))

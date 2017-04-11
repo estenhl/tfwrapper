@@ -1,19 +1,25 @@
 import numpy as np
 import tensorflow as tf
 
-from tfwrapper import ImageTransformer
 from tfwrapper.nets import CNN
 from tfwrapper.datasets import mnist
-
 
 h = 28
 w = 28
 c = 1
 
-dataset = mnist(size=1000, verbose=True)
-transformer = ImageTransformer(rotation_steps=2, max_rotation_angle=15, blur_steps=2, max_blur_sigma=2.5, hflip=True, vflip=True)
-X, y, test_X, test_y, _, _ = dataset.getdata(normalize=True, balance=False, shuffle=True, onehot=True,
-                                              split=True, translate_labels=True, transformer=transformer)
+dataset = mnist(size=10000, verbose=True)
+dataset = dataset.normalize()
+dataset = dataset.balance()
+dataset = dataset.shuffle()
+dataset = dataset.translate_labels()
+dataset = dataset.onehot()
+train, test = dataset.split(0.8)
+#transformer = ImageTransformer(rotation_steps=2, max_rotation_angle=15, blur_steps=2, max_blur_sigma=2.5, hflip=True, vflip=True)
+
+X = train.X
+y = train.y
+
 X = np.reshape(X, [-1, h, w, c])
 num_classes = y.shape[1]
 
@@ -32,7 +38,7 @@ layers = layers = [
 cnn = CNN([h, w, c], num_classes, layers, name=name)
 cnn.learning_rate = 1
 cnn.train(X, y, epochs=5, verbose=True)
-_, acc = cnn.validate(test_X, test_y)
+_, acc = cnn.validate(test.X, test.y)
 print('Test accuracy: %d%%' % (acc*100))
 
 

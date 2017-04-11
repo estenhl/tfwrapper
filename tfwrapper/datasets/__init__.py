@@ -4,13 +4,13 @@ import gzip
 import tarfile
 import zipfile
 import urllib.request
+import numpy as np
 
 from numpy import zeros, uint8, float32
 from shutil import copyfile
 from struct import unpack
 
 from tfwrapper import Dataset
-from tfwrapper import TokensDataset
 from tfwrapper import ImageDataset
 
 curr_path = os.path.dirname(os.path.realpath(__file__))
@@ -238,15 +238,13 @@ def cats_and_dogs(verbose=False):
 
 def mnist(size=None, verbose=False):
 	X, y = download_mnist(size=size, verbose=verbose)
-	dataset = ImageDataset(X=X, y=y)
+	dataset = Dataset(X=X, y=np.asarray(y).flatten())
 	return dataset
 
-def penn_tree_bank(verbose=False):
-	data_file = download_ptb(verbose=verbose)
-	dataset = TokensDataset(tokens_file=data_file)
-	return dataset
-
+"""
 def flowers(verbose=False):
 	data_path, labels_file = download_flowers(verbose=verbose)
 	dataset = ImageDataset(root_folder=data_path, labels_file=labels_file, verbose=verbose)
 	return dataset
+
+"""

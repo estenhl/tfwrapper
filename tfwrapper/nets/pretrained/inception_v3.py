@@ -4,12 +4,14 @@ import pandas as pd
 import tensorflow as tf
 
 from tfwrapper import TFSession
+from tfwrapper.nets.pretrained.pretrained_model import PretrainedModel
 from tfwrapper.utils.data import parse_features
 from tfwrapper.utils.data import write_features
 
+
 INCEPTION_PB_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),'models','inception_v3.pb')
 
-class InceptionV3():
+class InceptionV3(PretrainedModel):
 	core_layer_names = [
 		'DecodeJpeg/contents:0',
 		'Cast:0',
@@ -34,7 +36,9 @@ class InceptionV3():
 		'pool_3:0',
 		'softmax:0'
 	]
-	
+
+	FEATURE_LAYER = 'pool_3:0'
+
 	def __init__(self,graph_file=INCEPTION_PB_PATH):
 		if not os.path.isfile(graph_file):
 			raise Exception('Invalid path to inception v3 pb file')
@@ -57,6 +61,10 @@ class InceptionV3():
 		feature = sess.run(to_tensor,{from_layer: data})
 
 		return feature
+
+	def get_feature(self, img, sess, layer):
+		return self.extract_features_from_img(img, layer=layer, sess=sess)
+
 
 	def extract_features_from_img(self, img, layer='pool_3:0', sess=None):
 		with TFSession(sess, self.graph) as sess:
