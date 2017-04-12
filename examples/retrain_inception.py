@@ -14,11 +14,11 @@ feature_cache = os.path.join(catsdogs.FILE_PATH, "inc4_cache.csv")
 
 catsdogs.download_cats_and_dogs()
 
-container = catsdogs.create_container(20)
+container = catsdogs.create_container(max_images=20)
 container.shuffle()
 container.one_hot_encode()
 
-container = container.balance(max_value=10)  # should also be possible to choose max_value == min of smallest class
+container = container.balance(max_value=10)  # example for balancing
 
 train, test = container.split(shape=[0.9, 0.1])
 
@@ -32,6 +32,9 @@ test_preprocess = ImagePreprocess()
 test_preprocess.resize(img_size=img_size)
 
 inc_v4 = Inception_v4()
+#Inception_v3 could also be used
+#inc_v3 = Inception_v3()
+
 
 # loader = ImageLoader()
 loader = CachedFeatureLoader(feature_cache, inc_v4,
