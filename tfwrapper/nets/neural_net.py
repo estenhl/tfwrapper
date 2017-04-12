@@ -35,9 +35,8 @@ class NeuralNet(SupervisedModel):
 		bias_name = name + '_b'
 
 		def create_layer(x):
-			weight = tf.Variable(tf.truncated_normal(weight_shape, stddev=0.02), name=weight_name)
-			bias = tf.Variable(tf.zeros([output_size]), name=bias_name)
-
+			weight = NeuralNet.weight(weight_shape, name=weight_name)
+			bias = NeuralNet.bias(output_size, name=bias_name)
 
 			fc = tf.reshape(x, [-1, weight.get_shape().as_list()[0]], name=name + '/reshape')
 			fc = tf.add(tf.matmul(fc, weight), bias, name=name + '/add')

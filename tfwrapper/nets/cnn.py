@@ -5,9 +5,9 @@ from tfwrapper import TFSession
 from .neural_net import NeuralNet
 
 class CNN(NeuralNet):
-	def __init__(self, X_shape, y_size, layers, sess=None, name='NeuralNet'):
+	def __init__(self, X_shape, classes, layers, sess=None, name='NeuralNet'):
 		with TFSession(sess) as sess:
-			super().__init__(X_shape, y_size, layers, sess=sess, name=name)
+			super().__init__(X_shape, classes, layers, sess=sess, name=name)
 
 	@staticmethod
 	def conv2d(*, filter, input_depth, depth, strides=1, padding='SAME', name='conv2d'):
@@ -20,8 +20,8 @@ class CNN(NeuralNet):
 		bias_name = name + '/b'
 
 		def create_layer(x):
-			weight = tf.Variable(tf.random_normal(weight_shape), name=weight_name)
-			bias = tf.Variable(tf.random_normal([bias_size]), name=bias_name)
+			weight = CNN.weight(weight_shape, name=weight_name)
+			bias = CNN.bias(bias_size, name=bias_name)
 			conv = tf.nn.conv2d(x, weight, strides=[1, strides, strides, 1], padding=padding, name=name)
 			conv = tf.nn.bias_add(conv, bias)
 

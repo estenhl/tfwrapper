@@ -79,12 +79,29 @@ class SupervisedModel(ABC):
 		raise NotImplementedError('SupervisedModel is a generic class')
 
 	@staticmethod
+	def bias(size, init='zeros', name='bias'):
+		return SupervisedModel.weight([size], init=init, name=name)
+
+	@staticmethod
+	def weight(shape, init='truncated', stddev=0.02, trainable=True, name='weight'):
+		if init == 'truncated':
+			weight = tf.truncated_normal(shape, stddev=stddev)
+		elif init == 'random':
+			weight = tf.random_normal(shape)
+		elif init == 'zeros':
+			weight = tf.zeros(shape)
+		else:
+			raise NotImplementedError('Unknown initialization scheme %s' % str(init))
+
+		return tf.Variable(weight, trainable=trainable, name=name)
+
+	@staticmethod
 	def reshape(shape, name):
 		return lambda x: tf.reshape(x, shape=shape)
 
 	@staticmethod
 	def out(weight_shape, bias_size, name):
-		return lambda x: tf.add(tf.matmul(x, tf.Variable(tf.truncated_normal(weight_shape, stddev=0.02))), tf.Variable(tf.zeros([bias_size])), name=name)
+		return lambda x: tf.add(tf.matmul(x, SupervisedModel.weight(weight_shape, name=name + '_W')), SupervisedModel.bias(bias_size, name=name + '_b'), name=name)
 
 	def checkpoint_variables(self, sess):
 		for variable in tf.global_variables():

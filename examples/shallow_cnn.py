@@ -4,7 +4,7 @@ import tensorflow as tf
 from tfwrapper.nets import ShallowCNN
 from tfwrapper.datasets import mnist
 
-dataset = mnist(size=10000, verbose=True)
+dataset = mnist(size=5000, verbose=True)
 dataset = dataset.normalize()
 dataset = dataset.balance()
 dataset = dataset.shuffle()
