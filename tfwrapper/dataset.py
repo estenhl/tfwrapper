@@ -189,6 +189,16 @@ class Dataset():
 
 		return self.__class__(X=X, y=y, labels=self.labels)
 
+	def folds(self, k):
+		X = np.array_split(self._X, k)
+		y = np.array_split(self._y, k)
+
+		folds = []
+		for i in range(len(X)):
+			folds.append(self.__class__(X=X[i], y=y[i], labels=self.labels))
+
+		return folds
+
 	def __len__(self):
 		return len(self._X)
 

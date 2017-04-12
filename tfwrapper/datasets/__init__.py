@@ -241,4 +241,3 @@ def flowers(verbose=False):
 	data_path, labels_file = download_flowers(verbose=verbose)
 	dataset = ImageDataset(root_folder=data_path, labels_file=labels_file, verbose=verbose)
 	return dataset
-

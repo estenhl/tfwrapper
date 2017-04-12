@@ -29,14 +29,14 @@ class NeuralNet(SupervisedModel):
 
 
 	@staticmethod
-	def fullyconnected(*, input_size, output_size, name='fullyconnected'):
+	def fullyconnected(*, input_size, output_size, trainable=True, name='fullyconnected'):
 		weight_shape = [input_size, output_size]
-		weight_name = name + '_W'
-		bias_name = name + '_b'
+		weight_name = name + '/W'
+		bias_name = name + '/b'
 
 		def create_layer(x):
-			weight = NeuralNet.weight(weight_shape, name=weight_name)
-			bias = NeuralNet.bias(output_size, name=bias_name)
+			weight = NeuralNet.weight(weight_shape, name=weight_name, trainable=trainable)
+			bias = NeuralNet.bias(output_size, name=bias_name, trainable=trainable)
 
 			fc = tf.reshape(x, [-1, weight.get_shape().as_list()[0]], name=name + '/reshape')
 			fc = tf.add(tf.matmul(fc, weight), bias, name=name + '/add')

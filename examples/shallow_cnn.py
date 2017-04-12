@@ -17,7 +17,7 @@ y = train.y
 X = np.reshape(X, [-1, 28, 28, 1])
 
 cnn = ShallowCNN([28, 28, 1], 10, name='ExampleShallowCNN')
-cnn.train(X, y, epochs=5, verbose=True)
+cnn.train(X, y, epochs=10, verbose=True)
 _, acc = cnn.validate(test.X, test.y)
 print('Test accuracy: %d%%' % (acc*100))
 

@@ -79,8 +79,8 @@ class SupervisedModel(ABC):
 		raise NotImplementedError('SupervisedModel is a generic class')
 
 	@staticmethod
-	def bias(size, init='zeros', name='bias'):
-		return SupervisedModel.weight([size], init=init, name=name)
+	def bias(size, init='zeros', trainable=True, name='bias'):
+		return SupervisedModel.weight([size], init=init, trainable=trainable, name=name)
 
 	@staticmethod
 	def weight(shape, init='truncated', stddev=0.02, trainable=True, name='weight'):
@@ -100,8 +100,13 @@ class SupervisedModel(ABC):
 		return lambda x: tf.reshape(x, shape=shape)
 
 	@staticmethod
-	def out(weight_shape, bias_size, name):
-		return lambda x: tf.add(tf.matmul(x, SupervisedModel.weight(weight_shape, name=name + '_W')), SupervisedModel.bias(bias_size, name=name + '_b'), name=name)
+	def out(weight_shape, bias_size, trainable=True, name='pred'):
+		def create_layer(x):
+			weight = SupervisedModel.weight(weight_shape, name=name + '/W', trainable=trainable)
+			bias = SupervisedModel.bias(bias_size, name=name + '_b')
+			return tf.add(tf.matmul(x, weight), bias, name=name)
+
+		return create_layer
 
 	def checkpoint_variables(self, sess):
 		for variable in tf.global_variables():

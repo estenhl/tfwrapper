@@ -206,3 +206,28 @@ def test_index_datasets():
 	assert 1 == len(dataset)
 	assert np.array_equal(np.asarray([5]), dataset.X)
 	assert np.array_equal(np.asarray([5]), dataset.y)
+
+def test_equal_folds():
+	X = np.arange(12)
+	y = np.arange(12)
+	dataset = Dataset(X=X, y=y)
+
+	k = 3
+	folds = dataset.folds(k)
+
+	assert k == len(folds)
+	for i in range(k):
+		for j in range(int(len(X) / k)):
+			assert (i * int(len(X) / k)) + j in folds[i].X
+			assert (i * int(len(X) / k)) + j in folds[i].y
+
+def test_unequal_folds():
+	X = np.arange(7)
+	y = np.arange(7)
+	dataset = Dataset(X=X, y=y)
+
+	folds = dataset.folds(2)
+
+	assert 2 == len(folds)
+	assert 4 == len(folds[0])
+	assert 3 == len(folds[1])
