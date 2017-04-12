@@ -11,3 +11,5 @@ tfwrapper/datasets/**/*
 examples/inception_v3_features.csv
 examples/data/**/*
 .idea
+
+data/

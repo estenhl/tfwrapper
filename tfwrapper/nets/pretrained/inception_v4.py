@@ -14,7 +14,7 @@ PREDICTIONS = "InceptionV4/Logits/Predictions:0"
 class Inception_v4(PretrainedModel):
     FEATURE_LAYER = "InceptionV4/Logits/PreLogitsFlatten/Reshape:0"
 
-    def __init__(self, graph_file):
+    def __init__(self, graph_file= INCEPTION_PB_PATH):
         with tf.gfile.FastGFile(graph_file, 'rb') as f:
             graph_def = tf.GraphDef()
             graph_def.ParseFromString(f.read())

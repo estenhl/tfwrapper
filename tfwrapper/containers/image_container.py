@@ -49,7 +49,7 @@ class ImageContainer():
     def split(self, shape=[0.9, 0.1]):
         size = len(self.names)
 
-        if size > 3:
+        if len(shape) > 3:
             raise NotImplementedError("Size over 3 not handled yet")
         split_index = int(size * shape[0])
         dataset1 = ImageContainer(
