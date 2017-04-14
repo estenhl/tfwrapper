@@ -8,7 +8,7 @@ from tfwrapper.clustering import kmeans
 from tfwrapper.visualization import plot_clusters
 
 num_clusters = 3
-num_points_per_cluster = 100
+num_points_per_cluster = 10
 height = 100
 width = 100
 

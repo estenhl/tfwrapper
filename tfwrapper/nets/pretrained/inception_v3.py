@@ -56,8 +56,10 @@ class InceptionV3(PretrainedModel):
 	def run_op(self, to_layer, from_layer, data, sess=None):
 		print('Extracting features from layer ' + from_layer + ' to ' + to_layer)
 		to_tensor = self.graph.get_tensor_by_name(to_layer)
+
 		if sess is None:
 			raise NotImplementedError('Needs a sess')
+			
 		feature = sess.run(to_tensor,{from_layer: data})
 
 		return feature

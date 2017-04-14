@@ -199,6 +199,28 @@ class Dataset():
 
 		return folds
 
+	def get_clusters(self, get_labels=False):
+		if self.labels:
+			raise NotImplementedError('Getting clusters with onehotted data not implemented')
+
+		labels = sorted(list(set(self._y)))
+
+		clusters = []
+		for i in range(len(labels)):
+			clusters.append(None)
+
+		for i in range(len(self)):
+			index = labels.index(self._y[i])
+			if clusters[index] is None:
+				clusters[index] = np.asarray([self._X[i]])
+			else:
+				clusters[index] = np.concatenate([clusters[index], np.asarray([self._X[i]])])
+
+		if get_labels:
+			return clusters, labels
+		else:
+			return clusters
+
 	def __len__(self):
 		return len(self._X)
 

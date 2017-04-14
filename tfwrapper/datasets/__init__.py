@@ -237,7 +237,25 @@ def mnist(size=None, verbose=False):
 	dataset = Dataset(X=X, y=np.asarray(y).flatten())
 	return dataset
 
-def flowers(verbose=False):
+def flowers(size=1360, verbose=False):
 	data_path, labels_file = download_flowers(verbose=verbose)
-	dataset = ImageDataset(root_folder=data_path, labels_file=labels_file, verbose=verbose)
+
+	if size < 1360:
+		tmp_labels_file = os.path.join(os.path.dirname(labels_file), 'tmp.txt')
+		with open(labels_file, 'r') as f:
+			lines = f.readlines()
+
+		num_classes = 17
+		num_flowers_per_class = int(size / num_classes)
+		total_flowers_per_class = 80
+		with open(tmp_labels_file, 'w') as f:
+			for i in range(num_classes):
+				for j in range(num_flowers_per_class):
+					index = (i * total_flowers_per_class) + j
+					f.write(lines[index])
+		dataset = ImageDataset(root_folder=data_path, labels_file=tmp_labels_file)
+		os.remove(tmp_labels_file)
+	else:
+		dataset = ImageDataset(root_folder=data_path, labels_file=labels_file)
+	
 	return dataset
