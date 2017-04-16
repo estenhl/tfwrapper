@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-colours = ['red', 'green', 'blue', 'yellow', 'purple', 'brown', 'teal', 'orange', 'pink']
+colours = ['red', 'green', 'blue', 'yellow', 'purple', 'brown', 'teal', 'orange', 'pink', 'gray', 'darkslategray', 'whitesmoke', 'gold', 'tan', 'midnightblue', 'thistle', 'moccasin']
 
 def plot_clusters(clusters, centroids=None, names=None, title='Clusters', figsize=(10, 10), height=None, width=None):
 	fig = plt.figure(figsize=figsize)
