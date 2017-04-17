@@ -2,14 +2,10 @@
 **/__MACOSX/**/*
 **/__pycache__/*
 **/*.pyc
-tfwrapper/mnist/**/*
 **/.cache/**/*
-tfwrapper/nets/pretrained/models/**/*
-!tfwrapper/nets/pretrained/models/inception_v3.txt
-tfwrapper/datasets/**/*
-!tfwrapper/datasets/__init__.py
 examples/inception_v3_features.csv
 examples/data/**/*
 .idea
+tfwrapper/nets/pretrained/models/
 
 data/
