@@ -10,7 +10,7 @@ from tfwrapper.containers import ImageContainer
 
 
 DOWNLOAD_DRIVE_ID = "0B1b2bIlebXOqQnJWYUxDZXRhTlE"
-FILE_PATH = os.path.join(config.DATA, "catsdogs")
+FILE_PATH = os.path.join(config.DATASETS, "catsdogs")
 IMAGES = os.path.join(FILE_PATH, "images")
 
 def download_cats_and_dogs(verbose=False):

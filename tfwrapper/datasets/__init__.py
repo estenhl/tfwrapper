@@ -12,8 +12,9 @@ from struct import unpack
 
 from tfwrapper import Dataset
 from tfwrapper import ImageDataset
+from tfwrapper import config
 
-curr_path = os.path.dirname(os.path.realpath(__file__))
+curr_path = config.DATASETS
 
 def setup_structure(name, create_data_folder=True):
 	root_path = os.path.join(curr_path, name)

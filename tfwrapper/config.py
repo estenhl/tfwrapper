@@ -6,6 +6,8 @@ ROOT = str(Path(CONFIG_PATH).parent)
 
 DATA = os.path.join(ROOT, "data")
 MODELS = os.path.join(DATA, "models")
+DATASETS = os.path.join(DATA, "datasets")
 
 file_util.safe_mkdir(DATA)
 file_util.safe_mkdir(MODELS)
+file_util.safe_mkdir(DATASETS)
