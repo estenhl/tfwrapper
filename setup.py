@@ -10,5 +10,5 @@ setup(
     # license='<license>',
     # packages=['tfwrapper', 'tfwrapper.utils'],
     packages=find_packages('.'),
-    install_requires=['tensorflow>=0.11.0'],
+    install_requires=['tensorflow>=1.0.0'],
 )
