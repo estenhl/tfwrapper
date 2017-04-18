@@ -1,11 +1,8 @@
-import random
 import numpy as np
 import tensorflow as tf
 from abc import ABC, abstractmethod
 
 from .dataset import split_dataset
-from tfwrapper.metrics import loss
-from tfwrapper.metrics import accuracy
 from tfwrapper.utils.data import batch_data
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
@@ -141,19 +138,13 @@ class SupervisedModel(ABC):
 				np.random.shuffle(rand_idx)
 				X_batches = batch_data(X[rand_idx], self.batch_size)
 				y_batches = batch_data(y[rand_idx], self.batch_size)
-				num_batches = len(X_batches)
-				for i in range(num_batches):
-					sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i], self.lr: self.learning_rate})
-
-				if verbose:
-					loss, acc = self.validate(X_batches[-1], y_batches[-1], sess=sess, verbose=verbose)
-					print('Epoch %d, train loss: %.3f, train acc: %.3f' % (epoch + 1, loss, acc))
-
-					if validate:
-						loss, acc = self.validate(val_X, val_y, sess=sess, verbose=verbose)
-						print('Epoch %d, val loss: %.3f, val acc: %.3f' % (epoch + 1, loss, acc))
+				self.train_epoch(X_batches, y_batches, epoch, val_X=val_X, val_y=val_y, validate=validate, sess=sess, verbose=verbose)
 
 			self.checkpoint_variables(sess)
+
+	@abstractmethod
+	def train_epoch(self, X_batches, y_batches, epoch_nr, val_X=None, val_y=None, validate=True, sess=None, verbose=False):
+		raise NotImplementedError('SupervisedModel is a generic class')
 
 	def predict(self, X, sess=None, verbose=False):
 		with TFSession(sess, self.graph, variables=self.variables) as sess:
@@ -170,11 +161,9 @@ class SupervisedModel(ABC):
 
 		return preds
 
+	@abstractmethod
 	def validate(self, X, y, sess=None, verbose=False):
-		with TFSession(sess, self.graph, variables=self.variables) as sess:
-			preds = self.predict(X, sess=sess, verbose=verbose)
-
-		return loss(preds, y), accuracy(preds, y)
+		raise NotImplementedError('SupervisedModel is a generic class')
 
 	def save(self, filename, sess=None):
 		with TFSession(sess, self.graph, variables=self.variables) as sess:
