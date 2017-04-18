@@ -14,7 +14,7 @@ class PCA(DimensionalityReducer):
 		if len(X.shape) != 2:
 			raise InvalidArgumentException('Invalid dimensions for PCA, requires NxM matrix where N=num samples and M=dimensions')
 
-		M = X.shape[1]
+		_, M = X.shape
 		if M < self.dimensions:
 			raise InvalidArgumentException('Unable to perform PCA to a higher number of dimensions (From %d to %d)' % (M, self.dimensions))
 		
