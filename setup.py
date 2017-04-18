@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='tfwrapper',
@@ -8,6 +8,7 @@ setup(
     author='Esten Høyland Leonardsen',
     author_email='esten@epigram.ai',
     # license='<license>',
-    packages=['tfwrapper', 'tfwrapper.utils'],
+    # packages=['tfwrapper', 'tfwrapper.utils'],
+    packages=find_packages('.'),
     install_requires=['tensorflow>=0.11.0'],
 )
