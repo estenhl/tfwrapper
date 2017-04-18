@@ -8,6 +8,6 @@ setup(
     author='Esten Høyland Leonardsen',
     author_email='esten@epigram.ai',
     # license='<license>',
-    packages=['tfwrapper'],
+    packages=['tfwrapper', 'tfwrapper.utils'],
     install_requires=['tensorflow>=0.11.0'],
 )
