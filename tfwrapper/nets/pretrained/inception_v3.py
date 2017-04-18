@@ -65,7 +65,6 @@ class InceptionV3(PretrainedModel):
 	def get_feature(self, img, sess, layer):
 		return self.extract_features_from_img(img, layer=layer, sess=sess)
 
-
 	def extract_features_from_img(self, img, layer='pool_3:0', sess=None):
 		with TFSession(sess, self.graph) as sess:
 			try:

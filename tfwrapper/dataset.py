@@ -4,7 +4,9 @@ import scipy.ndimage
 import numpy as np
 from collections import Counter
 from random import shuffle
+
 from tfwrapper.utils.data import parse_features
+from tfwrapper.utils.data import write_features
 
 def normalize_array(arr):
 	return (arr - arr.mean()) / arr.std()
@@ -135,7 +137,7 @@ class Dataset():
 	def y(self):
 		return self._y
 
-	def __init__(self, X=np.asarray([]), y=np.asarray([]), labels=np.asarray([]), features=None, features_file=None, verbose=False):
+	def __init__(self, parent=None, X=np.asarray([]), y=np.asarray([]), labels=np.asarray([]), features=None, features_file=None, verbose=False):
 		self._X = X
 		self._y = y
 		self.labels = labels
@@ -186,6 +188,15 @@ class Dataset():
 			_keep = set(self._y) - set(drop)
 
 		X, y = drop_classes(self._X, self._y, keep=_keep)
+
+		return self.__class__(X=X, y=y, labels=self.labels)
+
+	def merge_classes(self, mappings):
+		X = self._X
+		y = self._y
+		for i in range(len(y)):
+			if y[i] in mappings:
+				y[i] = mappings[y[i]]
 
 		return self.__class__(X=X, y=y, labels=self.labels)
 
@@ -242,7 +253,6 @@ class ImagePreprocess():
 
     # (width, heiht)
     def resize(self, img_size=(299, 299)):
-        print('SAT RESIZE IN ' + str(self))
         self.augs[RESIZE] = img_size
 
     def bw(self):
@@ -291,6 +301,23 @@ class ImagePreprocess():
             org_suffixes.remove(FLIP_UD)
 
         return img_names, img_versions
+
+import tensorflow as tf 
+
+class FeatureExtractor(ImagePreprocess):
+    def __init__(self, model, features):
+        super().__init__()
+        self.model = model
+        self.features = features
+
+    def apply(self, img, name):
+        imgs, names = super().apply(img, name)
+        features = []
+        
+        for i in range(len(imgs)):
+            features.append(self.model.extract_features_from_img(img))
+
+        return features, names
 
 class ImageDataset(Dataset):
 	preprocessor = ImagePreprocess()

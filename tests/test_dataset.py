@@ -231,3 +231,23 @@ def test_unequal_folds():
 	assert 2 == len(folds)
 	assert 4 == len(folds[0])
 	assert 3 == len(folds[1])
+
+def test_merge_classes():
+	X = np.arange(10)
+	y = np.arange(10)
+	dataset = Dataset(X=X, y=y)
+
+	assert 10 == len(np.unique(dataset.y))
+	assert 10 == len(np.unique(dataset.X))
+
+	mappings = {}
+	for i in range(10):
+		mappings[i] = int(i / 5)
+	dataset = dataset.merge_classes(mappings)
+
+	assert 2 == len(np.unique(dataset.y))
+	assert 10 == len(np.unique(dataset.X))
+
+	for i in range(len(dataset)):
+		assert dataset.y[i] == int(dataset.X[i] / 5)
+
