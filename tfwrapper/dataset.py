@@ -264,11 +264,17 @@ class ImagePreprocess():
     def append_flip_ud(self):
         self.augs[FLIP_UD] = True
 
-    def apply_file(self, image_path, name):
+    def apply_file(self, image_path, name=None):
+        if name is None:
+            name = os.path.basename(image_path)
+
         img = twimage.imread(image_path)
         return self.apply(img, name)
 
     def apply(self, img, name):
+        if img is None:
+            return [], []
+        
         img_versions = []
         img_names = []
 
@@ -355,7 +361,7 @@ class ImageDataset(Dataset):
 		batch_y = []
 
 		while len(batch_X) < batch_size and cursor < len(self):
-			_, imgs = self.preprocessor.apply_file(self._X[cursor], 'Fucknames.jpg')
+			_, imgs = self.preprocessor.apply_file(self._X[cursor])
 			batch_X += imgs
 			batch_y += [self._y[cursor]] * len(imgs)
 			cursor += 1
