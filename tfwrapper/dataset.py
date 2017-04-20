@@ -238,6 +238,12 @@ RESIZE = "resize"
 TRANSFORM_BW = "bw"
 FLIP_LR = "fliplr"
 FLIP_UD = "flipud"
+ROTATED = 'rotated'
+ROTATION_STEPS = 'rotation_steps'
+MAX_ROTATION_ANGLE = 'max_rotation_angle'
+BLURRED = 'blurred'
+BLUR_STEPS = 'blur_steps'
+MAX_BLUR_SIGMA = 'max_blur_sigma'
 
 def create_name(name, suffixes):
     img_part = name.rsplit(".", 1)
@@ -263,6 +269,14 @@ class ImagePreprocess():
 
     def append_flip_ud(self):
         self.augs[FLIP_UD] = True
+
+    def rotate(self, rotation_steps=1, max_rotation_angle=10):
+        self.augs[ROTATED] = {ROTATION_STEPS: rotation_steps, MAX_ROTATION_ANGLE: max_rotation_angle}
+        self.augs[ROTATION_STEPS] = rotation_steps
+        self.augs[MAX_ROTATION_ANGLE] = max_rotation_angle
+
+    def blur(self, blur_steps=1, max_blur_sigma=1):
+        self.augs[BLURRED] = {BLUR_STEPS: blur_steps, MAX_BLUR_SIGMA: max_blur_sigma}
 
     def apply_file(self, image_path, name=None):
         if name is None:
@@ -305,6 +319,37 @@ class ImagePreprocess():
             org_suffixes.append(FLIP_UD)
             img_names.append(create_name(name, org_suffixes))
             org_suffixes.remove(FLIP_UD)
+
+        if ROTATED in self.augs:
+            rotation_steps = self.augs[ROTATED][ROTATION_STEPS]
+            max_rotation_angle = self.augs[ROTATED][MAX_ROTATION_ANGLE]
+            for i in range(rotation_steps):
+                angle = max_rotation_angle * (i+1)/rotation_steps
+                img_versions.append(twimage.rotate(img, angle))
+                org_suffixes.append(ROTATED)
+                org_suffixes.append(str(angle))
+                img_names.append(create_name(name, org_suffixes))
+                org_suffixes.remove(str(angle))
+
+                img_versions.append(twimage.rotate(img, -angle))
+                org_suffixes.append(str(-angle))
+                img_names.append(create_name(name, org_suffixes))
+                org_suffixes.remove(str(-angle))
+                org_suffixes.remove(ROTATED)
+
+        if BLURRED in self.augs:
+            blur_steps = self.augs[BLURRED][BLUR_STEPS]
+            max_blur_sigma = self.augs[BLURRED][MAX_BLUR_SIGMA]
+            for i in range(blur_steps):
+                sigma = max_blur_sigma * (i+1)/blur_steps
+                img_versions.append(twimage.blur(img, sigma))
+                org_suffixes.append(BLURRED)
+                org_suffixes.append(str(sigma))
+                img_names.append(create_name(name, org_suffixes))
+                org_suffixes.remove(str(sigma))
+                org_suffixes.remove(BLURRED)
+
+        # TODO: generate combinations of flip, rotation and blur
 
         return img_names, img_versions
 
@@ -370,56 +415,3 @@ class ImageDataset(Dataset):
 		y = np.asarray(batch_y)
 
 		return X, y, cursor
-
-# class ImageTransformer():
-# 	def __init__(self, resize_to=None, bw=False, hflip=False, vflip=False, rotation_steps=0, max_rotation_angle=0, blur_steps=0, max_blur_sigma=0):
-# 		self.resize_to = resize_to
-# 		self.bw = bw
-# 		self.hflip = hflip
-# 		self.vflip = vflip
-# 		self.rotation_steps = rotation_steps
-# 		self.max_rotation_angle = max_rotation_angle
-# 		self.blur_steps = blur_steps
-# 		self.max_blur_sigma = max_blur_sigma
-
-# 	def transform(self, img):
-# 		img_variants = []
-# 		suffixes = ['']
-
-# 		if self.resize_to is not None:
-# 			img = cv2.resize(img, self.resize_to)
-
-# 		if self.bw:
-# 			img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-# 		img_variants.append(img)
-
-# 		if self.hflip:
-# 			img_variants.append(np.fliplr(img))
-# 			suffixes.append('_hflip')
-
-# 		if self.vflip:
-# 			img_variants.append(np.flipud(img))
-# 			suffixes.append('_vflip')
-
-# 		if self.hflip and self.vflip:
-# 			img_variants.append(np.fliplr(np.flipud(img)))
-# 			suffixes.append('_hvflip')
-
-# 		if self.rotation_steps > 0 and self.max_rotation_angle > 0:
-# 			for i in range(self.rotation_steps):
-# 				angle = self.max_rotation_angle * (i+1)/self.rotation_steps
-# 				img_variants.append(scipy.ndimage.interpolation.rotate(img, angle, reshape=False))
-# 				suffixes.append('_rotate_' + str(angle))
-# 				img_variants.append(scipy.ndimage.interpolation.rotate(img, -angle, reshape=False))
-# 				suffixes.append('_rotate_' + str(-angle))
-
-# 		if self.blur_steps > 0 and self.max_blur_sigma > 0:
-# 			for i in range(self.blur_steps):
-# 				sigma = self.max_blur_sigma * (i+1)/self.blur_steps
-# 				img_variants.append(scipy.ndimage.filters.gaussian_filter(img, sigma))
-# 				suffixes.append('_blur_' + str(sigma))
-
-# 		# TODO: generate combinations of flip, rotation and blur
-
-# 		return img_variants, suffixes

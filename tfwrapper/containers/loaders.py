@@ -46,7 +46,7 @@ class CachedFeatureLoader():
         X = np.asarray(features)
         Y = np.asarray(labels)
 
-        return Dataset(X, Y), names
+        return Dataset(X=X, y=Y), names
 
 
     def batch_generator(self, dataset: ImageContainer, image_aug: ImagePreprocess, batch_size, shuffle=True):
@@ -78,7 +78,7 @@ class ImageLoader():
         X = np.asarray(imgs)
         Y = np.asarray(labels)
 
-        return Dataset(X, Y), names
+        return Dataset(X=X, y=Y), names
 
     def batch_generator(self, dataset: ImageContainer, image_aug: ImagePreprocess, batch_size, shuffle=True):
         dataset, names = self.create_dataset(dataset, image_aug)
