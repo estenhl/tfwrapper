@@ -16,11 +16,9 @@ class ShallowCNN(CNN):
 			self.channels = 1
 		self.classes = classes
 
-		if not (height % 4 == 0 and width % 4 == 0):
-			raise Exception('Height and width must be multiples of 4!')
-
 		height, width, channels = X_shape
-		fc_input_size = int((height/4) * (width/4) * 64)
+		twice_reduce = lambda x: -(-x // 4)
+		fc_input_size = twice_reduce(height)*twice_reduce(width)*64
 
 		layers = [
 			self.reshape([-1, height, width, channels], name=name + '/reshape'),
