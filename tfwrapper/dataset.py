@@ -353,7 +353,7 @@ class FeatureExtractor(ImagePreprocess):
         self.sess = sess
 
     def apply(self, img, name, label=None):
-        if type(label) is np.ndarray:
+        if label is not None and type(label) is np.ndarray:
             label = np.argmax(label)
 
         names, imgs = super().apply(img, name, label=label)
