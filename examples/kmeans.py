@@ -28,5 +28,5 @@ def generate_data(num_clusters, num_points_per_cluster, height, width):
 centroids, points = generate_data(num_clusters, num_points_per_cluster, height, width)
 clusters = kmeans(num_clusters, points)
 names = ['Cluster %d' % i for i in range(num_clusters)]
-plot_clusters(clusters, centroids=centroids, names=names, height=height, width=width, title='KMeans example', plot_decision_boundaries=True)
+plot_clusters(clusters, centroids=centroids, names=names, height=height, width=width, title='KMeans example', figsize=(10, 10))
 

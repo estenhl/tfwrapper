@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 from tfwrapper.metrics.distance import euclidean
 
@@ -25,29 +26,41 @@ def plot_boundaries(width, height, centroids):
 
 	plt.scatter(border_x, border_y, color='black', s=0.1)
 
-def plot_clusters(clusters, centroids=None, names=None, title='Clusters', figsize=(10, 10), height=None, width=None, plot_decision_boundaries=False):
-	fig = plt.figure(figsize=figsize)
+def plot_clusters(clusters, centroids=None, plot_decision_boundaries=False, dimensions=2, **pltargs):
+	if 'figsize' in pltargs:
+		fig = plt.figure(figsize=pltargs['figsize'])
+	else:
+		fig = plt.figure()
 
-	if height:
-		plt.gca().set_ylim([0, height])
-	if width:
-		plt.gca().set_xlim([0, width])
+	if dimensions == 2:
+		ax = fig.add_subplot(111)
+	elif dimensions == 3:
+		ax = fig.add_subplot(111, projection='3d')
+
+	if 'height' in pltargs:
+		ax.set_ylim([0, pltargs['height']])
+	if 'width' in pltargs:
+		ax.set_xlim([0, pltargs['width']])
 
 	handles = []
 	for i in range(len(clusters)):
-		handle = plt.scatter(clusters[i][:,0], clusters[i][:,1], color=colours[i%len(colours)])
+		if dimensions == 2:
+			handle = ax.scatter(clusters[i][:,0], clusters[i][:,1], color=colours[i%len(colours)])
+		elif dimensions == 3:
+			handle = ax.scatter(clusters[i][:,0], clusters[i][:,1], clusters[i][:,2], color=colours[i%len(colours)])
 		handles.append(handle)
 
 	if centroids is not None:
-		plt.scatter(centroids[:,0], centroids[:,1], marker='x', color='black')
+		ax.scatter(centroids[:,0], centroids[:,1], marker='x', color='black')
 
-	if names is not None and len(names) == len(handles):
-		plt.legend(handles, names)
+	if 'names' in pltargs:
+		ax.legend(handles, pltargs['names'])
 
 	# TODO: Height and width gots to go
-	if height and width and plot_decision_boundaries:
-		plot_boundaries(width, height, centroids)
+	if plot_decision_boundaries:
+		raise NotImplementedError('Plotting decision boundaries is not implemented')
 
-	fig.suptitle(title, fontsize=30)
+	if 'title' in pltargs:
+		fig.suptitle(pltargs['title'], fontsize=30)
 
 	plt.show()
