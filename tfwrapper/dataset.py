@@ -230,7 +230,7 @@ class Dataset():
             X = np.asarray([X])
             y = np.asarray([y])
 
-        return Dataset(X=X, y=y)
+        return self.__class__(X=X, y=y)
 
 from tfwrapper import twimage
 
@@ -285,7 +285,8 @@ class ImagePreprocess():
         if self.resize_to:
             img = twimage.resize(img, self.resize_to)
             #Should check for size
-            org_suffixes.append(RESIZE)
+            width, height = self.resize_to
+            org_suffixes.append('%s%dx%d' % (RESIZE, width, height))
         if self.bw:
             img = twimage.bw(img, shape=3)
             org_suffixes.append(TRANSFORM_BW)
@@ -355,35 +356,53 @@ class FeatureExtractor(ImagePreprocess):
         names, imgs = super().apply(img, name)
         features = []
         
+        records = []
         for i in range(len(imgs)):
-            print('Extracting features for %s' % names[i])
-            vector = self.model.get_feature(imgs[i], sess=self.sess)
-            features.append(vector)
-            record = {'name': names[i], 'features': vector}
+            if names[i] in self.features['filename'].values:
+                print('Skipping %s' % names[i])
+                vector = self.features[self.features['filename'] == names[i]]['features']
+                vector = np.asarray(vector)[0]
+                features.append(vector)
+            else:
+                print('Extracting features for %s' % names[i])
+                vector = self.model.get_feature(imgs[i], sess=self.sess)
+                features.append(vector)
+                record = {'filename': names[i], 'features': vector}
 
-            if label is not None:
-                record['label'] = label
+                if label is not None:
+                    record['label'] = label
 
-            self.features.append(record, ignore_index=True)
+                records.append(record)
+                self.features = self.features.append(record, ignore_index=True)
 
-        return features, names
+        if self.feature_file and len(records) > 0:
+            write_features(self.feature_file, records, append=os.path.isfile(self.feature_file))
 
-    # TODO: Should be __enter__, __exit__ instead of __init__, __del__
-    def __del__(self):
-        # Can't write_features when python is shutting down
-        pass
+        return names, features
 
 class ImageDataset(Dataset):
     preprocessor = ImagePreprocess()
+    loaded_X = None
+    loaded_y = None
 
     @property
     def X(self):
-        X, _, _ = self.read_batch(0)
+        if self.loaded_X is not None:
+            return self.loaded_X
+
+        X, y, _ = self.read_batch(0)
+        self.loaded_X = X
+        self.loaded_y = y
         return X
 
     @property
     def y(self):
-        _, y, _ = self.read_batch(0)
+        if self.loaded_y is not None:
+            return self.loaded_y
+
+        X, y, _ = self.read_batch(0)
+        self.loaded_X = X
+        self.loaded_y = y
         return y
 
     def __init__(self, X=np.asarray([]), y=np.asarray([]), labels=np.asarray([]), root_folder=None, labels_file=None):
