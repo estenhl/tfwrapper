@@ -32,5 +32,5 @@ with tf.Session(graph=inc_v4.graph) as sess:
     nn = SingleLayerNeuralNet([1536], 2, 1024, sess=sess, name='InceptionV4Test')
     nn.train(train.X, train.y, epochs=10, sess=sess, verbose=True)
     _, acc = nn.validate(test.X, test.y, sess=sess)
-    print('Acc: %d' % (acc * 100))
+    print('Acc: %d%%' % (acc * 100))
 

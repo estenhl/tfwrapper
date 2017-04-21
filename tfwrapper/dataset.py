@@ -353,10 +353,13 @@ class FeatureExtractor(ImagePreprocess):
         self.sess = sess
 
     def apply(self, img, name, label=None):
-        names, imgs = super().apply(img, name)
+        if type(label) is np.ndarray:
+            label = np.argmax(label)
+
+        names, imgs = super().apply(img, name, label=label)
         features = []
-        
         records = []
+
         for i in range(len(imgs)):
             if names[i] in self.features['filename'].values:
                 print('Skipping %s' % names[i])

@@ -88,6 +88,17 @@ def test_write_list_of_dicts():
 
 	os.remove(filename)
 
+def test_no_label():
+	filename = os.path.join(curr_path, 'test_no_label.tmp')
+
+	df = pd.DataFrame(columns=['filename', 'label', 'features'])
+	for i in range(3):
+		df.append({'filename': 'file%d' % i, 'features': np.arange(i+1, (i+1)*10).astype(float)}, ignore_index=True)
+
+	write_features(filename, df)
+	features = parse_features(filename)
+	print(features)
+
 def test_valid_datatypes():
 	filename = os.path.join(curr_path, 'test_valid_datatypes.tmp')
 
