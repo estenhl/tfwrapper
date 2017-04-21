@@ -18,14 +18,17 @@ train, test = dataset.split(0.8)
 
 inc_v4 = Inception_v4()
 
-train.preprocessor = FeatureExtractor(inc_v4, 'train_features.tmp')
+train.preprocessor = FeatureExtractor(inc_v4, os.path.join(curr_path, 'data', 'catsdogs_features.csv'))
 train.preprocessor.resize_to = (299, 299)
 train.preprocessor.flip_lr = True
 
-test.preprocessor = FeatureExtractor(inc_v4, 'test_features.tmp')
+test.preprocessor = FeatureExtractor(inc_v4, os.path.join(curr_path, 'data', 'catsdogs_features.csv'))
 test.preprocessor.resize_to = (299, 299)
 
-with tf.Session() as sess:
+with tf.Session(graph=inc_v4.graph) as sess:
+    train.preprocessor.sess = sess
+    test.preprocessor.sess = sess
+
     nn = SingleLayerNeuralNet([1536], 2, 1024, sess=sess, name='InceptionV4Test')
     nn.train(train.X, train.y, epochs=10, sess=sess, verbose=True)
     _, acc = nn.validate(test.X, test.y, sess=sess)
