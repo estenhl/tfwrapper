@@ -1,6 +1,7 @@
 
 import cv2
 import matplotlib.pyplot as plt
+import scipy.ndimage
 
 
 def imread(file_path):
@@ -16,6 +17,10 @@ def imwrite(file_path, image):
     cv2.imwrite(file_path, bgr_image)
 
 
+def blur(image, sigma):
+    return scipy.ndimage.filters.gaussian_filter(image, sigma)
+
+
 def bw(image, shape=1):
     allowed_shapes = [1, 3]
     if not shape in allowed_shapes:
@@ -28,6 +33,10 @@ def bw(image, shape=1):
 
 def resize(image, shape=(299, 299)):
     return cv2.resize(image, shape)
+
+
+def rotate(image, angle):
+    return scipy.ndimage.interpolation.rotate(image, angle, reshape=False)
 
 
 def show(image):
