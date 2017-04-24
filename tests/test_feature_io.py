@@ -97,7 +97,8 @@ def test_no_label():
 
 	write_features(filename, df)
 	features = parse_features(filename)
-	print(features)
+	
+	os.remove(filename)
 
 def test_valid_datatypes():
 	filename = os.path.join(curr_path, 'test_valid_datatypes.tmp')
