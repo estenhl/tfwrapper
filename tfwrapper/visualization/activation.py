@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
-def visualize_activation(features, img, cmap='YlOrRd'):
+def visualize_activation(features, img, cmap='OrRd'):
     if not len(features.shape) == 3:
         raise InvalidArgumentException('Requires features on the form (height, width, depth)')
 
