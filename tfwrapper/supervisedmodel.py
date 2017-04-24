@@ -1,3 +1,4 @@
+import json
 import numpy as np
 import tensorflow as tf
 from abc import ABC, abstractmethod
@@ -5,6 +6,8 @@ from abc import ABC, abstractmethod
 from .dataset import split_dataset
 from tfwrapper.utils.data import batch_data
 from tfwrapper.utils.exceptions import InvalidArgumentException
+
+METAFILE_SUFFIX = 'tw'
 
 class TFSession():
 	def __init__(self, session=None, graph=None, init=False, variables={}):
@@ -51,7 +54,6 @@ class SupervisedModel(ABC):
 			self.y_size = y_size
 			self.name = name
 			self.input_size = np.prod(X_shape)
-			self.output_size = y_size
 
 			self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '/X_placeholder')
 			self.y = tf.placeholder(tf.float32, [None, y_size], name=self.name + '/y_placeholder')
@@ -165,10 +167,21 @@ class SupervisedModel(ABC):
 	def validate(self, X, y, sess=None, verbose=False):
 		raise NotImplementedError('SupervisedModel is a generic class')
 
-	def save(self, filename, sess=None):
+	def save(self, filename, labels=[], sess=None):
 		with TFSession(sess, self.graph, variables=self.variables) as sess:
 			saver = tf.train.Saver()
 			saver.save(sess, filename)
+
+			metadata = {}
+			metadata['name'] = self.name
+			metadata['X_shape'] = self.X_shape
+			metadata['y_size'] = self.y_size
+			metadata['batch_size'] = self.batch_size
+			metadata['labels'] = labels
+
+			metadata_filename = '%s.%s' % (filename, METAFILE_SUFFIX)
+			with open(metadata_filename, 'w') as f:
+				f.write(json.dumps(metadata, indent=2))
 
 	def load(self, filename, sess=None):
 		with TFSession(sess, sess.graph) as sess:
@@ -183,3 +196,5 @@ class SupervisedModel(ABC):
 			self.pred = sess.graph.get_tensor_by_name(self.name + '/pred:0')
 
 			self.checkpoint_variables(sess)
+
+			# TODO: SHOULD USE METADATA, NOT SURE HOW THOUGH
