@@ -2,9 +2,11 @@ import os
 import cv2
 import scipy.ndimage
 import numpy as np
-from collections import Counter
+import tensorflow as tf 
 from random import shuffle
+from collections import Counter
 
+from tfwrapper import twimage
 from tfwrapper.utils.data import parse_features
 from tfwrapper.utils.data import write_features
 
@@ -137,10 +139,14 @@ class Dataset():
     def y(self):
         return self._y
 
-    def __init__(self, parent=None, X=np.asarray([]), y=np.asarray([]), labels=np.asarray([]), features=None, features_file=None, verbose=False):
+    def __init__(self, X=np.asarray([]), y=np.asarray([]), features=None, features_file=None, verbose=False, **kwargs):
         self._X = X
         self._y = y
-        self.labels = labels
+        
+        if 'labels' in kwargs:
+            self.labels = kwargs['labels']
+        else:
+            self.labels = np.asarray([])
 
         if features_file is not None:
             parsed_features = parse_features(features_file)
@@ -151,31 +157,55 @@ class Dataset():
             self._X = np.asarray(features['features'].tolist())
             self._y = np.asarray(features['label'].tolist())
 
+        self.cursor = 0
+
+    def batch_generator(self, batch_size, normalize=False, shuffle=False, infinite=False):
+        while True:
+            while self.cursor < len(self):
+                dataset, self.cursor = self.next_batch(self.cursor, batch_size)
+
+                if normalize:
+                    dataset = dataset.normalize()
+
+                if shuffle:
+                    dataset = dataset.shuffle()
+
+                yield dataset.X, dataset.y
+
+            if not infinite:
+                break
+
+            raise NotImplementedError('Infinite generator is not implemented (for your safety)')
+
+    def next_batch(self, start, batch_size):
+        end = start + batch_size
+        return self[start:end], end
+
     def normalize(self):
-        return self.__class__(X=normalize_array(self._X), y=self._y, labels=self.labels)
+        return self.__class__(X=normalize_array(self._X), y=self._y, **self.kwargs())
 
     def shuffle(self):
         X, y = shuffle_dataset(self._X, self._y)
 
-        return self.__class__(X=X, y=y, labels=self.labels)
+        return self.__class__(X=X, y=y, **self.kwargs())
 
     def balance(self, max=float('inf')):
         X, y = balance_dataset(self._X, self._y, max=max)
 
-        return self.__class__(X=X, y=y, labels=self.labels)
+        return self.__class__(X=X, y=y, **self.kwargs())
 
     def translate_labels(self):
         y, labels = labels_to_indexes(self._y)
 
-        return self.__class__(X=self._X, y=y, labels=labels)
+        return self.__class__(X=self._X, y=y, **self.kwargs(labels=labels))
 
     def onehot(self):
-        return self.__class__(X=self._X, y=onehot_array(self._y), labels=self.labels)
+        return self.__class__(X=self._X, y=onehot_array(self._y), **self.kwargs())
 
     def split(self, ratio=0.8):
         X, y, test_X, test_y = split_dataset(self._X, self._y, ratio=ratio)
-        train_dataset = self.__class__(X=X, y=y, labels=self.labels)
-        test_dataset = self.__class__(X=test_X, y=test_y, labels=self.labels)
+        train_dataset = self.__class__(X=X, y=y, **self.kwargs())
+        test_dataset = self.__class__(X=test_X, y=test_y, **self.kwargs())
 
         return train_dataset, test_dataset
 
@@ -189,7 +219,7 @@ class Dataset():
 
         X, y = drop_classes(self._X, self._y, keep=_keep)
 
-        return self.__class__(X=X, y=y, labels=self.labels)
+        return self.__class__(X=X, y=y, **self.kwargs())
 
     def merge_classes(self, mappings):
         X = self._X
@@ -198,7 +228,7 @@ class Dataset():
             if y[i] in mappings:
                 y[i] = mappings[y[i]]
 
-        return self.__class__(X=X, y=y, labels=self.labels)
+        return self.__class__(X=X, y=y, **self.kwargs())
 
     def folds(self, k):
         X = np.array_split(self._X, k)
@@ -206,9 +236,15 @@ class Dataset():
 
         folds = []
         for i in range(len(X)):
-            folds.append(self.__class__(X=X[i], y=y[i], labels=self.labels))
+            folds.append(self.__class__(X=X[i], y=y[i], **self.kwargs()))
 
         return folds
+
+    def kwargs(self, **kwargs):
+        if not 'labels' in kwargs:
+            kwargs['labels'] = self.labels
+
+        return kwargs
 
     def __len__(self):
         return len(self._X)
@@ -216,8 +252,11 @@ class Dataset():
     def __add__(self, other):
         X = np.concatenate((self._X, other._X))
         y = np.concatenate((self._y, other._y))
+        labels = np.asarray([])
+        if len(self.labels) > 0 and len(other.labels) > 0:
+            labels = np.concatenate(self.labels, other.labels)
 
-        return self.__class__(X=X, y=y, labels=self.labels)
+        return self.__class__(X=X, y=y, **self.kwargs(labels=labels))
 
     def __getitem__(self, val):
         if type(val) not in [slice, int]:
@@ -225,19 +264,82 @@ class Dataset():
 
         X = self._X[val]
         y = self._y[val]
+        labels = np.asarray([])
+        if len(self.labels) > 0:
+            labels = self.labels[val]
 
         if type(val) is int:
             X = np.asarray([X])
             y = np.asarray([y])
 
-        return self.__class__(X=X, y=y)
+        return self.__class__(X=X, y=y, **self.kwargs(labels=labels))
 
-from tfwrapper import twimage
+class ImageDataset(Dataset):
+    loaded_X = None
+    loaded_y = None
 
-RESIZE = "resize"
-TRANSFORM_BW = "bw"
-FLIP_LR = "fliplr"
-FLIP_UD = "flipud"
+    @property
+    def X(self):
+        if self.loaded_X is not None:
+            return self.loaded_X
+
+        X, y, _ = self.next_batch(0, float('inf'))
+        self.loaded_X = X
+        self.loaded_y = y
+        return X
+
+    @property
+    def y(self):
+        if self.loaded_y is not None:
+            return self.loaded_y
+
+        X, y, _ = self.next_batch(0, float('inf'))
+        self.loaded_X = X
+        self.loaded_y = y
+        return y
+
+    def __init__(self, X=np.asarray([]), y=np.asarray([]), root_folder=None, labels_file=None, **kwargs):
+        _X = X
+        _y = y
+
+        if 'loader' in kwargs:
+            self.loader = kwargs['loader']
+        else:
+            self.loader = ImageLoader()
+
+        print('labels in ImageDataset: %s' % 'labels' in kwargs)
+        if labels_file is not None and root_folder is not None:
+            _X, _y = parse_folder_with_labels_file(root_folder, labels_file)
+        elif root_folder is not None:
+            _X, _y = parse_datastructure(root_folder)
+
+        self.cursor = 0
+        super().__init__(X=_X, y=_y, **kwargs)
+
+    def normalize(self):
+        raise NotImplementedError('Unable to normalize an imagedataset which is read on-demand')
+
+    def next_batch(self, cursor, batch_size):
+        batch_X = []
+        batch_y = []
+
+        while len(batch_X) < batch_size and cursor < len(self):
+            imgs, names = self.loader.load(self._X[cursor], label=self._y[cursor])
+            batch_X += imgs
+            batch_y += [self._y[cursor]] * len(imgs)
+            cursor += 1
+
+        X = np.asarray(batch_X)
+        y = np.asarray(batch_y)
+
+        return X, y, cursor
+
+    def kwargs(self, kwargs={}):
+        kwargs = super().kwargs(**kwargs)
+        kwargs['loader'] = self.loader
+
+        return kwargs
+
 ROTATED = 'rotated'
 ROTATION_STEPS = 'rotation_steps'
 MAX_ROTATION_ANGLE = 'max_rotation_angle'
@@ -248,14 +350,14 @@ MAX_BLUR_SIGMA = 'max_blur_sigma'
 def create_name(name, suffixes):
     return "_".join([name] + suffixes)
 
-
-class ImagePreprocess():
+class ImagePreprocessor():
     resize_to = False
     bw = False
     flip_lr = False
     flip_ud = False
+    blur = False
+    rotate = False
 
-    # TODO: REMOVE
     augs = {}
 
     def rotate(self, rotation_steps=1, max_rotation_angle=10):
@@ -266,19 +368,12 @@ class ImagePreprocess():
     def blur(self, blur_steps=1, max_blur_sigma=1):
         self.augs[BLURRED] = {BLUR_STEPS: blur_steps, MAX_BLUR_SIGMA: max_blur_sigma}
 
-    def apply_file(self, image_path, name=None, label=None):
-        if name is None:
-            name = '.'.join(os.path.basename(image_path).split('.')[:-1])
-
-        img = twimage.imread(image_path)
-        return self.apply(img, name, label=label)
-
-    def apply(self, img, name, label=None):
+    def process(self, img, name, label=None):
         if img is None:
             return [], []
         
-        img_versions = []
-        img_names = []
+        imgs = []
+        names = []
 
         org_suffixes = []
 
@@ -286,43 +381,40 @@ class ImagePreprocess():
             img = twimage.resize(img, self.resize_to)
             #Should check for size
             width, height = self.resize_to
-            org_suffixes.append('%s%dx%d' % (RESIZE, width, height))
+            org_suffixes.append('%s%dx%d' % ('resize', width, height))
         if self.bw:
             img = twimage.bw(img, shape=3)
-            org_suffixes.append(TRANSFORM_BW)
+            org_suffixes.append('bw')
 
-        img_versions.append(img)
-        img_names.append(create_name(name, org_suffixes))
+        imgs.append(img)
+        names.append(create_name(name, org_suffixes))
 
-        # img_versions.append(img)
-        # img_names.append(org_suffixes)
-        # #Append
         if self.flip_lr:
-            img_versions.append(np.fliplr(img))
-            org_suffixes.append(FLIP_LR)
-            img_names.append(create_name(name, org_suffixes))
-            org_suffixes.remove(FLIP_LR)
+            imgs.append(np.fliplr(img))
+            org_suffixes.append('fliplr')
+            names.append(create_name(name, org_suffixes))
+            org_suffixes.remove('fliplr')
 
         if self.flip_ud:
-            img_versions.append(np.flipud(img))
-            org_suffixes.append(FLIP_UD)
-            img_names.append(create_name(name, org_suffixes))
-            org_suffixes.remove(FLIP_UD)
+            imgs.append(np.flipud(img))
+            org_suffixes.append('fliplr')
+            names.append(create_name(name, org_suffixes))
+            org_suffixes.remove('fliplr')
 
         if ROTATED in self.augs:
             rotation_steps = self.augs[ROTATED][ROTATION_STEPS]
             max_rotation_angle = self.augs[ROTATED][MAX_ROTATION_ANGLE]
             for i in range(rotation_steps):
                 angle = max_rotation_angle * (i+1)/rotation_steps
-                img_versions.append(twimage.rotate(img, angle))
+                imgs.append(twimage.rotate(img, angle))
                 org_suffixes.append(ROTATED)
                 org_suffixes.append(str(angle))
-                img_names.append(create_name(name, org_suffixes))
+                names.append(create_name(name, org_suffixes))
                 org_suffixes.remove(str(angle))
 
-                img_versions.append(twimage.rotate(img, -angle))
+                imgs.append(twimage.rotate(img, -angle))
                 org_suffixes.append(str(-angle))
-                img_names.append(create_name(name, org_suffixes))
+                names.append(create_name(name, org_suffixes))
                 org_suffixes.remove(str(-angle))
                 org_suffixes.remove(ROTATED)
 
@@ -331,32 +423,41 @@ class ImagePreprocess():
             max_blur_sigma = self.augs[BLURRED][MAX_BLUR_SIGMA]
             for i in range(blur_steps):
                 sigma = max_blur_sigma * (i+1)/blur_steps
-                img_versions.append(twimage.blur(img, sigma))
+                imgs.append(twimage.blur(img, sigma))
                 org_suffixes.append(BLURRED)
                 org_suffixes.append(str(sigma))
-                img_names.append(create_name(name, org_suffixes))
+                names.append(create_name(name, org_suffixes))
                 org_suffixes.remove(str(sigma))
                 org_suffixes.remove(BLURRED)
 
         # TODO: generate combinations of flip, rotation and blur
 
-        return img_names, img_versions
+        return imgs, names
 
-import tensorflow as tf 
+class ImageLoader():
+    def __init__(self, preprocessor=ImagePreprocessor()):
+        self.preprocessor = preprocessor
 
-class FeatureExtractor(ImagePreprocess):
-    def __init__(self, model, feature_file=None, sess=None):
-        super().__init__()
+    def load(self, path, name=None, label=None):
+        if name is None:
+            name = '.'.join(os.path.basename(path).split('.')[:-1])
+
+        img = twimage.imread(path)
+        return self.preprocessor.process(img, name, label=label)
+
+class FeatureLoader(ImageLoader):
+    def __init__(self, model, feature_file=None, preprocessor=ImagePreprocessor(), sess=None):
+        super().__init__(preprocessor=preprocessor)
         self.model = model
         self.feature_file = feature_file
         self.features = parse_features(feature_file)
         self.sess = sess
 
-    def apply(self, img, name, label=None):
+    def load(self, img, name=None, label=None):
         if label is not None and type(label) is np.ndarray:
             label = np.argmax(label)
 
-        names, imgs = super().apply(img, name, label=label)
+        imgs, names = super().load(img, name, label=label)
         features = []
         records = []
 
@@ -381,62 +482,4 @@ class FeatureExtractor(ImagePreprocess):
         if self.feature_file and len(records) > 0:
             write_features(self.feature_file, records, append=os.path.isfile(self.feature_file))
 
-        return names, features
-
-class ImageDataset(Dataset):
-    preprocessor = ImagePreprocess()
-    loaded_X = None
-    loaded_y = None
-
-    @property
-    def X(self):
-        if self.loaded_X is not None:
-            return self.loaded_X
-
-        X, y, _ = self.read_batch(0)
-        self.loaded_X = X
-        self.loaded_y = y
-        return X
-
-    @property
-    def y(self):
-        if self.loaded_y is not None:
-            return self.loaded_y
-
-        X, y, _ = self.read_batch(0)
-        self.loaded_X = X
-        self.loaded_y = y
-        return y
-
-    def __init__(self, X=np.asarray([]), y=np.asarray([]), labels=np.asarray([]), root_folder=None, labels_file=None):
-        _X = X
-        _y = y
-
-        if labels_file is not None and root_folder is not None:
-            _X, _y = parse_folder_with_labels_file(root_folder, labels_file)
-        elif root_folder is not None:
-            _X, _y = parse_datastructure(root_folder)
-
-        self.cursor = 0
-        super().__init__(X=_X, y=_y, labels=labels)
-
-    def next_batch(self, batch_size=128):
-        while self.cursor + batch_size < len(self):
-            batch_X, batch_y, cursor = self.read_batch(self.cursor)
-            self.cursor = cursor
-            yield Dataset(X=batch_X, y=batch_y, labels=self.labels)
-
-    def read_batch(self, cursor, batch_size=float('inf')):
-        batch_X = []
-        batch_y = []
-
-        while len(batch_X) < batch_size and cursor < len(self):
-            _, imgs = self.preprocessor.apply_file(self._X[cursor], label=self._y[cursor])
-            batch_X += imgs
-            batch_y += [self._y[cursor]] * len(imgs)
-            cursor += 1
-
-        X = np.asarray(batch_X)
-        y = np.asarray(batch_y)
-
-        return X, y, cursor
+        return features, names
