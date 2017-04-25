@@ -5,8 +5,8 @@ import numpy as np
 from tfwrapper import Dataset
 from tfwrapper.utils.data import write_features
 
-from .utils import curr_path
-from .utils import generate_features
+from utils import curr_path
+from utils import generate_features
 
 def test_create_from_data():
 	X = np.asarray([1, 2, 3])

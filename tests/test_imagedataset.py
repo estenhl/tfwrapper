@@ -6,8 +6,8 @@ import numpy as np
 from tfwrapper import ImageLoader
 from tfwrapper import ImageDataset
 
-from .utils import curr_path
-from .utils import remove_dir
+from utils import curr_path
+from utils import remove_dir
 
 def create_tmp_dir(root=os.path.join(curr_path, 'tmp'), size=10):
     os.mkdir(root)

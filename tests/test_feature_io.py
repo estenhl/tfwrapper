@@ -7,8 +7,8 @@ from tfwrapper.utils.data import parse_features
 from tfwrapper.utils.data import write_features
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
-from .utils import curr_path
-from .utils import generate_features
+from utils import curr_path
+from utils import generate_features
 
 def test_write_new_file():
 	filename = os.path.join(curr_path, 'test_write_new_file.tmp')
