@@ -8,17 +8,7 @@ from tfwrapper import ImageDataset
 
 from utils import curr_path
 from utils import remove_dir
-
-def create_tmp_dir(root=os.path.join(curr_path, 'tmp'), size=10):
-    os.mkdir(root)
-    for label in ['x', 'y']:
-        os.mkdir(os.path.join(root, label))
-        for i in range(int(size/2)):
-            img = np.zeros((10, 10, 3))
-            path = os.path.join(root, label, str(i) + '.jpg')
-            cv2.imwrite(path, img)
-
-    return root
+from utils import create_tmp_dir
 
 def test_create_from_datastructure():
     try:

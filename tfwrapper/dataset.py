@@ -283,20 +283,24 @@ class ImageDataset(Dataset):
         if self.loaded_X is not None:
             return self.loaded_X
 
-        X, y, _ = self.next_batch(0, float('inf'))
-        self.loaded_X = X
-        self.loaded_y = y
-        return X
+        dataset, _ = self.next_batch(0, float('inf'))
+        
+        self.loaded_X = dataset.X
+        self.loaded_y = dataset.y
+        
+        return dataset.X
 
     @property
     def y(self):
         if self.loaded_y is not None:
             return self.loaded_y
 
-        X, y, _ = self.next_batch(0, float('inf'))
-        self.loaded_X = X
-        self.loaded_y = y
-        return y
+        dataset, _ = self.next_batch(0, float('inf'))
+        
+        self.loaded_X = dataset.X
+        self.loaded_y = dataset.y
+        
+        return dataset.y
 
     def __init__(self, X=np.asarray([]), y=np.asarray([]), root_folder=None, labels_file=None, **kwargs):
         _X = X
@@ -306,8 +310,7 @@ class ImageDataset(Dataset):
             self.loader = kwargs['loader']
         else:
             self.loader = ImageLoader()
-
-        print('labels in ImageDataset: %s' % 'labels' in kwargs)
+            
         if labels_file is not None and root_folder is not None:
             _X, _y = parse_folder_with_labels_file(root_folder, labels_file)
         elif root_folder is not None:
@@ -332,9 +335,9 @@ class ImageDataset(Dataset):
         X = np.asarray(batch_X)
         y = np.asarray(batch_y)
 
-        return X, y, cursor
+        return Dataset(X=X, y=y), cursor
 
-    def kwargs(self, kwargs={}):
+    def kwargs(self, **kwargs):
         kwargs = super().kwargs(**kwargs)
         kwargs['loader'] = self.loader
 
