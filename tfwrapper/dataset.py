@@ -260,7 +260,7 @@ class Dataset():
         y = np.concatenate((self._y, other._y))
         labels = np.asarray([])
         if len(self.labels) > 0 and len(other.labels) > 0:
-            labels = np.concatenate(self.labels, other.labels)
+            labels = np.concatenate((self.labels, other.labels))
 
         return self.__class__(X=X, y=y, **self.kwargs(labels=labels))
 
@@ -308,14 +308,25 @@ class ImageDataset(Dataset):
         
         return dataset.y
 
+    @property
+    def loader(self):
+        return self._loader
+
+    @loader.setter
+    def loader(self, value):
+        print('SETTING LOADER')
+        self.loaded_X = None
+        self.loaded_y = None
+        self._loader = value
+
     def __init__(self, X=np.asarray([]), y=np.asarray([]), root_folder=None, labels_file=None, **kwargs):
         _X = X
         _y = y
 
         if 'loader' in kwargs:
-            self.loader = kwargs['loader']
+            self._loader = kwargs['loader']
         else:
-            self.loader = ImageLoader()
+            self._loader = ImageLoader()
             
         if labels_file is not None and root_folder is not None:
             _X, _y = parse_folder_with_labels_file(root_folder, labels_file)
