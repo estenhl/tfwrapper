@@ -40,8 +40,11 @@ def balance_dataset(X, y, max=float('inf')):
 
     for i in range(0, len(X)):
         if counters[y[i]] < min_count:
-            balanced_X.append(X[i])
-            balanced_y.append(y[i])
+            try:
+                balanced_X.append(X[i])
+                balanced_y.append(y[i])
+            except Exception as e:
+                print(e)
         counters[y[i]] = counters[y[i]] + 1
 
     if is_onehot:
@@ -124,8 +127,11 @@ def drop_classes(X, y, *, keep):
 
     for i in range(len(X)):
         if y[i] in keep:
-            filtered_X.append(X[i])
-            filtered_y.append(y[i])
+            try:
+                filtered_X.append(X[i])
+                filtered_y.append(y[i])
+            except Exception as e:
+                print(e)
 
     return np.asarray(filtered_X), np.asarray(filtered_y)
 
