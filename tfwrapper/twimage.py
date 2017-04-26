@@ -5,11 +5,16 @@ import scipy.ndimage
 
 
 def imread(file_path):
-    #Add try
-    image = cv2.imread(file_path)
-    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    rgb_image = None
+    
+    try:
+        image = cv2.imread(file_path)
+        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    except Exception as e:
+        print(e)
 
     return rgb_image
+
 
 
 def imwrite(file_path, image):
