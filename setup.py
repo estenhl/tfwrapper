@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='tfwrapper',
-    version='0.0.2',
+    version='0.0.4',
     description='Wrapper for tfwrapper',
     url='https://github.com/epigramai/tfwrapper',
     author='Esten Høyland Leonardsen',
