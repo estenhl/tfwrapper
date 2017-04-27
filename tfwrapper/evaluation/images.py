@@ -1,6 +1,7 @@
 import os
 import time
 import functools
+import numpy as np
 import tensorflow as tf
 
 from tfwrapper import ImageLoader
@@ -21,7 +22,7 @@ def kfold_imagesize_validation(dataset, image_sizes, k=10):
         model_size = []
 
         dataset = dataset.translate_labels()
-        
+
         preprocessor = ImagePreprocessor()
         preprocessor.resize_to = image_size
         dataset.loader = ImageLoader(preprocessor)
@@ -34,7 +35,7 @@ def kfold_imagesize_validation(dataset, image_sizes, k=10):
             test = test.onehot()
 
             with tf.Session() as sess:
-                cnn = ShallowCNN([image_size[0], image_size[1], 3], 2, name='Checkboxes', sess=sess)
+                cnn = ShallowCNN([image_size[0], image_size[1], 3], 2, name='Val%d' % i, sess=sess)
                 cnn.learning_rate = 0.0001
 
                 train_start = time.time()
@@ -44,18 +45,19 @@ def kfold_imagesize_validation(dataset, image_sizes, k=10):
                 val_start = time.time()
                 accuracy.append(cnn.validate(test.X, test.y, sess=sess)[1])
                 prediction_duration.append(time.time() - val_start)
-
-                cnn.save('test', sess=sess)
-                model_size.append(os.stat('test.data-00000-of-00001').st_size)
+                """
+                cnn.save('test_%d' % i, sess=sess)
+                model_size.append(os.stat('test_%d.data-00000-of-00001' % i).st_size)
                 os.remove('checkpoint')
-                os.remove('test.meta')
-                os.remove('test.index')
-                os.remove('test.tw')
+                os.remove('test_%d.meta' % i)
+                os.remove('test_%d.index' % i)
+                os.remove('test_%d.tw' % i)
+                """
             tf.reset_default_graph()
-        accuracies.append(np.mean(np.asarray(size_test_acc)))
-        training_durations.append(np.mean(np.asarray(size_train_time)))
-        prediction_durations.append(np.mean(np.asarray(size_val_time)))
-        model_sizes.append(np.mean(np.asarray(size_sizes)))
+        accuracies.append(np.mean(np.asarray(accuracy)))
+        training_durations.append(np.mean(np.asarray(training_duration)))
+        prediction_durations.append(np.mean(np.asarray(prediction_duration)))
+        #model_sizes.append(np.mean(np.asarray(model_size)))
 
     return accuracies, training_durations, prediction_durations, model_sizes
 if __name__ == '__main__':
@@ -64,5 +66,5 @@ if __name__ == '__main__':
 
     dataset = ImageDataset(root_folder=data_path)
     dataset = dataset.shuffle()
-    dataset = dataset[:500]
-    print(kfold_imagesize_validation(dataset, [(100, 100), (4, 4)]))
+    #dataset = dataset[:100]
+    print(kfold_imagesize_validation(dataset, [(100, 100), (4, 4)], k=5))
