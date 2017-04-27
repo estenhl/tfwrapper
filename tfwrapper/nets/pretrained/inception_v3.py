@@ -65,7 +65,6 @@ class InceptionV3(PretrainedModel):
 	def get_feature(self, img, sess, layer):
 		return self.extract_features_from_img(img, layer=layer, sess=sess)
 
-
 	def extract_features_from_img(self, img, layer='pool_3:0', sess=None):
 		with TFSession(sess, self.graph) as sess:
 			try:
@@ -76,6 +75,12 @@ class InceptionV3(PretrainedModel):
 				print(e)
 
 				return None
+
+
+	def extract_features_from_imgs(self, imgs, layer='pool_3:0', sess=None):
+		with TFSession(sess, self.graph) as sess:
+			return imgs.apply(lambda x: self.extract_features_from_img(x, layer, sess))
+
 
 	def extract_features_from_file(self, filename, layer='pool_3:0', sess=None):
 		with TFSession(sess, self.graph) as sess:
