@@ -17,16 +17,16 @@ DOWNLOAD_ID = '0B1b2bIlebXOqN3JWdHRZc05xdzQ'
 class Inception_v4(PretrainedModel):
     FEATURE_LAYER = "InceptionV4/Logits/PreLogitsFlatten/Reshape:0"
 
-    # def __init__(self, graph_file=INCEPTION_PB_PATH):
-        #self.download_if_necessary()
+    def __init__(self, graph_file=INCEPTION_PB_PATH):
+        self.download_if_necessary()
 
-        # with tf.gfile.FastGFile(graph_file, 'rb') as f:
-        #     graph_def = tf.GraphDef()
-        #     graph_def.ParseFromString(f.read())
-        #     _ = tf.import_graph_def(graph_def, name='')
-        #
-        #     PretrainedModel.__init__(self, tf.get_default_graph())
-        #     tf.reset_default_graph()
+        with tf.gfile.FastGFile(graph_file, 'rb') as f:
+            graph_def = tf.GraphDef()
+            graph_def.ParseFromString(f.read())
+            _ = tf.import_graph_def(graph_def, name='')
+
+            PretrainedModel.__init__(self, tf.get_default_graph())
+            tf.reset_default_graph()
 
     def get_feature(self, img, sess=None, layer=FEATURE_LAYER):
         if not sess:
