@@ -26,6 +26,6 @@ for i in range(len(test_X)):
 with tf.Session() as sess:
     cnn = VGG16([32, 32, 1], classes=10, sess=sess)
     cnn.learning_rate = 0.0001
-    cnn.train(X, train.y, epochs=10, sess=sess, verbose=True)
+    cnn.train(X, train.y, epochs=50, sess=sess, verbose=True)
     _, acc = cnn.validate(test_X, test.y)
     print('Test accuracy: %d%%' % (acc*100))
