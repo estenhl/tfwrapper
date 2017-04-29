@@ -8,7 +8,7 @@ from tfwrapper.nets import VGG16
 from tfwrapper.datasets import mnist
 
 
-dataset = mnist(size=1000, verbose=True)
+dataset = mnist(size=10000, verbose=True)
 dataset = dataset.balance()
 dataset = dataset.shuffle()
 dataset = dataset.translate_labels()
