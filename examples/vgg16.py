@@ -8,7 +8,6 @@ from tfwrapper.nets import VGG16
 from tfwrapper.datasets import mnist
 
 
-X_shape = [224, 224, 3]
 dataset = mnist(size=1000, verbose=True)
 dataset = dataset.balance()
 dataset = dataset.shuffle()
@@ -16,10 +15,17 @@ dataset = dataset.translate_labels()
 dataset = dataset.onehot()
 train, test = dataset.split(0.8)
 
-X = np.zeros([len(train.X), 224, 224, 1])
+X = np.zeros([len(train.X),32, 32, 1])
 for i in range(len(X)):
-    X[i] = np.resize(cv2.resize(train.X[i], (224, 224)), (224, 224, 1))
+    X[i] = np.resize(cv2.resize(train.X[i], (32, 32)), (32, 32, 1))
+
+test_X = np.zeros([len(test.X), 32, 32, 1])
+for i in range(len(test_X)):
+    test_X[i] = np.resize(cv2.resize(test.X[i], (32, 32)), (32, 32, 1))
 
 with tf.Session() as sess:
-	cnn = VGG16([224, 224, 1], classes=10, sess=sess)
-	cnn.train(X, train.y, epochs=10, sess=sess, verbose=True)
+    cnn = VGG16([32, 32, 1], classes=10, sess=sess)
+    cnn.learning_rate = 0.0001
+    cnn.train(X, train.y, epochs=10, sess=sess, verbose=True)
+    _, acc = cnn.validate(test_X, test.y)
+    print('Test accuracy: %d%%' % (acc*100))
