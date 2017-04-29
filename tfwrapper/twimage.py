@@ -5,11 +5,16 @@ import scipy.ndimage
 
 
 def imread(file_path):
-    #Add try
-    image = cv2.imread(file_path)
-    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    rgb_image = None
+    
+    try:
+        image = cv2.imread(file_path)
+        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    except Exception as e:
+        print(e)
 
     return rgb_image
+
 
 
 def imwrite(file_path, image):
@@ -26,7 +31,8 @@ def bw(image, shape=1):
     if not shape in allowed_shapes:
         raise ValueError('Illegal argument shape. Must be one of {}'.format(allowed_shapes))
     gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    gray_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2RGB)
+    if shape == 3:
+        gray_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2RGB)
 
     return gray_image
 

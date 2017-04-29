@@ -16,6 +16,8 @@ class CachedFeatureLoader():
 
         self.cache = self.read_cache_from_file()
 
+        self.sess = tf.Session(graph=self.model.graph)
+
     def read_cache_from_file(self):
         return features.parse_features(self.file_path)
 
@@ -26,19 +28,16 @@ class CachedFeatureLoader():
         names, imgs, labels = image_aug.apply_dataset(dataset)
 
         features = []
-        sess = tf.Session(graph=self.model.graph)
 
         counter_log_interval = len(names)/10
         for i, (name, img) in enumerate(zip(names, imgs)):
-            print(name)
             if (i % counter_log_interval) == 0:
                 print("{}% parsed".format(i / counter_log_interval))
             if name in self.cache:
                 features.append(self.cache[name])
-                print("Already cached")
             else:
-                print("Loading feature")
-                feature = self.model.get_feature(img, sess=sess, layer=self.layer)
+                print("Loading feature for {}".format(name))
+                feature = self.model.get_feature(img, sess=self.sess, layer=self.layer)
                 features.append(feature)
                 self.cache[name] = feature
 
@@ -68,6 +67,7 @@ class CachedFeatureLoader():
                     yield batch_X, batch_Y
                     batch_X = []
                     batch_Y = []
+
 
 
 class ImageLoader():

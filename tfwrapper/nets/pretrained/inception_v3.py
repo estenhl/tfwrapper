@@ -64,7 +64,7 @@ class InceptionV3(PretrainedModel):
 
 		return feature
 
-	def get_feature(self, img, sess, layer):
+	def get_feature(self, img, sess, layer='pool_3:0'):
 		return self.extract_features_from_img(img, layer=layer, sess=sess)
 
 	def extract_features_from_img(self, img, layer='pool_3:0', sess=None):
