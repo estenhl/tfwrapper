@@ -1,13 +1,13 @@
-import random
+import json
 import numpy as np
 import tensorflow as tf
 from abc import ABC, abstractmethod
 
 from .dataset import split_dataset
 from tfwrapper.utils.data import batch_data
-from tfwrapper.utils.metrics import loss
-from tfwrapper.utils.metrics import accuracy
 from tfwrapper.utils.exceptions import InvalidArgumentException
+
+METAFILE_SUFFIX = 'tw'
 
 class TFSession():
 	def __init__(self, session=None, graph=None, init=False, variables={}):
@@ -54,7 +54,6 @@ class SupervisedModel(ABC):
 			self.y_size = y_size
 			self.name = name
 			self.input_size = np.prod(X_shape)
-			self.output_size = y_size
 
 			self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '/X_placeholder')
 			self.y = tf.placeholder(tf.float32, [None, y_size], name=self.name + '/y_placeholder')
@@ -79,12 +78,34 @@ class SupervisedModel(ABC):
 		raise NotImplementedError('SupervisedModel is a generic class')
 
 	@staticmethod
+	def bias(size, init='zeros', trainable=True, name='bias'):
+		return SupervisedModel.weight([size], init=init, trainable=trainable, name=name)
+
+	@staticmethod
+	def weight(shape, init='truncated', stddev=0.02, trainable=True, name='weight'):
+		if init == 'truncated':
+			weight = tf.truncated_normal(shape, stddev=stddev)
+		elif init == 'random':
+			weight = tf.random_normal(shape)
+		elif init == 'zeros':
+			weight = tf.zeros(shape)
+		else:
+			raise NotImplementedError('Unknown initialization scheme %s' % str(init))
+
+		return tf.Variable(weight, trainable=trainable, name=name)
+
+	@staticmethod
 	def reshape(shape, name):
 		return lambda x: tf.reshape(x, shape=shape)
 
 	@staticmethod
-	def out(weight_shape, bias_size, name):
-		return lambda x: tf.add(tf.matmul(x, tf.Variable(tf.random_normal(weight_shape), name=name + '/weights')), tf.Variable(tf.random_normal([bias_size]), name=name + '/biases'), name=name)
+	def out(weight_shape, bias_size, trainable=True, name='pred'):
+		def create_layer(x):
+			weight = SupervisedModel.weight(weight_shape, name=name + '/W', trainable=trainable)
+			bias = SupervisedModel.bias(bias_size, name=name + '_b')
+			return tf.add(tf.matmul(x, weight), bias, name=name)
+
+		return create_layer
 
 	@staticmethod
 	def relu(name):
@@ -118,27 +139,22 @@ class SupervisedModel(ABC):
 		if val_X is None and validate:
 			X, y, val_X, val_y = split_dataset(X, y)
 
-		X_batches = batch_data(X, self.batch_size)
-		y_batches = batch_data(y, self.batch_size)
-		num_batches = len(X_batches)
-
 		if verbose:
 			print('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
 
 		with TFSession(sess, self.graph, init=True) as sess:
 			for epoch in range(epochs):
-				for i in range(num_batches):
-					sess.run(self.optimizer, feed_dict={self.X: X_batches[i], self.y: y_batches[i], self.lr: self.learning_rate})
-
-				if verbose:
-					loss, acc = self.validate(X_batches[-1], y_batches[-1], sess=sess, verbose=verbose)
-					print('Epoch %d, train loss: %.3f, train acc: %.3f' % (epoch + 1, loss, acc))
-
-					if validate:
-						loss, acc = self.validate(val_X, val_y, sess=sess, verbose=verbose)
-						print('Epoch %d, val loss: %.3f, val acc: %.3f' % (epoch + 1, loss, acc))
+				rand_idx = np.arange(len(X))
+				np.random.shuffle(rand_idx)
+				X_batches = batch_data(X[rand_idx], self.batch_size)
+				y_batches = batch_data(y[rand_idx], self.batch_size)
+				self.train_epoch(X_batches, y_batches, epoch, val_X=val_X, val_y=val_y, validate=validate, sess=sess, verbose=verbose)
 
 			self.checkpoint_variables(sess)
+
+	@abstractmethod
+	def train_epoch(self, X_batches, y_batches, epoch_nr, val_X=None, val_y=None, validate=True, sess=None, verbose=False):
+		raise NotImplementedError('SupervisedModel is a generic class')
 
 	def predict(self, X, sess=None, verbose=False):
 		with TFSession(sess, self.graph, variables=self.variables) as sess:
@@ -155,16 +171,25 @@ class SupervisedModel(ABC):
 
 		return preds
 
+	@abstractmethod
 	def validate(self, X, y, sess=None, verbose=False):
-		with TFSession(sess, self.graph, variables=self.variables) as sess:
-			preds = self.predict(X, sess=sess, verbose=verbose)
+		raise NotImplementedError('SupervisedModel is a generic class')
 
-		return loss(preds, y), accuracy(preds, y)
-
-	def save(self, filename, sess=None):
+	def save(self, filename, labels=[], sess=None):
 		with TFSession(sess, self.graph, variables=self.variables) as sess:
 			saver = tf.train.Saver()
 			saver.save(sess, filename)
+
+			metadata = {}
+			metadata['name'] = self.name
+			metadata['X_shape'] = self.X_shape
+			metadata['y_size'] = self.y_size
+			metadata['batch_size'] = self.batch_size
+			metadata['labels'] = labels
+
+			metadata_filename = '%s.%s' % (filename, METAFILE_SUFFIX)
+			with open(metadata_filename, 'w') as f:
+				f.write(json.dumps(metadata, indent=2))
 
 	def load(self, filename, sess=None):
 		with TFSession(sess, sess.graph) as sess:
@@ -179,3 +204,5 @@ class SupervisedModel(ABC):
 			self.pred = sess.graph.get_tensor_by_name(self.name + '/pred:0')
 
 			self.checkpoint_variables(sess)
+
+			# TODO: SHOULD USE METADATA, NOT SURE HOW THOUGH

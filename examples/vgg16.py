@@ -2,17 +2,24 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
+from tfwrapper import ImageLoader
+from tfwrapper import ImagePreprocessor
 from tfwrapper.nets import VGG16
 from tfwrapper.datasets import mnist
 
 
 X_shape = [224, 224, 3]
-data = mnist(size=1000, verbose=True)
-X, y, test_X, test_y, _, _ = data.getdata(balance=True, split=True, onehot=True, translate_labels=True)
-X_reshaped = np.zeros((len(X), 224, 224, 3))
+dataset = mnist(size=1000, verbose=True)
+dataset = dataset.balance()
+dataset = dataset.shuffle()
+dataset = dataset.translate_labels()
+dataset = dataset.onehot()
+train, test = dataset.split(0.8)
+
+X = np.zeros([len(train.X), 224, 224, 1])
 for i in range(len(X)):
-	X_reshaped[i] = cv2.cvtColor(cv2.resize(X[i], (224, 224)), cv2.COLOR_GRAY2BGR)
-X = X_reshaped
+    X[i] = np.resize(cv2.resize(train.X[i], (224, 224)), (224, 224, 1))
+
 with tf.Session() as sess:
-	cnn = VGG16(X_shape, classes=10, sess=sess)
-	cnn.train(X, y, epochs=10, sess=sess, verbose=True)
+	cnn = VGG16([224, 224, 1], classes=10, sess=sess)
+	cnn.train(X, train.y, epochs=10, sess=sess, verbose=True)
