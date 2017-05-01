@@ -336,7 +336,6 @@ class ImageDataset(Dataset):
 
     @loader.setter
     def loader(self, value):
-        print('SETTING LOADER')
         self.loaded_X = None
         self.loaded_y = None
         self._loader = value
