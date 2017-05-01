@@ -28,13 +28,13 @@ class VGG16(CNN):
 			self.conv2d(filter=[3, 3], depth=512, name=name + '/conv5/conv5_2'),
 			self.conv2d(filter=[3, 3], depth=512, name=name + '/conv5/conv5_3'),
 			self.maxpool2d(k=2),
-			self.fullyconnected(input_size=fc_input_size, output_size=4096, name=name + '/fc6'),
+			self.fullyconnected(inputs=fc_input_size, outputs=4096, name=name + '/fc6'),
 			self.relu(name=name + '/relu1'),
 			self.dropout(0.5),
-			self.fullyconnected(input_size=4096, output_size=4096, name=name + '/fc7'),
+			self.fullyconnected(inputs=4096, outputs=4096, name=name + '/fc7'),
 			self.relu(name=name + '/relu2'),
 			self.dropout(0.5),
-			self.fullyconnected(input_size=4096, output_size=classes, name=name + '/fc8'),
+			self.fullyconnected(inputs=4096, outputs=classes, name=name + '/fc8'),
 			self.softmax(name=name + '/pred')
 		]
 

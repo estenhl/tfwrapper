@@ -99,10 +99,12 @@ class SupervisedModel(ABC):
 		return lambda x: tf.reshape(x, shape=shape)
 
 	@staticmethod
-	def out(weight_shape, bias_size, trainable=True, name='pred'):
+	def out(*, inputs, outputs, trainable=True, name='pred'):
+		weight_shape = [inputs, outputs]
+
 		def create_layer(x):
 			weight = SupervisedModel.weight(weight_shape, name=name + '/W', trainable=trainable)
-			bias = SupervisedModel.bias(bias_size, name=name + '/b')
+			bias = SupervisedModel.bias(outputs, name=name + '/b')
 			return tf.add(tf.matmul(x, weight), bias, name=name)
 
 		return create_layer

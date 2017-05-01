@@ -8,7 +8,7 @@ h = 28
 w = 28
 c = 1
 
-dataset = mnist(size=5000, verbose=True)
+dataset = mnist(size=10000, verbose=True)
 dataset = dataset.normalize()
 dataset = dataset.balance()
 dataset = dataset.shuffle()
@@ -27,12 +27,12 @@ name = 'ExampleCustomCNN'
 twice_reduce = lambda x: -1 * ((-1 * x) // 4)
 layers = layers = [
 	CNN.reshape([-1, h, w, c], name=name + '/reshape'),
-	CNN.conv2d(filter=[5, 5], input_depth=1, depth=32, name=name + '/conv1'),
+	CNN.conv2d(filter=[5, 5], depth=32, name=name + '/conv1'),
 	CNN.maxpool2d(k=2, name=name + '/pool1'),
-	CNN.conv2d(filter=[5, 5], input_depth=32, depth=64, name=name + '/conv2'),
+	CNN.conv2d(filter=[5, 5], depth=64, name=name + '/conv2'),
 	CNN.maxpool2d(k=2, name=name + '/pool2'),
-	CNN.fullyconnected(input_size=twice_reduce(h)*twice_reduce(w)*64, output_size=512, name=name + '/fc'),
-	CNN.out([512, num_classes], num_classes, name=name + '/pred')
+	CNN.fullyconnected(inputs=twice_reduce(h)*twice_reduce(w)*64, outputs=512, name=name + '/fc'),
+	CNN.out(inputs=512, outputs=num_classes, name=name + '/pred')
 ]
 cnn = CNN([h, w, c], num_classes, layers, name=name)
 cnn.learning_rate = 1

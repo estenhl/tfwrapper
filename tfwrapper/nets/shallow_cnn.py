@@ -27,9 +27,9 @@ class ShallowCNN(CNN):
 			self.conv2d(filter=[5, 5], depth=64, name=name + '/conv2'),
 			self.conv2d(filter=[5, 5], depth=64, name=name + '/conv3'),
 			self.maxpool2d(k=2, name=name + '/pool2'),
-			self.fullyconnected(input_size=fc_input_size, output_size=512, name=name + '/fc'),
+			self.fullyconnected(inputs=fc_input_size, outputs=512, name=name + '/fc'),
 			self.dropout(0.8, name=name + '/dropout'),
-			self.out([512, self.classes], self.classes, name=name + '/pred')
+			self.out(inputs=512, outputs=classes, name=name + '/pred')
 		]
 
 		with TFSession(sess) as sess:

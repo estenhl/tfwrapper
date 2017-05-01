@@ -21,11 +21,8 @@ class NeuralNet(SupervisedModel):
 	def loss_function(self):
 		return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '/softmax'), name=self.name + '/loss')
 
-
 	def optimizer_function(self):
 		return tf.train.AdamOptimizer(learning_rate=self.lr, name=self.name + '/adam').minimize(self.loss, name=self.name + '/optimizer')
-
-
 
 	def accuracy_function(self):
 		correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
@@ -33,18 +30,24 @@ class NeuralNet(SupervisedModel):
 
 
 	@staticmethod
-	def fullyconnected(*, input_size, output_size, trainable=True, name='fullyconnected'):
-		weight_shape = [input_size, output_size]
+	def fullyconnected(*, inputs, outputs, trainable=True, activation='relu', name='fullyconnected'):
+		weight_shape = [inputs, outputs]
 		weight_name = name + '/W'
 		bias_name = name + '/b'
 
 		def create_layer(x):
 			weight = NeuralNet.weight(weight_shape, name=weight_name, trainable=trainable)
-			bias = NeuralNet.bias(output_size, name=bias_name, trainable=trainable)
+			bias = NeuralNet.bias(outputs, name=bias_name, trainable=trainable)
 
-			fc = tf.reshape(x, [-1, weight.get_shape().as_list()[0]], name=name + '/reshape')
+			fc = tf.reshape(x, [-1, inputs], name=name + '/reshape')
 			fc = tf.add(tf.matmul(fc, weight), bias, name=name + '/add')
-			fc = tf.nn.relu(fc, name=name)
+			
+			if activation == 'relu':
+				fc = tf.nn.relu(fc, name=name)
+			elif activation == 'softmax':
+				fc = tf.nn.softmax(fc, name=name)
+			else:
+				raise NotImplementedError('%s activation is not implemented (Valid: [\'relu\', \'softmax\'])' % activation)
 
 			return fc
 
@@ -62,7 +65,6 @@ class NeuralNet(SupervisedModel):
 
 			self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
 			self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')
-
 
 	def train_epoch(self, X_batches, y_batches, epoch_nr, val_X=None, val_y=None, validate=True, sess=None, verbose=False):
 		with TFSession(sess, self.graph) as sess:
