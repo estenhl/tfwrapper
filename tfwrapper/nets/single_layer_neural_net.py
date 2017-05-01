@@ -10,8 +10,8 @@ class SingleLayerNeuralNet(NeuralNet):
 			X_size = np.prod(X_shape)
 
 			layers = [
-				self.fullyconnected(input_size=X_size, output_size=hidden, name=name + '/hidden'),
-				self.out([hidden, y_size], y_size, name=name + '/pred')
+				self.fullyconnected(inputs=X_size, outputs=hidden, name=name + '/hidden'),
+				self.out(inputs=hidden, outputs=y_size, name=name + '/pred')
 			]
 
 			super().__init__(X_shape, y_size, layers, sess=sess, name=name)

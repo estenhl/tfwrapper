@@ -17,7 +17,7 @@ def shuffle_dataset(X, y):
     idx = np.arange(len(X))
     np.random.shuffle(idx)
 
-    return np.squeeze(X[idx]), np.squeeze(y[idx])
+    return X[idx], y[idx]
 
 def balance_dataset(X, y, max=float('inf')):
     assert len(X) == len(y)
@@ -214,6 +214,28 @@ class Dataset():
         test_dataset = self.__class__(X=test_X, y=test_y, **self.kwargs())
 
         return train_dataset, test_dataset
+
+    def get_clusters(self, get_labels=False):
+        if self.labels:
+            raise NotImplementedError('Getting clusters with onehotted data not implemented')
+
+        labels = sorted(list(set(self._y)))
+
+        clusters = []
+        for i in range(len(labels)):
+            clusters.append(None)
+
+        for i in range(len(self)):
+            index = labels.index(self._y[i])
+            if clusters[index] is None:
+                clusters[index] = np.asarray([self._X[i]])
+            else:
+                clusters[index] = np.concatenate([clusters[index], np.asarray([self._X[i]])])
+
+        if get_labels:
+            return clusters, labels
+        else:
+            return clusters
 
     def drop_classes(self, *, drop=None, keep=None):
         if drop is None and keep is None:

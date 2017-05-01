@@ -99,14 +99,24 @@ class SupervisedModel(ABC):
 		return lambda x: tf.reshape(x, shape=shape)
 
 	@staticmethod
-	def out(weight_shape, bias_size, trainable=True, name='pred'):
+	def out(*, inputs, outputs, trainable=True, name='pred'):
+		weight_shape = [inputs, outputs]
+
 		def create_layer(x):
 			weight = SupervisedModel.weight(weight_shape, name=name + '/W', trainable=trainable)
-			bias = SupervisedModel.bias(bias_size, name=name + '_b')
+			bias = SupervisedModel.bias(outputs, name=name + '/b')
 			return tf.add(tf.matmul(x, weight), bias, name=name)
 
 		return create_layer
 
+	@staticmethod
+	def relu(name):
+		return lambda x: tf.nn.relu(x, name=name)
+
+	@staticmethod
+	def softmax(name):
+		return lambda x: tf.nn.softmax(x, name=name)
+		
 	def checkpoint_variables(self, sess):
 		for variable in tf.global_variables():
 			self.variables[variable.name] = sess.run(variable)

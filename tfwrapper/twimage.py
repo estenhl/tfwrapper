@@ -31,7 +31,8 @@ def bw(image, shape=1):
     if not shape in allowed_shapes:
         raise ValueError('Illegal argument shape. Must be one of {}'.format(allowed_shapes))
     gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    gray_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2RGB)
+    if shape == 3:
+        gray_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2RGB)
 
     return gray_image
 

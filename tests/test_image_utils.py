@@ -3,12 +3,12 @@ import cv2
 import pytest
 import numpy as np
 
+from tfwrapper.utils.files import remove_dir
 from tfwrapper.utils.images import copy_image
 from tfwrapper.utils.images import copy_image_folder
 from tfwrapper.utils.images import find_duplicates
 
 from utils import curr_path
-from utils import remove_dir
 
 def create_image_dir(src=os.path.join(curr_path, 'tmp_src'), size=1, vary_colours=False):
 	os.mkdir(src)

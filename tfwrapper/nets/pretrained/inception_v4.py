@@ -14,7 +14,7 @@ PREDICTIONS = "InceptionV4/Logits/Predictions:0"
 
 DOWNLOAD_ID = '0B1b2bIlebXOqN3JWdHRZc05xdzQ'
 
-class Inception_v4(PretrainedModel):
+class InceptionV4(PretrainedModel):
     FEATURE_LAYER = "InceptionV4/Logits/PreLogitsFlatten/Reshape:0"
 
     def __init__(self, graph_file=INCEPTION_PB_PATH):

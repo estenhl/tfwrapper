@@ -4,6 +4,7 @@ import numpy as np
 
 from tfwrapper import Dataset
 from tfwrapper.utils.data import write_features
+from tfwrapper.utils.files import remove_dir
 
 from utils import curr_path
 from utils import generate_features

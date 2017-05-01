@@ -20,15 +20,12 @@ def is_list_of_dicts(obj):
 	return type(obj) == list and (len(obj) == 0 or type(obj[0]) == dict)
 
 def write_features(dest, all_features, delimiter='|', append=False, mode='w'):
-	print('WRITING FEATURES: %s' % str(all_features))
 	if append:
 		mode = 'a'
 	write_header = mode == 'w'
 
 	if is_list_of_dicts(all_features):
-		print('IS DICT OF LISTS')
 		all_features = pd.DataFrame(all_features)
-		print('AFTER TRANSFORM: ' + str(all_features))
 	elif type(all_features) != pd.DataFrame:
 		raise InvalidArgumentException('Write features requires either a DataFrame or a list of dicts, not %s' % type(all_features))
 
