@@ -102,7 +102,7 @@ class SupervisedModel(ABC):
 	def out(weight_shape, bias_size, trainable=True, name='pred'):
 		def create_layer(x):
 			weight = SupervisedModel.weight(weight_shape, name=name + '/W', trainable=trainable)
-			bias = SupervisedModel.bias(bias_size, name=name + '_b')
+			bias = SupervisedModel.bias(bias_size, name=name + '/b')
 			return tf.add(tf.matmul(x, weight), bias, name=name)
 
 		return create_layer

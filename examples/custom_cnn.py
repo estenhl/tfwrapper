@@ -20,7 +20,6 @@ train, test = dataset.split(0.8)
 X = train.X
 y = train.y
 
-X = np.reshape(X, [-1, h, w, c])
 num_classes = y.shape[1]
 
 name = 'ExampleCustomCNN'

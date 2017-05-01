@@ -5,8 +5,6 @@ import tarfile
 import zipfile
 import urllib.request
 import numpy as np
-
-from numpy import zeros, uint8, float32
 from shutil import copyfile
 from struct import unpack
 
@@ -15,39 +13,12 @@ from tfwrapper import Dataset
 from tfwrapper import ImageDataset
 from tfwrapper.utils.files import download_file
 
+from .utils import setup_structure
+from .utils import recursive_delete
+from .utils import curr_path
+from .mnist import download_mnist
 
 curr_path = config.DATASETS
-
-def setup_structure(name, create_data_folder=True):
-	root_path = os.path.join(curr_path, name)
-	if not os.path.isdir(root_path):
-		os.mkdir(root_path)
-
-	data_path = os.path.join(root_path, 'data')
-	if create_data_folder and not os.path.isdir(data_path):
-		os.mkdir(data_path)
-
-	labels_file = os.path.join(root_path, 'labels.txt')
-
-	return root_path, data_path, labels_file
-
-def recursive_delete(path, skip=[]):
-	ret_val = True
-	if os.path.isdir(path):
-		for filename in os.listdir(path):
-			ret_val = recursive_delete(os.path.join(path, filename), skip=skip) and ret_val
-
-
-		if ret_val:
-			os.rmdir(path)
-
-		return ret_val
-	elif os.path.isfile(path) and path not in skip:
-		os.remove(path)
-
-		return True
-
-	return False
 
 def download_cats_and_dogs(verbose=False):
 	root_path, data_path, labels_file = setup_structure('cats_and_dogs')
@@ -99,63 +70,6 @@ def download_cats_and_dogs(verbose=False):
 			os.remove(os.path.join(root_path, 'train.zip'))
 	
 	return data_path, labels_file
-
-def parse_mnist_data(data_file, labels_file, size=None, verbose=False):
-	if verbose:
-		print('Unpacking mnist data')
-
-	images = gzip.open(data_file, 'rb')
-	labels = gzip.open(labels_file, 'rb')
-
-	images.read(4)
-	number_of_images = images.read(4)
-	number_of_images = unpack('>I', number_of_images)[0]
-	rows = images.read(4)
-	rows = unpack('>I', rows)[0]
-	cols = images.read(4)
-	cols = unpack('>I', cols)[0]
-
-	labels.read(4)
-	N = labels.read(4)
-	N = unpack('>I', N)[0]
-	if size is not None:
-		N = size
-
-	X = zeros((N, rows, cols), dtype=float32)
-	y = zeros((N, 1), dtype=uint8)
-	for i in range(N):
-		if i % 1000 == 0 and verbose:
-			print("Read %i of %i images" % (i, N))
-		for row in range(rows):
-			for col in range(cols):
-				tmp_pixel = images.read(1)
-				tmp_pixel = unpack('>B', tmp_pixel)[0]
-				X[i][row][col] = tmp_pixel
-		tmp_label = labels.read(1)
-		y[i] = unpack('>B', tmp_label)[0]
-	if verbose:
-		print('Read %i images' % N)
-
-	return X, y
-
-def download_mnist(size=None, verbose=False):
-	data_url = 'http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz'
-	labels_url = 'http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz'
-
-	root_path, data_path, labels_file = setup_structure('mnist')
-	local_data_zip = os.path.join(root_path, 'data.zip')
-	local_labels_zip = os.path.join(root_path, 'labels.zip')
-
-	num_files = len(os.listdir(data_path))
-	if True: #num_files < zzz
-		if not os.path.isfile(local_data_zip):
-			download_file(data_url, local_data_zip, verbose=verbose)
-		if not os.path.isfile(local_labels_zip):
-			download_file(labels_url, local_labels_zip, verbose=verbose)
-
-	X, y = parse_mnist_data(local_data_zip, local_labels_zip, size=size, verbose=verbose)
-	
-	return X, y
 
 def download_ptb(verbose=False):
 	url = 'http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz'
@@ -229,8 +143,8 @@ def cats_and_dogs(verbose=False):
 	dataset = ImageDataset(root_folder=data_path, labels_file=labels_file, verbose=verbose)
 	return dataset
 
-def mnist(size=None, verbose=False):
-	X, y = download_mnist(size=size, verbose=verbose)
+def mnist(size=None, imagesize=[28, 28], verbose=False):
+	X, y = download_mnist(size=size, imagesize=imagesize, verbose=verbose)
 	dataset = Dataset(X=X, y=np.asarray(y).flatten())
 	return dataset
 

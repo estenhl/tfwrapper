@@ -17,7 +17,7 @@ def shuffle_dataset(X, y):
     idx = np.arange(len(X))
     np.random.shuffle(idx)
 
-    return np.squeeze(X[idx]), np.squeeze(y[idx])
+    return X[idx], y[idx]
 
 def balance_dataset(X, y, max=float('inf')):
     assert len(X) == len(y)
