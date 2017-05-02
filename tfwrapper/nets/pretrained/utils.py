@@ -6,7 +6,7 @@ from tfwrapper.utils.files import remove_dir
 from tfwrapper.utils.files import download_file
 
 if not os.path.exists(os.path.join(os.path.dirname(os.path.realpath(__file__)),'models')):
-	os.mkdir(os.path.dirname(os.path.realpath(__file__)),'models')
+	os.mkdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'models'))
 
 INCEPTION_PB_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),'models','inception_v3.pb')
 INCEPTION_TAR_URL = 'http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz'
