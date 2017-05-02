@@ -6,7 +6,7 @@ from tfwrapper.nets.pretrained.pretrained_model import PretrainedModel
 from tfwrapper.utils.download import google_drive
 from tfwrapper import config
 
-INCEPTION_PB_PATH = os.path.join(config.MODELS, 'inception_v4.pb')
+INCEPTION_PB_PATH = os.path.join(config.MODELS,'inception_v4.pb')
 
 FEATURE_LAYER = "InceptionV4/Logits/PreLogitsFlatten/Reshape:0"
 SUBFEATURES_LAYER = "InceptionV4/InceptionV4/Mixed_7d/concat:0"
@@ -18,7 +18,6 @@ class Inception_v4(PretrainedModel):
     FEATURE_LAYER = "InceptionV4/Logits/PreLogitsFlatten/Reshape:0"
 
     def __init__(self, graph_file=INCEPTION_PB_PATH):
-        print(graph_file)
         self.download_if_necessary(graph_file)
 
         with tf.gfile.FastGFile(graph_file, 'rb') as f:
