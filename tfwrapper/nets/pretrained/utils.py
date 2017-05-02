@@ -56,7 +56,6 @@ def vgg16_ckpt_path(verbose=True):
 SSD300_CKPT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),'models','ssd_300_vgg.ckpt')
 SSD300_CKPT_URL = 'https://github.com/balancap/SSD-Tensorflow/raw/master/checkpoints/ssd_300_vgg.ckpt.zip'
 
-
 def ssd300_ckpt_path(verbose=True):
 	if not os.path.isfile(SSD300_CKPT_PATH):
 		download_file(SSD300_CKPT_URL, SSD300_CKPT_PATH, verbose=verbose)

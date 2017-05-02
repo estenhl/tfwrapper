@@ -19,7 +19,7 @@ def shuffle_dataset(X, y):
 
     return X[idx], y[idx]
 
-def balance_dataset(X, y, max=float('inf')):
+def balance_dataset(X, y, max_val=0):
     assert len(X) == len(y)
 
     is_onehot = False
@@ -29,7 +29,7 @@ def balance_dataset(X, y, max=float('inf')):
 
     counts = Counter(y)
     min_count = min([counts[x] for x in counts])
-    min_count = min(min_count, max)
+    min_count = max(min_count, max_val)
 
     counters = {}
     for val in y:
@@ -195,8 +195,8 @@ class Dataset():
 
         return self.__class__(X=X, y=y, **self.kwargs())
 
-    def balance(self, max=float('inf')):
-        X, y = balance_dataset(self._X, self._y, max=max)
+    def balance(self, max=0):
+        X, y = balance_dataset(self._X, self._y, max_val=max)
 
         return self.__class__(X=X, y=y, **self.kwargs())
 

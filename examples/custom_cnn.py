@@ -35,7 +35,7 @@ layers = layers = [
 	CNN.out(inputs=512, outputs=num_classes, name=name + '/pred')
 ]
 cnn = CNN([h, w, c], num_classes, layers, name=name)
-cnn.learning_rate = 1
+cnn.learning_rate = 0.001
 cnn.train(X, y, epochs=5, verbose=True)
 _, acc = cnn.validate(test.X, test.y)
 print('Test accuracy: %d%%' % (acc*100))

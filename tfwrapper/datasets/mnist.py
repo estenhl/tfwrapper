@@ -46,9 +46,7 @@ def parse_mnist_data(data_file, labels_file, size=None, imagesize=[28, 28], verb
     if verbose:
         print('Read %i images' % N)
 
-    print('BEFORE EXPAND: %s' % str(resized_X.shape))
     resized_X = np.expand_dims(resized_X, axis=3)
-    print('AFTER EXPAND: %s' % str(resized_X.shape))
 
     return resized_X, y
 

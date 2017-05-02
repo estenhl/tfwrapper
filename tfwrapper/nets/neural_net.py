@@ -28,7 +28,6 @@ class NeuralNet(SupervisedModel):
 		correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
 		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '/accuracy')
 
-
 	@staticmethod
 	def fullyconnected(*, inputs, outputs, trainable=True, activation='relu', name='fullyconnected'):
 		weight_shape = [inputs, outputs]
