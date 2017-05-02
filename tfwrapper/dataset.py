@@ -17,9 +17,9 @@ def shuffle_dataset(X, y):
     idx = np.arange(len(X))
     np.random.shuffle(idx)
 
-    return np.squeeze(X[idx]), np.squeeze(y[idx])
+    return X[idx], y[idx]
 
-def balance_dataset(X, y, max=float('inf')):
+def balance_dataset(X, y, max_val=0):
     assert len(X) == len(y)
 
     is_onehot = False
@@ -29,7 +29,7 @@ def balance_dataset(X, y, max=float('inf')):
 
     counts = Counter(y)
     min_count = min([counts[x] for x in counts])
-    min_count = min(min_count, max)
+    min_count = max(min_count, max_val)
 
     counters = {}
     for val in y:
@@ -195,8 +195,8 @@ class Dataset():
 
         return self.__class__(X=X, y=y, **self.kwargs())
 
-    def balance(self, max=float('inf')):
-        X, y = balance_dataset(self._X, self._y, max=max)
+    def balance(self, max=0):
+        X, y = balance_dataset(self._X, self._y, max_val=max)
 
         return self.__class__(X=X, y=y, **self.kwargs())
 
@@ -214,6 +214,28 @@ class Dataset():
         test_dataset = self.__class__(X=test_X, y=test_y, **self.kwargs())
 
         return train_dataset, test_dataset
+
+    def get_clusters(self, get_labels=False):
+        if self.labels:
+            raise NotImplementedError('Getting clusters with onehotted data not implemented')
+
+        labels = sorted(list(set(self._y)))
+
+        clusters = []
+        for i in range(len(labels)):
+            clusters.append(None)
+
+        for i in range(len(self)):
+            index = labels.index(self._y[i])
+            if clusters[index] is None:
+                clusters[index] = np.asarray([self._X[i]])
+            else:
+                clusters[index] = np.concatenate([clusters[index], np.asarray([self._X[i]])])
+
+        if get_labels:
+            return clusters, labels
+        else:
+            return clusters
 
     def drop_classes(self, *, drop=None, keep=None):
         if drop is None and keep is None:
@@ -260,7 +282,7 @@ class Dataset():
         y = np.concatenate((self._y, other._y))
         labels = np.asarray([])
         if len(self.labels) > 0 and len(other.labels) > 0:
-            labels = np.concatenate(self.labels, other.labels)
+            labels = np.concatenate((self.labels, other.labels))
 
         return self.__class__(X=X, y=y, **self.kwargs(labels=labels))
 
@@ -308,14 +330,24 @@ class ImageDataset(Dataset):
         
         return dataset.y
 
+    @property
+    def loader(self):
+        return self._loader
+
+    @loader.setter
+    def loader(self, value):
+        self.loaded_X = None
+        self.loaded_y = None
+        self._loader = value
+
     def __init__(self, X=np.asarray([]), y=np.asarray([]), root_folder=None, labels_file=None, **kwargs):
         _X = X
         _y = y
 
         if 'loader' in kwargs:
-            self.loader = kwargs['loader']
+            self._loader = kwargs['loader']
         else:
-            self.loader = ImageLoader()
+            self._loader = ImageLoader()
             
         if labels_file is not None and root_folder is not None:
             _X, _y = parse_folder_with_labels_file(root_folder, labels_file)

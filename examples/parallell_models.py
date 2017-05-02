@@ -17,7 +17,6 @@ train, test = dataset.split(0.8)
 X = train.X
 test_X = test.X
 
-X = np.reshape(X, [-1, 28, 28, 1])
 rnn_X = np.reshape(X, [-1, 28, 28])
 rnn_test_X = np.reshape(test_X, [-1, 28, 28])
 

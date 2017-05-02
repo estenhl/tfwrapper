@@ -9,6 +9,7 @@ from utils import curr_path
 
 data_path = os.path.join(curr_path, '..', 'data', 'datasets', 'catsdogs', 'images')
 dataset = ImageDataset(root_folder=data_path)
+
 img = dataset[0].X[0]
 
 inception = InceptionV3()

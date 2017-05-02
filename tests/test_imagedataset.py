@@ -22,6 +22,23 @@ def test_create_from_datastructure():
     finally:
         remove_dir(root_folder)
 
+def test_create_from_weird_datastructure():
+    try:
+        root = os.path.join(curr_path, 'test')
+        folders = ['Bever','bjoern','Ekorn','Elg','Fugl','Gaupe','Grevling','Hare','Hjort','Ilder','Jerv','Katt','Maar','Mennesker - Gaaende','Mennesker - Hest','Mennesker - kjoeretoey','Mennesker - Motorsykkel','Mennesker - Syklende','Raadyr','Rein','Rev','Roeyskatt','Sau','Smaagnager','Snoemus','Ulv','Villsvin']
+        os.mkdir(root)
+        for folder in folders:
+            dest = os.path.join(root, folder)
+            os.mkdir(dest)
+            img = np.ones([28, 28, 3])
+            dest = os.path.join(dest, 'test.jpg')
+            cv2.imwrite(dest, img)
+
+        dataset = ImageDataset(root_folder=root)
+        assert len(dataset) == len(folders)
+    finally:
+        remove_dir(root)
+
 def create_tmp_labels_file(root_folder, name):
     with open(name, 'w') as f:
         for filename in os.listdir(root_folder):

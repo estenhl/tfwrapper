@@ -8,8 +8,7 @@ from tfwrapper.nets.pretrained.pretrained_model import PretrainedModel
 from tfwrapper.utils.data import parse_features
 from tfwrapper.utils.data import write_features
 
-
-INCEPTION_PB_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),'models','inception_v3.pb')
+from .utils import inceptionv3_pb_path
 
 class InceptionV3(PretrainedModel):
 	core_layer_names = [
@@ -39,7 +38,7 @@ class InceptionV3(PretrainedModel):
 
 	FEATURE_LAYER = 'pool_3:0'
 
-	def __init__(self,graph_file=INCEPTION_PB_PATH):
+	def __init__(self,graph_file=inceptionv3_pb_path()):
 		if not os.path.isfile(graph_file):
 			raise Exception('Invalid path to inception v3 pb file')
 
@@ -56,13 +55,15 @@ class InceptionV3(PretrainedModel):
 	def run_op(self, to_layer, from_layer, data, sess=None):
 		print('Extracting features from layer ' + from_layer + ' to ' + to_layer)
 		to_tensor = self.graph.get_tensor_by_name(to_layer)
+
 		if sess is None:
 			raise NotImplementedError('Needs a sess')
+			
 		feature = sess.run(to_tensor,{from_layer: data})
 
 		return feature
 
-	def get_feature(self, img, sess, layer):
+	def get_feature(self, img, sess, layer='pool_3:0'):
 		return self.extract_features_from_img(img, layer=layer, sess=sess)
 
 	def extract_features_from_img(self, img, layer='pool_3:0', sess=None):

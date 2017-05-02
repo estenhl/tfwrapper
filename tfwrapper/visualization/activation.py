@@ -23,5 +23,6 @@ def visualize_activation(features, img, cmap='OrRd'):
     ax = figure.add_subplot(111)
     plt.axis('off')
     ax.imshow(img)
-    ax.imshow(scaled_weights, alpha=0.25, cmap=cmap)
+    ax.imshow(scaled_weights, alpha=0.35, cmap=cmap)
+
     plt.show()

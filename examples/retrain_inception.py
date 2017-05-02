@@ -5,7 +5,7 @@ from tfwrapper import ImageDataset
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
 from tfwrapper.nets import SingleLayerNeuralNet
-from tfwrapper.nets.pretrained import Inception_v4
+from tfwrapper.nets.pretrained import InceptionV4
 
 curr_path = os.path.abspath(os.path.join(os.path.realpath(__file__), os.pardir))
 data_path = os.path.join(curr_path, '..', 'data', 'datasets', 'catsdogs', 'images')
@@ -17,7 +17,7 @@ dataset = dataset.translate_labels()
 dataset = dataset.onehot()
 train, test = dataset.split(0.8)
 
-inc_v4 = Inception_v4()
+inc_v4 = InceptionV4()
 feature_file = os.path.join(curr_path, 'data', 'catsdogs_features.csv')
 
 train_prep = ImagePreprocessor()

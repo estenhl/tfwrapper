@@ -7,7 +7,7 @@ from tfwrapper.datasets import flowers
 from tfwrapper.clustering import kmeans
 from tfwrapper.visualization import plot_clusters
 
-num_clusters = 3
+num_clusters = 5
 num_points_per_cluster = 100
 height = 100
 width = 100
@@ -27,6 +27,6 @@ def generate_data(num_clusters, num_points_per_cluster, height, width):
 
 centroids, points = generate_data(num_clusters, num_points_per_cluster, height, width)
 clusters = kmeans(num_clusters, points)
-names = ['Cluster 1', 'Cluster 2', 'Cluster 3']
-plot_clusters(clusters, centroids=centroids, names=names, height=height, width=width, title='KMeans example')
+names = ['Cluster %d' % i for i in range(num_clusters)]
+plot_clusters(clusters, centroids=centroids, names=names, height=height, width=width, title='KMeans example', figsize=(10, 10))
 
