@@ -44,7 +44,7 @@ def download_cats_and_dogs(verbose=False):
 			for filename in os.listdir(os.path.join(root_path, 'train')):
 				src_file = os.path.join(root_path, 'train', filename)
 
-				if not filename.endswith('.jpg'):
+				if not filename.lower().endswith('.jpg'):
 					os.remove(src_file)
 					continue
 
@@ -114,7 +114,7 @@ def download_flowers(verbose=False):
 		for filename in os.listdir(tmp_folder):
 			src = os.path.join(tmp_folder, filename)
 
-			if filename.endswith('.jpg'):
+			if filename.lower().endswith('.jpg'):
 				dest = os.path.join(data_folder, filename)
 				copyfile(src, dest)
 

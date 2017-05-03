@@ -94,7 +94,7 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
         src = os.path.join(root, foldername)
         if os.path.isdir(src):
             for filename in os.listdir(src):
-                if filename.endswith(suffix):
+                if filename.lower().endswith(suffix):
                     src_file = os.path.join(src, filename)
                     X.append(src_file)
                     y.append(foldername)
