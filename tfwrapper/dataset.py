@@ -29,7 +29,8 @@ def balance_dataset(X, y, max_val=0):
 
     counts = Counter(y)
     min_count = min([counts[x] for x in counts])
-    min_count = max(min_count, max_val)
+    if max_val is not 0:
+        min_count = max_val
 
     counters = {}
     for val in y:

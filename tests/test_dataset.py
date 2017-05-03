@@ -57,12 +57,20 @@ def test_balance():
 	assert 10 == np.sum(dataset.y)
 
 def test_balance_with_max():
-	X = np.concatenate([np.zeros(5), np.ones(8)])
-	y = np.concatenate([np.zeros(5), np.ones(8)])
+	X = np.concatenate([np.zeros(5), np.ones(10)])
+	y = np.concatenate([np.zeros(5), np.ones(10)])
 	dataset = Dataset(X=X, y=y)
-	dataset = dataset.balance(max=12)
+	dataset = dataset.balance(max=8)
 
 	assert 5 + 8 == len(dataset)
+
+def test_balance_with_low_max():
+	X = np.concatenate([np.zeros(3), np.ones(3)])
+	y = np.concatenate([np.zeros(3), np.ones(3)])
+	dataset = Dataset(X=X, y=y)
+	dataset = dataset.balance(max=2)
+
+	assert 4 == len(dataset)
 
 def test_translate_labels():
 	X = np.asarray([0, 1, 2])
