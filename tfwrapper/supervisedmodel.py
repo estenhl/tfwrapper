@@ -1,4 +1,5 @@
 import json
+import math
 import numpy as np
 import tensorflow as tf
 from abc import ABC, abstractmethod
@@ -85,6 +86,14 @@ class SupervisedModel(ABC):
 	def weight(shape, init='truncated', stddev=0.02, trainable=True, name='weight'):
 		if init == 'truncated':
 			weight = tf.truncated_normal(shape, stddev=stddev)
+		elif init == 'he_normal':
+			# He et al., http://arxiv.org/abs/1502.01852
+			fan_in, _ = SupervisedModel.compute_fan_in_out(shape)
+			weight = tf.truncated_normal(shape, stddev=math.sqrt(2 / fan_in))
+		elif init == 'xavier_normal':
+			# Glorot & Bengio, AISTATS 2010 - http://jmlr.org/proceedings/papers/v9/glorot10a/glorot10a.pdf
+			fan_in, fan_out = SupervisedModel.compute_fan_in_out(shape)
+			weight = tf.truncated_normal(shape, stddev=math.sqrt(2 / (fan_in + fan_out)))
 		elif init == 'random':
 			weight = tf.random_normal(shape)
 		elif init == 'zeros':
@@ -93,6 +102,23 @@ class SupervisedModel(ABC):
 			raise NotImplementedError('Unknown initialization scheme %s' % str(init))
 
 		return tf.Variable(weight, trainable=trainable, name=name)
+
+	@staticmethod
+	def compute_fan_in_out(weight_shape):
+		if len(weight_shape) == 2:
+			fan_in = weight_shape[0]
+			fan_out = weight_shape[1]
+		elif len(weight_shape) in {3, 4, 5}:
+			# Assuming convolution kernels (1D, 2D or 3D).
+			# TF kernel shape: (..., input_depth, depth)
+			receptive_field_size = np.prod(weight_shape[:2])
+			fan_in = weight_shape[-2] * receptive_field_size
+			fan_out = weight_shape[-1] * receptive_field_size
+		else:
+			# No specific assumptions.
+			fan_in = math.sqrt(np.prod(weight_shape))
+			fan_out = math.sqrt(np.prod(weight_shape))
+		return fan_in, fan_out
 
 	@staticmethod
 	def reshape(shape, name):
