@@ -29,13 +29,13 @@ class NeuralNet(SupervisedModel):
 		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '/accuracy')
 
 	@staticmethod
-	def fullyconnected(*, inputs, outputs, trainable=True, activation='relu', name='fullyconnected'):
+	def fullyconnected(*, inputs, outputs, trainable=True, activation='relu', init='truncated', name='fullyconnected'):
 		weight_shape = [inputs, outputs]
 		weight_name = name + '/W'
 		bias_name = name + '/b'
 
 		def create_layer(x):
-			weight = NeuralNet.weight(weight_shape, name=weight_name, trainable=trainable)
+			weight = NeuralNet.weight(weight_shape, name=weight_name, init=init, trainable=trainable)
 			bias = NeuralNet.bias(outputs, name=bias_name, trainable=trainable)
 
 			fc = tf.reshape(x, [-1, inputs], name=name + '/reshape')
