@@ -7,28 +7,22 @@ from .cnn import CNN
 
 class SqueezeNet(CNN):
     def __init__(self, X_shape, classes, sess=None, name='SqueezeNet'):
-        height, width, channels = X_shape
-
-        height, width, channels = X_shape
-        twice_reduce = lambda x: -(-x // 4)
-        fc_input_size = twice_reduce(height)*twice_reduce(width)*64
-
         layers = [
-            self.conv2d(filter=[7, 7], depth=96, strides=2, name=name + '/conv1'),
+            self.conv2d(filter=[7, 7], depth=96, strides=2, padding='VALID', init='xavier_normal', name=name + '/conv1'),
             self.maxpool2d(k=3, strides=2, name=name + '/pool1'),
-            self.fire(squeeze_depth=16, expand_depth=64, name=name + '/fire1'),
             self.fire(squeeze_depth=16, expand_depth=64, name=name + '/fire2'),
-            self.fire(squeeze_depth=32, expand_depth=128, name=name + '/fire3'),
-            self.maxpool2d(k=2, name=name + '/pool2'),
+            self.fire(squeeze_depth=16, expand_depth=64, name=name + '/fire3'),
             self.fire(squeeze_depth=32, expand_depth=128, name=name + '/fire4'),
-            self.fire(squeeze_depth=48, expand_depth=192, name=name + '/fire5'),
+            self.maxpool2d(k=3, name=name + '/pool4'),
+            self.fire(squeeze_depth=32, expand_depth=128, name=name + '/fire5'),
             self.fire(squeeze_depth=48, expand_depth=192, name=name + '/fire6'),
-            self.fire(squeeze_depth=64, expand_depth=256, name=name + '/fire7'),
-            self.maxpool2d(k=2, name=name + '/pool3'),
+            self.fire(squeeze_depth=48, expand_depth=192, name=name + '/fire7'),
             self.fire(squeeze_depth=64, expand_depth=256, name=name + '/fire8'),
-            self.maxpool2d(k=4, name=name + '/pool4'),
-            self.reshape([-1, 512], name=name + '/reshape'),
-            self.out(inputs=512, outputs=classes, name=name + '/pred')
+            self.maxpool2d(k=3, name=name + '/pool8'),
+            self.fire(squeeze_depth=64, expand_depth=256, name=name + '/fire9'),
+            self.conv2d(filter=[1, 1], depth=classes, strides=1, activation='none', padding='VALID', init='xavier_normal', name=name + '/conv10'),
+            self.flatten(name=name + 'avgpool10'),
+            self.reshape([-1, classes], name=name + '/reshape10')
         ]
 
         with TFSession(sess) as sess:
@@ -36,9 +30,9 @@ class SqueezeNet(CNN):
 
     def fire(self, *, squeeze_depth, expand_depth, name='fire'):
         def create_layer(x):
-            inputs = self.conv2d(filter=[1, 1], depth=squeeze_depth, name=name + '/squeeze')(x)
-            expand_1x1 = self.conv2d(filter=[1, 1], depth=expand_depth, name=name + '/1x1')(inputs)
-            expand_3x3 = self.conv2d(filter=[3, 3], depth=expand_depth, name=name + '/3x3')(inputs)
+            inputs = self.conv2d(filter=[1, 1], depth=squeeze_depth, padding='VALID', init='xavier_normal', name=name + '/squeeze')(x)
+            expand_1x1 = self.conv2d(filter=[1, 1], depth=expand_depth, padding='VALID', init='xavier_normal', name=name + '/1x1')(inputs)
+            expand_3x3 = self.conv2d(filter=[3, 3], depth=expand_depth, padding='SAME', init='xavier_normal', name=name + '/3x3')(inputs)
 
             return tf.concat([expand_1x1, expand_3x3], axis=3, name=name)
 

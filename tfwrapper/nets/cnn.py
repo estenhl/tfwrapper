@@ -13,7 +13,7 @@ class CNN(NeuralNet):
 			super().__init__(X_shape, classes, layers, sess=sess, name=name)
 
 	@staticmethod
-	def conv2d(*, filter, depth, strides=1, padding='SAME', activation='relu', trainable=True, name='conv2d'):
+	def conv2d(*, filter, depth, strides=1, padding='SAME', activation='relu', init='truncated', trainable=True, name='conv2d'):
 		if len(filter) != 2:
 			raise InvalidArgumentException('conv2d takes filters with exactly 2 dimensions (e.g. [3, 3])')
 
@@ -26,7 +26,7 @@ class CNN(NeuralNet):
 			weight_shape = filter + [input_depth, depth]
 			bias_size = depth
 
-			weight = CNN.weight(weight_shape, name=weight_name, trainable=trainable)
+			weight = CNN.weight(weight_shape, name=weight_name, trainable=trainable, init=init)
 			bias = CNN.bias(bias_size, name=bias_name, trainable=trainable)
 			conv = tf.nn.conv2d(x, weight, strides=[1, strides, strides, 1], padding=padding, name=name)
 			conv = tf.nn.bias_add(conv, bias)
@@ -35,8 +35,10 @@ class CNN(NeuralNet):
 				conv = tf.nn.relu(conv, name=name)
 			elif activation == 'softmax':
 				conv = tf.nn.softmax(conv, name=name)
+			elif activation == 'none':
+				pass
 			else:
-				raise NotImplementedError('%s activation is not implemented (Valid: [\'relu\', \'softmax\'])' % activation)
+				raise NotImplementedError('%s activation is not implemented (Valid: [\'relu\', \'softmax\', \'none\'])' % activation)
 
 			return conv
 
