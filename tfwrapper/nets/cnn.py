@@ -40,8 +40,6 @@ class CNN(NeuralNet):
 
 			return conv
 
-			return tf.nn.relu(conv)
-
 		return create_layer
 
 	@staticmethod
