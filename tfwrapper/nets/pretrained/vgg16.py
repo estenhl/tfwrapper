@@ -3,10 +3,12 @@ import tensorflow as tf
 from tfwrapper.nets import VGG16
 from tfwrapper.utils import get_variable_by_name
 
-from .utils import vgg16_ckpt_path
+from .utils import VGG16_CKPT_PATH
+from .utils import download_vgg16
 
 class PretrainedVGG16(VGG16):
-	def __init__(self, X_shape, *, ckpt_path=vgg16_ckpt_path(), sess=None, graph=None, name='vgg_16'):
+	def __init__(self, X_shape, *, ckpt_path=VGG16_CKPT_PATH, sess=None, graph=None, name='vgg_16'):
+		path = download_vgg16(path, verbose=True)
 		super().__init__(X_shape, sess=sess, graph=graph, name='vgg_16')
 		self.load_from_checkpoint(ckpt_path, sess=sess)
 

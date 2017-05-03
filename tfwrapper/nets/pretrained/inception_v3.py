@@ -8,7 +8,8 @@ from tfwrapper.nets.pretrained.pretrained_model import PretrainedModel
 from tfwrapper.utils.data import parse_features
 from tfwrapper.utils.data import write_features
 
-from .utils import inceptionv3_pb_path
+from .utils import INCEPTION_PB_PATH
+from .utils import download_inceptionv3
 
 class InceptionV3(PretrainedModel):
 	core_layer_names = [
@@ -38,7 +39,9 @@ class InceptionV3(PretrainedModel):
 
 	FEATURE_LAYER = 'pool_3:0'
 
-	def __init__(self,graph_file=inceptionv3_pb_path()):
+	def __init__(self,graph_file=INCEPTION_PB_PATH):
+		graph_file = download_inceptionv3(graph_file, verbose=True)
+
 		if not os.path.isfile(graph_file):
 			raise Exception('Invalid path to inception v3 pb file')
 

@@ -28,7 +28,7 @@ def create_boundingboxes(folder, output_file=None):
 	visualizer = BoundingBoxVisualizer(interactive=True)
 
 	for filename in os.listdir(folder):
-		if filename.endswith('.jpg') and filename not in existing:
+		if filename.lower().endswith('.jpg') and filename not in existing:
 			src = os.path.join(folder, filename)
 			bbox = create_boundingbox(src, visualizer)
 			if bbox is not None:

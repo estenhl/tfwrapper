@@ -29,7 +29,8 @@ def balance_dataset(X, y, max_val=0):
 
     counts = Counter(y)
     min_count = min([counts[x] for x in counts])
-    min_count = max(min_count, max_val)
+    if max_val is not 0:
+        min_count = max_val
 
     counters = {}
     for val in y:
@@ -94,7 +95,7 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
         src = os.path.join(root, foldername)
         if os.path.isdir(src):
             for filename in os.listdir(src):
-                if filename.endswith(suffix):
+                if filename.lower().endswith(suffix):
                     src_file = os.path.join(src, filename)
                     X.append(src_file)
                     y.append(foldername)
@@ -438,9 +439,9 @@ class ImagePreprocessor():
 
         if self.flip_ud:
             imgs.append(np.flipud(img))
-            org_suffixes.append('fliplr')
+            org_suffixes.append('flipud')
             names.append(create_name(name, org_suffixes))
-            org_suffixes.remove('fliplr')
+            org_suffixes.remove('flipud')
 
         if ROTATED in self.augs:
             rotation_steps = self.augs[ROTATED][ROTATION_STEPS]

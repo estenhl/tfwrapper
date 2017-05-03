@@ -6,7 +6,7 @@ import numpy as np
 def find_duplicates(folder, verbose=False):
 	images = []
 	for filename in os.listdir(folder):
-		if not (filename.endswith('.jpg') or filename.endswith('.png')):
+		if not (filename.lower().endswith('.jpg') or filename.lower().endswith('.png')):
 			continue
 
 		images.append({'filename': filename, 'img': cv2.imread(os.path.join(folder, filename))})

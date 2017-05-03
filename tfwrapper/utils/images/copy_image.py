@@ -4,7 +4,7 @@ import numpy as np
 
 def copy_image_folder(src_folder, dest_folder, size=None, bw=False, h_flip=False, v_flip=False, verbose=False):
 	for filename in os.listdir(src_folder):
-		if filename.endswith('.jpg') or filename.endswith('.png'):
+		if filename.lower().endswith('.jpg') or filename.lower().endswith('.png'):
 			src = os.path.join(src_folder, filename)
 			copy_image(src, dest_folder, size=size, bw=bw, h_flip=h_flip, v_flip=v_flip, verbose=verbose)
 
