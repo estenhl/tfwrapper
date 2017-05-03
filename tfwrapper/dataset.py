@@ -438,9 +438,9 @@ class ImagePreprocessor():
 
         if self.flip_ud:
             imgs.append(np.flipud(img))
-            org_suffixes.append('fliplr')
+            org_suffixes.append('flipud')
             names.append(create_name(name, org_suffixes))
-            org_suffixes.remove('fliplr')
+            org_suffixes.remove('flipud')
 
         if ROTATED in self.augs:
             rotation_steps = self.augs[ROTATED][ROTATION_STEPS]
