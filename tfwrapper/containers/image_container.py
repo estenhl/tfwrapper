@@ -24,7 +24,7 @@ class ImageContainer():
             src = os.path.join(root, foldername)
             if os.path.isdir(src):
                 for filename in os.listdir(src):
-                    if filename.endswith(suffix):
+                    if filename.lower().endswith(suffix):
                         src_file = os.path.join(src, filename)
                         img_path.append(src_file)
                         y.append(foldername)
