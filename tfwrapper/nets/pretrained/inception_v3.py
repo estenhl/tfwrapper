@@ -74,7 +74,7 @@ class InceptionV3(PretrainedModel):
 			try:
 				feature = self.run_op(layer, 'Cast:0', img, sess=sess)
 
-				return feature[0]
+				return feature.flatten()
 			except Exception as e:
 				print(e)
 
