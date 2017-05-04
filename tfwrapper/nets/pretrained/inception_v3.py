@@ -74,11 +74,7 @@ class InceptionV3(PretrainedModel):
 			try:
 				feature = self.run_op(layer, 'Cast:0', img, sess=sess)
 
-				# Very very dirty
-				if layer == 'pool_3:0':
-					return feature.flatten()
-				else:
-					return feature
+				return feature[0]
 			except Exception as e:
 				print(e)
 
