@@ -214,7 +214,6 @@ class SupervisedModel(ABC):
 			metadata['X_shape'] = self.X_shape
 			metadata['y_size'] = self.y_size
 			metadata['batch_size'] = self.batch_size
-			metadata['labels'] = labels
 			metadata['time'] = str(datetime.datetime.now())
 
 			metadata_filename = '%s.%s' % (filename, METAFILE_SUFFIX)
