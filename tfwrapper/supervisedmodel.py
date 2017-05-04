@@ -1,5 +1,6 @@
 import json
 import math
+import datetime
 import numpy as np
 import tensorflow as tf
 from abc import ABC, abstractmethod
@@ -203,17 +204,18 @@ class SupervisedModel(ABC):
 	def validate(self, X, y, sess=None, verbose=False):
 		raise NotImplementedError('SupervisedModel is a generic class')
 
-	def save(self, filename, labels=[], sess=None):
+	def save(self, filename, sess=None, **kwargs):
 		with TFSession(sess, self.graph, variables=self.variables) as sess:
 			saver = tf.train.Saver()
 			saver.save(sess, filename)
 
-			metadata = {}
+			metadata = kwargs
 			metadata['name'] = self.name
 			metadata['X_shape'] = self.X_shape
 			metadata['y_size'] = self.y_size
 			metadata['batch_size'] = self.batch_size
 			metadata['labels'] = labels
+			metadata['time'] = str(datetime.datetime.now())
 
 			metadata_filename = '%s.%s' % (filename, METAFILE_SUFFIX)
 			with open(metadata_filename, 'w') as f:

@@ -49,6 +49,7 @@ class SqueezeNet(CNN):
             raise NotImplementedError(
                 '%s version not implemented (Valid: [\'1.0\', \'1.1\'])' % version)
 
+        self.version = version
         with TFSession(sess) as sess:
             super().__init__(X_shape, classes, layers, sess=sess, name=name)
 
@@ -61,3 +62,7 @@ class SqueezeNet(CNN):
             return tf.concat([expand_1x1, expand_3x3], axis=3, name=name)
 
         return create_layer
+
+    def save(self, filename, sess=None, **kwargs):
+        super().save(filename, sess=sess, version=self.version, **kwargs)
+
