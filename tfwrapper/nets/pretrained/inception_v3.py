@@ -73,8 +73,12 @@ class InceptionV3(PretrainedModel):
 		with TFSession(sess, self.graph) as sess:
 			try:
 				feature = self.run_op(layer, 'Cast:0', img, sess=sess)
-				
-				return feature.flatten()
+
+				# Very very dirty
+				if layer == 'pool_3:0':
+					return feature.flatten()
+				else:
+					return feature
 			except Exception as e:
 				print(e)
 
