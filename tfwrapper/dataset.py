@@ -488,9 +488,10 @@ class ImageLoader():
         return self.preprocessor.process(img, name, label=label)
 
 class FeatureLoader(ImageLoader):
-    def __init__(self, model, feature_file=None, preprocessor=ImagePreprocessor(), sess=None):
+    def __init__(self, model, layer=None, feature_file=None, preprocessor=ImagePreprocessor(), sess=None):
         super().__init__(preprocessor=preprocessor)
         self.model = model
+        self.layer = layer
         self.feature_file = feature_file
         self.features = parse_features(feature_file)
         self.sess = sess
@@ -511,7 +512,10 @@ class FeatureLoader(ImageLoader):
                 features.append(vector)
             else:
                 print('Extracting features for %s' % names[i])
-                vector = self.model.get_feature(imgs[i], sess=self.sess)
+                if self.layer is None:
+                    vector = self.model.get_feature(imgs[i], sess=self.sess)
+                else:
+                    vector = self.model.get_feature(imgs[i], layer=self.layer, sess=self.sess)
                 features.append(vector)
                 record = {'filename': names[i], 'features': vector}
 
