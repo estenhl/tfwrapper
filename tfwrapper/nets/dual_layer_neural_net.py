@@ -5,7 +5,7 @@ from tfwrapper import TFSession
 from tfwrapper.nets import NeuralNet
 
 class DualLayerNeuralNet(NeuralNet):
-	def __init__(self, X_shape, y_size, hidden1, hidden2, sess=None, graph=None, name='SingleLayerNeuralNet'):
+	def __init__(self, X_shape, y_size, hidden1, hidden2, sess=None, name='DualLayerNeuralNet'):
 		with TFSession(sess) as sess:
 			X_size = np.prod(X_shape)
 
