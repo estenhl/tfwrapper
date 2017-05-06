@@ -15,6 +15,6 @@ class DualLayerNeuralNet(NeuralNet):
 				self.out(inputs=hidden2, outputs=y_size, name=name + '/pred')
 			]
 
-			super().__init__(X_shape, y_size, layers, sess=sess, graph=graph, name=name)
+			super().__init__(X_shape, y_size, layers, sess=sess, name=name)
 
 			self.graph = sess.graph
