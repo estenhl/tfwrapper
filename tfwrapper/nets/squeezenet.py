@@ -24,7 +24,7 @@ class SqueezeNet(CNN):
                 # todo: Dropout /drop9 here, once we can turn it off during validation/test
                 self.conv2d(filter=[1, 1], depth=classes, strides=1, padding='VALID', init='xavier_normal', name=name + '/conv10'),
                 self.flatten(name=name + 'avgpool10'),
-                self.reshape([-1, classes], name=name + '/reshape10')
+                self.reshape([-1, classes], name=name + '/pred')
             ]
         elif version == '1.0':
             layers = [
@@ -43,7 +43,7 @@ class SqueezeNet(CNN):
                 # todo: Dropout /drop9 here, once we can turn it off during validation/test
                 self.conv2d(filter=[1, 1], depth=classes, strides=1, padding='VALID', init='xavier_normal', name=name + '/conv10'),
                 self.flatten(name=name + 'avgpool10'),
-                self.reshape([-1, classes], name=name + '/reshape10')
+                self.reshape([-1, classes], name=name + '/pred')
             ]
         else:
             raise NotImplementedError(
