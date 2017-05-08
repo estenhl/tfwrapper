@@ -123,7 +123,7 @@ class SupervisedModel(ABC):
 
 	@staticmethod
 	def reshape(shape, name):
-		return lambda x: tf.reshape(x, shape=shape)
+		return lambda x: tf.reshape(x, shape=shape, name=name)
 
 	@staticmethod
 	def out(*, inputs, outputs, init='truncated', trainable=True, name='pred'):
