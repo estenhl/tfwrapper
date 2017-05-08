@@ -12,7 +12,7 @@ A collection of datasets convenient for
 * image_size: Size of the individual images. Defaults to (28, 28)
 
 ###### Example:
-An example can be seen in [custom_cnn.py]()
+An example can be seen in [custom_cnn.py](https://github.com/epigramai/tfwrapper/blob/cifar/examples/custom_cnn.py)
 ### cifar10
 50 000 small images (32x32) from the 10 classes {airplane, automobile, bird, cat, deer, dog, frog, horse, ship, truck}. Originates from [Learning Multiple Layers of Features from Tiny Images](https://www.cs.toronto.edu/~kriz/learning-features-2009-TR.pdf)
 ###### Usage:
@@ -21,7 +21,7 @@ An example can be seen in [custom_cnn.py]()
 * size: Number of images in the dataset. Defaults to the full set
 
 ###### Example:
-An example can be seen in [shallow_cnn.py]()
+An example can be seen in [shallow_cnn.py](https://github.com/epigramai/tfwrapper/blob/cifar/examples/shallow_cnn.py)
 ### cifar100
 50 000 small images (32x32) from the 100 classes. Originates from [Learning Multiple Layers of Features from Tiny Images](https://www.cs.toronto.edu/~kriz/learning-features-2009-TR.pdf)
 ###### Usage:
@@ -39,4 +39,4 @@ No example currently exists
 * size: Number of images in the dataset. Defaults to the full set
 
 ###### Example:
-An example can be seen in [kmeans.py]()
+An example can be seen in [kmeans.py](https://github.com/epigramai/tfwrapper/blob/cifar/examples/kmeans.py)
