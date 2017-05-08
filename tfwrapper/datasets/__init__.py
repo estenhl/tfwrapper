@@ -17,6 +17,7 @@ from .utils import setup_structure
 from .utils import recursive_delete
 from .utils import curr_path
 from .mnist import download_mnist
+from .cifar import download_cifar10
 
 curr_path = config.DATASETS
 
@@ -170,3 +171,9 @@ def flowers(size=1360, verbose=False):
 		dataset = ImageDataset(root_folder=data_path, labels_file=labels_file)
 	
 	return dataset
+
+def cifar10(verbose=False):
+	X, y = download_cifar10(verbose=verbose)
+	dataset = Dataset(X=X, y=y)
+	return dataset
+

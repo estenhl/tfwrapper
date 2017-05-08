@@ -1,4 +1,5 @@
 import os
+import pickle
 
 from tfwrapper import config
 
@@ -34,3 +35,8 @@ def recursive_delete(path, skip=[]):
         return True
 
     return False
+
+def unpickle(file):
+    with open(file, 'rb') as fo:
+        dict = pickle.load(fo, encoding='bytes')
+    return dict
