@@ -1,8 +1,8 @@
 ## Datasets
 A collection of datasets convenient for
 
-### cats and dogs
-### mnist
+#### cats and dogs
+#### mnist
 60 000 images containing handwritten digits in the range 0 through 9. Originally created (on this form) by [Yann LeCun](http://yann.lecun.com/exdb/mnist/)
 
 ###### Usage:
@@ -13,7 +13,7 @@ A collection of datasets convenient for
 
 ###### Example:
 An example can be seen in [custom_cnn.py](https://github.com/epigramai/tfwrapper/blob/master/examples/custom_cnn.py)
-### cifar10
+#### cifar10
 50 000 small images (32x32) from the 10 classes {airplane, automobile, bird, cat, deer, dog, frog, horse, ship, truck}. Originates from [Learning Multiple Layers of Features from Tiny Images](https://www.cs.toronto.edu/~kriz/learning-features-2009-TR.pdf)
 ###### Usage:
 `from tfwrapper.datasets import cifar10`
@@ -22,7 +22,7 @@ An example can be seen in [custom_cnn.py](https://github.com/epigramai/tfwrapper
 
 ###### Example:
 An example can be seen in [shallow_cnn.py](https://github.com/epigramai/tfwrapper/blob/master/examples/shallow_cnn.py)
-### cifar100
+#### cifar100
 50 000 small images (32x32) from 100 classes. Originates from [Learning Multiple Layers of Features from Tiny Images](https://www.cs.toronto.edu/~kriz/learning-features-2009-TR.pdf)
 ###### Usage:
 `from tfwrapper.datasets import cifar100`
@@ -31,7 +31,7 @@ An example can be seen in [shallow_cnn.py](https://github.com/epigramai/tfwrappe
 
 ###### Example:
 No example currently exists
-### flowers
+#### flowers
 1360 images of flowers from 17 different species. Used in [A Visual Vocabulary for Flower Classification](http://www.robots.ox.ac.uk/~vgg/publications/papers/nilsback06.pdf)
 ###### Usage:
 `from tfwrapper.datasets import flowers`
