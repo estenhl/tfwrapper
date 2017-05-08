@@ -1,7 +1,8 @@
 import urllib.request
 
+from tfwrapper import logger
+
 def download_file(url, path, verbose=False):
-	if verbose:
-		print('Downloading ' + url  + ' to ' + path)
+	logger.info('Downloading ' + url  + ' to ' + path)
 
 	urllib.request.urlretrieve(url, path)

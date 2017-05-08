@@ -16,8 +16,9 @@ from tfwrapper.utils.files import download_file
 from .utils import setup_structure
 from .utils import recursive_delete
 from .utils import curr_path
-from .mnist import download_mnist
-from .cifar import download_cifar10
+from .mnist import parse_mnist
+from .cifar import parse_cifar10
+from .cifar import parse_cifar100
 
 curr_path = config.DATASETS
 
@@ -144,8 +145,8 @@ def cats_and_dogs(verbose=False):
 	dataset = ImageDataset(root_folder=data_path, labels_file=labels_file, verbose=verbose)
 	return dataset
 
-def mnist(size=None, imagesize=[28, 28], verbose=False):
-	X, y = download_mnist(size=size, imagesize=imagesize, verbose=verbose)
+def mnist(size=None, imagesize=[28, 28]):
+	X, y = parse_mnist(size=size, imagesize=imagesize)
 	dataset = Dataset(X=X, y=np.asarray(y).flatten())
 	return dataset
 
@@ -172,8 +173,12 @@ def flowers(size=1360, verbose=False):
 	
 	return dataset
 
-def cifar10(verbose=False):
-	X, y = download_cifar10(verbose=verbose)
+def cifar10(size=50000):
+	X, y = parse_cifar10(size=size)
 	dataset = Dataset(X=X, y=y)
 	return dataset
 
+def cifar100(size=50000):
+	X, y = parse_cifar100(size=size)
+	dataset = Dataset(X=X, y=y)
+	return dataset

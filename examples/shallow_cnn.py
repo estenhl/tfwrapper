@@ -4,7 +4,7 @@ import tensorflow as tf
 from tfwrapper.nets import ShallowCNN
 from tfwrapper.datasets import cifar10
 
-dataset = cifar10(verbose=True)
+dataset = cifar10(size=30000)
 dataset = dataset.normalize()
 dataset = dataset.balance()
 dataset = dataset.shuffle()

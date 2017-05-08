@@ -8,7 +8,7 @@ h = 28
 w = 28
 c = 1
 
-dataset = mnist(size=10000, verbose=True)
+dataset = mnist(size=10000)
 dataset = dataset.normalize()
 dataset = dataset.balance()
 dataset = dataset.shuffle()
