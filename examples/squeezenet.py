@@ -2,9 +2,9 @@ import numpy as np
 import tensorflow as tf
 
 from tfwrapper.nets import SqueezeNet
-from tfwrapper.datasets import mnist
+from tfwrapper.datasets import cifar100
 
-dataset = mnist(size=10000,  verbose=True)
+dataset = cifar100()
 dataset = dataset.normalize()
 dataset = dataset.balance()
 dataset = dataset.shuffle()
@@ -12,7 +12,7 @@ dataset = dataset.translate_labels()
 dataset = dataset.onehot()
 train, test = dataset.split(0.8)
 
-cnn = SqueezeNet([28, 28, 1], 10, name='ExampleSqueezeNet')
+cnn = SqueezeNet([32, 32, 3], 10, name='ExampleSqueezeNet')
 cnn.learning_rate = 0.1
 cnn.train(train.X, train.y, epochs=5, verbose=True)
 _, acc = cnn.validate(test.X, test.y)

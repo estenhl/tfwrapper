@@ -9,7 +9,7 @@ from time import process_time
 from tfwrapper.nets import RNN
 from tfwrapper.datasets import mnist
 
-dataset = mnist(size=1000, verbose=True)
+dataset = mnist(size=1000)
 dataset = dataset.normalize()
 dataset = dataset.translate_labels()
 dataset = dataset.onehot()

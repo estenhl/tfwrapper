@@ -8,7 +8,7 @@ from tfwrapper.datasets import mnist
 
 from utils import curr_path
 
-dataset = mnist(size=5000, verbose=True)
+dataset = mnist(size=5000)
 dataset = dataset.normalize()
 dataset = dataset.shuffle()
 dataset = dataset.onehot()
