@@ -30,7 +30,7 @@ An example can be seen in [shallow_cnn.py](https://github.com/epigramai/tfwrappe
 * size: Number of images in the dataset. Defaults to the full set
 
 ###### Example:
-No example currently exists
+An example can be seen in [shallow_cnn.py](https://github.com/epigramai/tfwrapper/blob/master/examples/squeezenet.py)
 #### flowers
 1360 images of flowers from 17 different species. Used in [A Visual Vocabulary for Flower Classification](http://www.robots.ox.ac.uk/~vgg/publications/papers/nilsback06.pdf)
 ###### Usage:
