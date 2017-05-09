@@ -6,6 +6,8 @@ import tensorflow as tf
 from random import shuffle
 from collections import Counter
 
+from .logger import logger
+from .tfsession import TFSession
 from tfwrapper import twimage
 from tfwrapper.utils.data import parse_features
 from tfwrapper.utils.data import write_features
@@ -488,13 +490,14 @@ class ImageLoader():
         return self.preprocessor.process(img, name, label=label)
 
 class FeatureLoader(ImageLoader):
-    def __init__(self, model, layer=None, feature_file=None, preprocessor=ImagePreprocessor(), sess=None):
+    sess = None
+
+    def __init__(self, model, layer=None, cache=None, preprocessor=ImagePreprocessor(), sess=sess):
         super().__init__(preprocessor=preprocessor)
         self.model = model
         self.layer = layer
-        self.feature_file = feature_file
-        self.features = parse_features(feature_file)
-        self.sess = sess
+        self.cache = cache
+        self.features = parse_features(cache)
 
     def load(self, img, name=None, label=None):
         if label is not None and type(label) is np.ndarray:
@@ -504,28 +507,29 @@ class FeatureLoader(ImageLoader):
         features = []
         records = []
 
-        for i in range(len(imgs)):
-            if names[i] in self.features['filename'].values:
-                print('Skipping %s' % names[i])
-                vector = self.features[self.features['filename'] == names[i]]['features']
-                vector = np.asarray(vector)[0]
-                features.append(vector)
-            else:
-                print('Extracting features for %s' % names[i])
-                if self.layer is None:
-                    vector = self.model.get_feature(imgs[i], sess=self.sess)
+        with TFSession(self.sess) as sess:
+            for i in range(len(imgs)):
+                if names[i] in self.features['filename'].values:
+                    logger.info('Skipping %s' % names[i])
+                    vector = self.features[self.features['filename'] == names[i]]['features']
+                    vector = np.asarray(vector)[0]
+                    features.append(vector)
                 else:
-                    vector = self.model.get_feature(imgs[i], layer=self.layer, sess=self.sess)
-                features.append(vector)
-                record = {'filename': names[i], 'features': vector}
+                    logger.info('Extracting features for %s' % names[i])
+                    if self.layer is None:
+                        vector = self.model.extract_bottleneck_features(imgs[i], sess=sess)
+                    else:
+                        vector = self.model.extract_features(imgs[i], layer=self.layer, sess=sess)
+                    features.append(vector)
+                    record = {'filename': names[i], 'features': vector}
 
-                if label is not None:
-                    record['label'] = label
+                    if label is not None:
+                        record['label'] = label
 
-                records.append(record)
-                self.features = self.features.append(record, ignore_index=True)
+                    records.append(record)
+                    self.features = self.features.append(record, ignore_index=True)
 
-        if self.feature_file and len(records) > 0:
-            write_features(self.feature_file, records, append=os.path.isfile(self.feature_file))
+            if self.cache and len(records) > 0:
+                write_features(self.cache, records, append=os.path.isfile(self.cache))
 
         return features, names
