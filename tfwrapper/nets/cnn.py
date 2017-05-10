@@ -64,9 +64,9 @@ class CNN(NeuralNet):
             filtersize = [1, int(height), int(width), 1]
 
             if method == 'avgpool':
-                return tf.nn.avg_pool(x, ksize=filtersize, strides=filtersize, padding=padding, name=name)
+                return tf.nn.avg_pool(x, ksize=filtersize, strides=filtersize, padding='SAME', name=name)
             elif method == 'maxpool':
-                return tf.nn.max_pool(x, ksize=filtersize, strides=filtersize, padding=padding, name=name)
+                return tf.nn.max_pool(x, ksize=filtersize, strides=filtersize, padding='SAME', name=name)
             else:
                 errormsg = '%s method for flatten not impolemented (Valid: [\'avgpool\', \'maxpool\'])' % method
                 logger.error(errormsg)
