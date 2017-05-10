@@ -496,8 +496,9 @@ class FeatureLoader(ImageLoader):
         super().__init__(preprocessor=preprocessor)
         self.model = model
         self.layer = layer
-        self.cache = cache
-        self.features = parse_features(cache)
+        if cache:
+            self.cache = cache
+            self.features = parse_features(cache)
 
     def load(self, img, name=None, label=None):
         if label is not None and type(label) is np.ndarray:
