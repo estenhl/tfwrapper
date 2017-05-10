@@ -61,7 +61,7 @@ class CNN(NeuralNet):
     def flatten(method='avgpool', name='flatten'):
         def create_layer(x):
             _, height, width, _ = x.get_shape()
-            filtersize = [1, height, width, 1]
+            filtersize = [1, int(height), int(width), 1]
 
             if method == 'avgpool':
                 return CNN.avgpool2d(k=filtersize, strides=filtersize, padding='SAME', name=name)(x)
