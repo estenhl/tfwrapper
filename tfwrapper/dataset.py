@@ -149,6 +149,10 @@ class Dataset():
     def y(self):
         return self._y
 
+    @property
+    def shape(self):
+        return self._X.shape
+
     def __init__(self, X=np.asarray([]), y=np.asarray([]), features=None, features_file=None, verbose=False, **kwargs):
         self._X = X
         self._y = y
@@ -335,6 +339,13 @@ class ImageDataset(Dataset):
         return dataset.y
 
     @property
+    def shape(self):
+        if self.loaded_X is not None:
+            return self.loaded_X.shape
+        else:
+            return [len(self)] + self.loader.shape[1:]
+
+    @property
     def loader(self):
         return self._loader
 
@@ -480,6 +491,14 @@ class ImagePreprocessor():
         return imgs, names
 
 class ImageLoader():
+
+    @property
+    def shape(self):
+        if self.preprocessor.resize_to:
+            return [-1] + list(self.preprocessor.resize_to) + [3]
+
+        return [-1, -1, -1, 3]
+
     def __init__(self, preprocessor=ImagePreprocessor()):
         self.preprocessor = preprocessor
 
@@ -492,6 +511,15 @@ class ImageLoader():
 
 class FeatureLoader(ImageLoader):
     sess = None
+
+    @property
+    def shape(self):
+        layer = self.layer
+
+        if layer is None:
+            layer = -1
+
+        return self.model.get_layer_shape(layer)
 
     def __init__(self, model, layer=None, cache=None, preprocessor=ImagePreprocessor(), sess=None):
         super().__init__(preprocessor=preprocessor)

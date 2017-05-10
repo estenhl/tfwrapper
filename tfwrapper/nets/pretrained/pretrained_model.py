@@ -25,3 +25,15 @@ class PretrainedModel():
 
             return features
 
+    def get_layer_shape(self, id):
+        if hasattr(self, 'core_layer_names'):
+            if type(id) is int:
+                return self.core_layer_names[id]['output']
+            elif type(id) is str:
+                for i in range(len(self.core_layer_names)):
+                    if self.core_layer_names[i]['name'] == id:
+                        return self.core_layer_names[i]['output']
+
+            logger.error('Invalid id %s' % repr(id))
+        return [-1, -1, -1, -1]
+

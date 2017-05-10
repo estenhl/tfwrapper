@@ -230,3 +230,9 @@ def test_inherit_labels():
 
 	assert np.array_equal(labels, dataset.labels)
 
+def test_shape():
+	X = np.reshape(np.arange(27), (3, 3, 3))
+	y = np.reshape(np.arange(27), (3, 3, 3))
+	dataset = Dataset(X=X, y=y)
+	
+	assert X.shape == dataset.shape
