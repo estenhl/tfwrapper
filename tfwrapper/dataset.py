@@ -493,15 +493,18 @@ class ImageLoader():
 class FeatureLoader(ImageLoader):
     sess = None
 
-    def __init__(self, model, layer=None, cache=None, preprocessor=ImagePreprocessor(), sess=sess):
+    def __init__(self, model, layer=None, cache=None, preprocessor=ImagePreprocessor(), sess=None):
         super().__init__(preprocessor=preprocessor)
         self.model = model
         self.layer = layer
 
+        self.cache = None
         self.features = pd.DataFrame(columns = ['filename', 'label', 'features'])
         if cache:
             self.cache = cache
             self.features = parse_features(cache)
+
+        self.sess = sess
 
     def load(self, img, name=None, label=None):
         if label is not None and type(label) is np.ndarray:
