@@ -25,7 +25,7 @@ num_classes = y.shape[1]
 name = 'ExampleCustomCNN'
 # TODO: make dependent on list of maxpool factors 'k'
 twice_reduce = lambda x: -1 * ((-1 * x) // 4)
-layers = layers = [
+layers = [
 	CNN.reshape([-1, h, w, c], name=name + '/reshape'),
 	CNN.conv2d(filter=[5, 5], depth=32, name=name + '/conv1'),
 	CNN.maxpool2d(k=2, name=name + '/pool1'),
