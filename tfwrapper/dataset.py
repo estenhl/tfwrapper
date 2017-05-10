@@ -496,6 +496,8 @@ class FeatureLoader(ImageLoader):
         super().__init__(preprocessor=preprocessor)
         self.model = model
         self.layer = layer
+
+        self.features = pd.DataFrame(columns = ['filename', 'label', 'features'])
         if cache:
             self.cache = cache
             self.features = parse_features(cache)
