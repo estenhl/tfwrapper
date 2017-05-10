@@ -2,7 +2,8 @@ import os
 import cv2
 import scipy.ndimage
 import numpy as np
-import tensorflow as tf 
+import tensorflow as tf
+import pandas as pd
 from random import shuffle
 from collections import Counter
 
