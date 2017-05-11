@@ -171,7 +171,8 @@ class SupervisedModel(ABC):
             preds = None
 
             for batch in batches:
-                batch_preds = sess.run(self.pred, feed_dict={self.X: batch})
+                feed_dict[self.X] = batch
+                batch_preds = sess.run(self.pred, feed_dict=feed_dict)
                 if preds is not None:
                     preds = np.concatenate([preds, batch_preds])
                 else:

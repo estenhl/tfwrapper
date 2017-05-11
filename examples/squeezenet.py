@@ -12,9 +12,11 @@ dataset = dataset.translate_labels()
 dataset = dataset.onehot()
 train, test = dataset.split(0.8)
 
-cnn = SqueezeNet([32, 32, 3], 100, name='ExampleSqueezeNet')
-cnn.learning_rate = 0.00005
-cnn.train(train.X, train.y, epochs=100, verbose=True)
-_, acc = cnn.validate(test.X, test.y)
-preds = cnn.predict(test.X)
-print('Test accuracy: %d%%' % (acc*100))
+with tf.Session() as sess:
+    cnn = SqueezeNet([32, 32, 3], 100, name='ExampleSqueezeNet', sess=sess)
+    cnn.learning_rate = 0.00005
+    cnn.train(train.X, train.y, epochs=100, sess=sess)
+    _, acc = cnn.validate(test.X, test.y, sess=sess)
+    print('Test accuracy: %d%%' % (acc*100))
+    preds = cnn.predict(test.X, sess=sess)
+
