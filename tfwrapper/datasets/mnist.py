@@ -5,6 +5,7 @@ import numpy as np
 from struct import unpack
 
 from tfwrapper import logger
+from tfwrapper.utils.files import download_file
 
 from .utils import setup_structure
 from .utils import recursive_delete
