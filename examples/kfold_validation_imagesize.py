@@ -1,12 +1,9 @@
 import os
 
-from tfwrapper import ImageDataset
+from tfwrapper.datasets import cats_and_dogs
 from tfwrapper.validation import kfold_validation_imagesize
 
-curr_path = os.path.abspath(os.path.join(os.path.realpath(__file__), os.pardir))
-data_path = os.path.join(curr_path, '..', 'data', 'datasets', 'catsdogs', 'images')
-
-dataset = ImageDataset(root_folder=data_path)
+dataset = cats_and_dogs()
 dataset = dataset.shuffle()
 dataset = dataset[:10000]
 
