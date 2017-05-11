@@ -39,7 +39,7 @@ for rep in range(nr_of_runs):  # statistics gathering loop
     model.batch_size = batch_size
 
     time_start = process_time()
-    model.train(train_ds.X, train_ds.y, epochs=epochs, verbose=True, validate=True)
+    model.train(train_ds.X, train_ds.y, epochs=epochs, validate=True)
     time_end = process_time()
     time.append(time_end - time_start)
 

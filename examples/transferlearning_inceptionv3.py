@@ -17,7 +17,10 @@ dataset = dataset.translate_labels()
 dataset = dataset.onehot()
 train, test = dataset.split(0.8)
 
-features_file = os.path.join(curr_path, 'data', 'catsdogs_inceptionv3.csv')
+datafolder = os.path.join(curr_path, 'data')
+if not os.path.isdir(datafolder):
+    os.mkdir(datafolder)
+features_file = os.path.join(datafolder, 'catsdogs_inceptionv3.csv')
 
 with tf.Session() as sess:
     inception = InceptionV3()
@@ -39,7 +42,7 @@ with tf.Session() as sess:
 
 with tf.Session() as sess:
     nn = SingleLayerNeuralNet([2048], 2, 1024, sess=sess, name='InceptionV4Test')
-    nn.train(X, y, epochs=10, sess=sess, verbose=True)
+    nn.train(X, y, epochs=10, sess=sess)
     _, acc = nn.validate(test_X, test_y, sess=sess)
     print('Acc: %d%%' % (acc * 100))
 
