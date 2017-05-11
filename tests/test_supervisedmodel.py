@@ -17,7 +17,7 @@ def test_mismatching_lengths():
 
     exception = False
     try:
-        model.train(X, y)
+        model.train(X, y, epochs=1)
     except InvalidArgumentException:
         exception = True
 
@@ -30,7 +30,7 @@ def test_invalid_X_shape():
 
     exception = False
     try:
-        model.train(X, y)
+        model.train(X, y, epochs=1)
     except InvalidArgumentException:
         exception = True
 
@@ -43,7 +43,7 @@ def test_y_without_onehot():
 
     exception = False
     try:
-        model.train(X, y)
+        model.train(X, y, epochs=1)
     except InvalidArgumentException:
         exception = True
 
@@ -56,7 +56,7 @@ def test_invalid_classes():
 
     exception = False
     try:
-        model.train(X, y)
+        model.train(X, y, epochs=1)
     except InvalidArgumentException:
         exception = True
 
