@@ -78,7 +78,7 @@ def kfold_validation(dataset, create_model, k=10, epochs=10, validator=Validator
         with tf.Session() as sess:
             model = create_model(i, sess)
             train_start = time.time()
-            model.train(train.X, train.y, epochs=epochs, verbose=True, sess=sess)
+            model.train(train.X, train.y, epochs=epochs, sess=sess)
             training_duration.append(time.time() - train_start)
 
             val_start = time.time()
