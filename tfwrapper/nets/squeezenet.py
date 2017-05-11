@@ -67,9 +67,9 @@ class SqueezeNet(CNN):
     def save(self, filename, sess=None, **kwargs):
         return super().save(filename, sess=sess, version=self.version, **kwargs)
 
-    def train(self, X, y, *, epochs, dropout=0.8, feed_dict={}, val_X=None, val_y=None, validate=True, sess=None):
+    def train(self, X=None, y=None, generator=None, epochs=None, feed_dict={}, val_X=None, val_y=None, val_generator=None, validate=True, shuffle=True, sess=None):
         feed_dict[self.drop] = dropout
-        return super().train(X, y, epochs=epochs, feed_dict=feed_dict, val_X=val_X, val_y=val_y, validate=validate, sess=sess)
+        return super().train(X=X, y=y, generator=generator, epochs=epochs, feed_dict=feed_dict, val_X=val_X, val_y=val_y, validate=validate, shuffle=shuffle, sess=sess)
 
     def predict(self, X, feed_dict={}, sess=None):
         feed_dict[self.drop] = 1

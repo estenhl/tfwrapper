@@ -1,5 +1,6 @@
 import sys
 import copy
+import random
 import numpy as np
 import tensorflow as tf
 
@@ -51,11 +52,9 @@ class NeuralNet(SupervisedModel):
 
         return create_layer
 
-
     @staticmethod
     def dropout(dropout, name='dropout'):
         return lambda x: tf.nn.dropout(x, dropout, name=name)
-
 
     def load(self, filename, sess=None):
         with TFSession(sess, self.graph, self.variables) as sess:
@@ -64,45 +63,70 @@ class NeuralNet(SupervisedModel):
             self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
             self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')
 
-    def train_epoch(self, X_batches, y_batches, epoch_nr, feed_dict={}, val_X=None, val_y=None, validate=True, sess=None):
+    def train_epoch(self, batches, epoch_nr, feed_dict={}, val_batches=None, shuffle=False, sess=None):
         with TFSession(sess, self.graph) as sess:
-            num_batches = len(X_batches)
-            num_items = num_batches * self.batch_size - (self.batch_size - len(X_batches[-1]))
+            # TODO (11.05.17): Generators has noe __len__
+            try:
+                num_batches = len(batches)
+                num_items = num_batches * self.batch_size - (self.batch_size - len(batches[-1][0]))
+            except Exception as e:
+                num_items = -1
+
+            if shuffle:
+                batches = batches.copy()
+                random.shuffle(batches)
+            
             feed_dict[self.lr] = self.learning_rate
 
             epoch_loss_avg = 0
             epoch_acc_avg = 0
             epoch_time = 0
 
-            for i in range(num_batches):
-                feed_dict[self.X] = X_batches[i]
-                feed_dict[self.y] = y_batches[i]
+            batch_count = 0
+            item_count = 0
+            for X, y in batches:
+                feed_dict[self.X] = X
+                feed_dict[self.y] = y
                 
                 start_batch_time = process_time()
                 _, loss_val, acc_val = sess.run([self.optimizer, self.loss, self.accuracy], feed_dict=feed_dict)
                 epoch_time += process_time() - start_batch_time
 
-                epoch_loss_avg += loss_val / num_batches
-                epoch_acc_avg += acc_val / num_batches
+                epoch_loss_avg += loss_val
+                epoch_acc_avg += acc_val
 
+                batch_count += 1
+                item_count += len(X)
                 # TODO (11.05.17): Use logger
                 if True:
                     # Display a summary of this batch reusing the same terminal line
                     sys.stdout.write('\033[K')  # erase previous line in case the new line is shorter
                     sys.stdout.write('\riter: {:0{}}/{} | batch loss: {:.5} - acc {:.5}' \
-                                     ' | time: {:.3}s'.format(i * self.batch_size + len(X_batches[i]),
-                                                              len(str(num_items)), num_items, loss_val, acc_val, epoch_time))
+                                     ' | time: {:.3}s'.format(item_count, len(str(num_items)), num_items, 
+                                                            loss_val, acc_val, epoch_time))
                     sys.stdout.flush()
+
+            epoch_loss_avg /= batch_count
+            epoch_acc_avg /= batch_count
 
             # TODO (11.05.17): Use logger
             if True:
                 epoch_summary = '\nEpoch: \033[1m\033[32m{}\033[0m\033[0m | avg batch loss: \033[1m\033[32m{:.5}\033[0m\033[0m' \
                                 ' - avg acc: {:.5}'.format(epoch_nr + 1, epoch_loss_avg, epoch_acc_avg)
-                if validate and (val_X is not None) and (val_y is not None):
-                    loss_val, acc_val = self.validate(val_X, val_y, sess=sess)
+                
+                # TODO (11.05.17): Handle batches as actual batches
+                if val_batches is not None:
+                    X, y = val_batches[0]
+
+                    for batch_X, batch_y in val_batches[1:]:
+                        X = np.concatenate([X, batch_X])
+                        y = np.concatenate([y, batch_y])
+
+                    X = np.asarray(X)
+                    y = np.asarray(y)
+                    loss_val, acc_val = self.validate(X, y, sess=sess)
                     epoch_summary += ' | val_loss: \033[1m\033[32m{:.5}\033[0m\033[0m - val_acc: {:.5}'.format(loss_val, acc_val)
                 print(epoch_summary, '\n')
-
 
     def validate(self, X, y, sess=None):
         with TFSession(sess, self.graph, variables=self.variables) as sess:

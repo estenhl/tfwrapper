@@ -9,7 +9,6 @@ from tfwrapper.utils.data import batch_data
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 from .logger import logger
-from .dataset import split_dataset
 from .tfsession import TFSession
 
 METAFILE_SUFFIX = 'tw'
@@ -119,14 +118,14 @@ class SupervisedModel(ABC):
         for variable in tf.global_variables():
             self.variables[variable.name] = sess.run(variable)
 
-    def train(self, X, y, *, epochs, feed_dict={}, val_X=None, val_y=None, validate=True, sess=None):
+    def create_batches(self, X, y, prefix=''):
         if not len(X) == len(y):
-            errormsg = 'X and y must be same length, not %d and %d' % (len(X), len(y))
+            errormsg = '%sX and %sy must be same length, not %d and %d' % (prefix, prefix, len(X), len(y))
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
         
         if not (len(X.shape) >= 2 and list(X.shape[1:]) == self.X_shape):
-            errormsg = 'X with shape %s does not match given X_shape %s' % (str(X.shape), str(self.X_shape))
+            errormsg = '%sX with shape %s does not match given X_shape %s' % (prefix, str(X.shape), str(self.X_shape))
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
         else:
@@ -134,34 +133,60 @@ class SupervisedModel(ABC):
 
         # TODO (11.05.17): This should not be in supervisedmodel (Makes regression on one variable impossible)
         if not len(y.shape) == 2:
-            errormsg = 'y must be a onehot array'
+            errormsg = '%sy must be a onehot array' % prefix
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
 
         if not y.shape[1] == self.y_size:
-            errormsg = 'y with %d classes does not match given y_size %d' % (y.shape[1], self.y_size)
+            errormsg = '%sy with %d classes does not match given y_size %d' % (prefix, y.shape[1], self.y_size)
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
         else:
             y = np.reshape(y, [-1, self.y_size])
 
-        if val_X is None and validate:
-            X, y, val_X, val_y = split_dataset(X, y)
+        num_batches = int(len(X) / self.batch_size) + 1
+        batches = []
+        for i in range(num_batches):
+            start = i * self.batch_size
+            end = min((i + 1) * self.batch_size, len(X))
+            batches.append((X[start:end], y[start:end]))
+            print('Batch %d goes from %d to %d with size %d' % (i, start, end, len(batches[-1][0])))
 
-        logger.info('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
+        return batches
+
+    def train(self, X=None, y=None, generator=None, epochs=None, feed_dict={}, val_X=None, val_y=None, val_generator=None, validate=True, shuffle=True, sess=None):
+        if X is not None and y is not None:
+            logger.info('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
+            generator = self.create_batches(X, y, 'train.')
+        elif generator is not None:
+            logger.info('Training ' + self.name + ' with generator')
+            shuffle = False
+        else:
+            errormsg = 'Either X and y or a generator must be supplied'
+            logger.error(errormsg)
+            raise InvalidArgumentException(errormsg)
+
+        if epochs is None:
+            logger.warning('Training without specifying epochs. Defaulting to 1')
+            epochs = 1
+
+        if val_X is not None and val_y is not None:
+            val_generator = self.create_batches(val_X, val_y, 'val.')
+        if X is not None and val_X is None and validate:
+            train_len = int(len(batches) * 0.8)
+            val_generator = batches[train_len:]
+            batches = batches[:train_len]
+        elif generator is not None and val_generator is None and validate:
+            logger.warning('Unable to create validation set for generators on the fly')
 
         with TFSession(sess, self.graph, init=True) as sess:
             for epoch in range(epochs):
-                rand_idx = np.arange(len(X))
-                np.random.shuffle(rand_idx)
-                X_batches = batch_data(X[rand_idx], self.batch_size)
-                y_batches = batch_data(y[rand_idx], self.batch_size)
-                self.train_epoch(X_batches, y_batches, epoch, feed_dict=feed_dict, val_X=val_X, val_y=val_y, validate=validate, sess=sess)
+                self.train_epoch(generator, epoch, feed_dict=feed_dict, val_batches=val_generator, shuffle=shuffle, sess=sess)
 
             self.checkpoint_variables(sess)
 
     @abstractmethod
-    def train_epoch(self, X_batches, y_batches, epoch_nr, feed_dict={}, val_X=None, val_y=None, validate=True, sess=None):
+    def train_epoch(self, batches, epoch_nr, feed_dict={}, val_batches=None, sess=None):
         raise NotImplementedError('SupervisedModel is a generic class')
 
     def predict(self, X, feed_dict={}, sess=None):

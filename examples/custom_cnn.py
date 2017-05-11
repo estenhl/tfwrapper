@@ -36,7 +36,7 @@ layers = [
 ]
 cnn = CNN([h, w, c], num_classes, layers, name=name)
 cnn.learning_rate = 0.001
-cnn.train(X, y, epochs=5)
+cnn.train(X, y, epochs=5, validate=False)
 _, acc = cnn.validate(test.X, test.y)
 print('Test accuracy: %d%%' % (acc*100))
 
