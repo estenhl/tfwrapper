@@ -8,6 +8,12 @@ from tfwrapper.utils.exceptions import InvalidArgumentException
 def is_new_format(features_str):
     return features_str[0] == '['
 
+def parse_features_str(s, delimiter='|'):
+    if is_new_format(s):
+        return np.asarray(list(json.loads(s)))
+    else:
+        return np.fromstring(s, sep=delimiter)
+
 def parse_features(src, filename_col=0, label_col=1, features_col=2, delimiter='|'):
     if os.path.isfile(src):
         features = pd.read_csv(src,
@@ -15,13 +21,8 @@ def parse_features(src, filename_col=0, label_col=1, features_col=2, delimiter='
                                header=0,
                                names=['filename', 'label', 'features_as_str'],
                                usecols=[filename_col, label_col, features_col])
-        if len(features['features_as_str']) > 0:
-            if is_new_format(features.ix[0, 'features_as_str']):
-                features['features'] = features['features_as_str'].apply(lambda x: np.asarray(list(json.loads(x))))
-            else:
-                features['features'] = features['features_as_str'].apply(lambda x: np.fromstring(x, sep=delimiter))
-        else:
-            features['features'] = np.asarray([])
+
+        features['features'] = features['features_as_str'].apply(lambda x: parse_features_str(x, delimiter=delimiter))
 
         return features[['filename', 'label', 'features']]
     else:
