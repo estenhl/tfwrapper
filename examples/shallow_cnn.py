@@ -13,7 +13,7 @@ dataset = dataset.onehot()
 train, test = dataset.split(0.8)
 
 cnn = ShallowCNN([32, 32, 3], 10, name='ExampleShallowCNN')
-cnn.train(train.X, train.y, epochs=5, verbose=True)
+cnn.train(train.X, train.y, epochs=5)
 _, acc = cnn.validate(test.X, test.y)
 print('Test accuracy: %d%%' % (acc*100))
 
