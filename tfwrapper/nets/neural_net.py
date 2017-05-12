@@ -115,7 +115,7 @@ class NeuralNet(SupervisedModel):
                                 ' - avg acc: {:.5}'.format(epoch_nr + 1, epoch_loss_avg, epoch_acc_avg)
                 
                 # TODO (11.05.17): Handle batches as actual batches
-                if val_batches is not None:
+                if val_batches is not None and len(val_batches) > 0:
                     X, y = val_batches[0]
 
                     for batch_X, batch_y in val_batches[1:]:

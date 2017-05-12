@@ -2,9 +2,9 @@ import numpy as np
 import tensorflow as tf
 
 from tfwrapper.nets import SqueezeNet
-from tfwrapper.datasets import cifar100
+from tfwrapper.datasets import cifar10
 
-dataset = cifar100()
+dataset = cifar10()
 dataset = dataset.normalize()
 dataset = dataset.balance()
 dataset = dataset.shuffle()

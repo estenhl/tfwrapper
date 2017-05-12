@@ -114,3 +114,49 @@ def test_save_labels():
             assert labels == obj['labels']
     finally:
         remove_dir(folder)
+
+def test_train_X_y():
+    model = SingleLayerNeuralNet([1], 1, 5)
+    X = np.reshape(np.arange(10), [10, 1])
+    y = np.reshape(np.arange(10), [10, 1])
+
+    exception = False
+    #try:
+    model.train(X, y, epochs=1)
+    #except Exception as e:
+    #    print(e)
+    #    exception = True
+
+    assert not exception
+
+def data_generator(size=10, batch_size=5):
+    X = np.reshape(np.arange(size), [size, 1])
+    y = np.reshape(np.arange(size), [size, 1])
+
+    for i in range(0, size, batch_size):
+        yield X[i * batch_size:(i + 1) * batch_size], y[i * batch_size:(i + 1) * batch_size]
+
+def test_train_generator():
+    model = SingleLayerNeuralNet([1], 1, 5)
+    generator = data_generator()
+
+    exception = False
+    try:
+        model.train(generator=generator, epochs=1)
+    except Exception as e:
+        print(e)
+        exception = True
+
+    assert not exception
+
+def test_no_data():
+    model = SingleLayerNeuralNet([10], 3, 5)
+
+    exception = False
+    try:
+        model.train(epochs=1)
+    except Exception:
+        exception = True
+
+    assert exception
+

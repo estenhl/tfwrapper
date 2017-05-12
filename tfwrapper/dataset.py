@@ -139,6 +139,39 @@ def drop_classes(X, y, *, keep):
 
     return np.asarray(filtered_X), np.asarray(filtered_y)
 
+class DatasetGenerator():
+    def __init__(self, dataset, batch_size, normalize=False, shuffle=False, infinite=False):
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.normalize = normalize
+        self.shuffle = shuffle
+        self.infinite = infinite
+        self.cursor = 0
+
+    def __iter__(self):
+        self.cursor = 0
+        return self
+
+    def __next__(self):
+        if self.cursor >= len(self):
+            if not self.infinite:
+                raise StopIteration
+            
+            self.cursor = 0
+
+        dataset, self.cursor = self.dataset.next_batch(self.cursor, self.batch_size)
+
+        if self.normalize:
+            dataset = dataset.normalize()
+
+        if self.shuffle:
+            dataset = dataset.shuffle()
+
+        return dataset.X, dataset.y
+
+    def __len__(self):
+        return len(self.dataset)
+
 class Dataset():
 
     @property
@@ -171,26 +204,9 @@ class Dataset():
             self._X = np.asarray(features['features'].tolist())
             self._y = np.asarray(features['label'].tolist())
 
-        self.cursor = 0
-
     def batch_generator(self, batch_size, normalize=False, shuffle=False, infinite=False):
-        while True:
-            while self.cursor < len(self):
-                dataset, self.cursor = self.next_batch(self.cursor, batch_size)
-
-                if normalize:
-                    dataset = dataset.normalize()
-
-                if shuffle:
-                    dataset = dataset.shuffle()
-
-                yield dataset.X, dataset.y
-
-            if not infinite:
-                break
-
-            raise NotImplementedError('Infinite generator is not implemented (for your safety)')
-
+        return DatasetGenerator(self, batch_size, normalize=normalize, shuffle=shuffle, infinite=infinite)
+    
     def next_batch(self, start, batch_size):
         end = start + batch_size
         return self[start:end], end
@@ -369,7 +385,6 @@ class ImageDataset(Dataset):
         elif root_folder is not None:
             _X, _y = parse_datastructure(root_folder)
 
-        self.cursor = 0
         super().__init__(X=_X, y=_y, **kwargs)
 
     def normalize(self):
