@@ -3,6 +3,8 @@ import copy
 import random
 import numpy as np
 import tensorflow as tf
+
+from tensorflow.contrib import rnn
 from time import process_time
 
 from tfwrapper import logger
@@ -11,14 +13,53 @@ from tfwrapper import SupervisedModel
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class NeuralNet(SupervisedModel):
-    def __init__(self, X_shape, classes, layers, sess=None, name='NeuralNet', **kwargs):
+    def __init__(self, X_shape=None, y_size=None, layers=None, sess=None, name='NeuralNet', **kwargs):
+        super().__init__(name=name)
+        if X_shape is not None and y_size is not None and layers is not None:
+            with TFSession(sess) as sess:
+                self.fill_from_shape(sess, X_shape, y_size, layers, **kwargs)
+                self.post_init()
 
+    def post_init(self):
+        super().post_init()
+        self.accuracy = self.accuracy_function()
+
+    @classmethod
+    def single_layer(cls, X_shape, y_size, hidden, sess=None, name='SingleLayerNeuralNet'):
         with TFSession(sess) as sess:
-            super().__init__(X_shape, classes, layers, sess=sess, name=name, **kwargs)
+            X_size = np.prod(X_shape)
 
-            self.accuracy = self.accuracy_function()
+            layers = [
+                cls.fullyconnected(inputs=X_size, outputs=hidden, name=name + '/hidden'),
+                cls.out(inputs=hidden, outputs=y_size, name=name + '/pred')
+                ]
 
-            self.graph = sess.graph
+            return cls.from_shape(X_shape=X_shape, y_size=y_size, layers=layers, sess=sess, name=name)
+
+    @classmethod
+    def dual_layer(cls, X_shape, y_size, hidden1, hidden2, sess=None, name='DualLayerNeuralNet'):
+        with TFSession(sess) as sess:
+            X_size = np.prod(X_shape)
+
+            layers = [
+                cls.fullyconnected(inputs=X_size, outputs=hidden1, name=name + '/hidden1'),
+                cls.fullyconnected(inputs=hidden1, outputs=hidden2, name=name + '/hidden2'),
+                cls.out(inputs=hidden2, outputs=y_size, name=name + '/pred')
+            ]
+
+            return cls.from_shape(X_shape=X_shape, y_size=y_size, layers=layers, sess=sess, name=name)
+
+    @classmethod
+    def rnn(cls, seq_shape, seq_length, num_hidden, y_size, sess=None, name='RNN'):
+        X_shape = seq_shape + [seq_length]
+        layers = [cls.rnn_layer(seq_shape, seq_length, num_hidden, y_size, name=name)]
+
+        return cls.from_shape(X_shape=X_shape, y_size=y_size, layers=layers, sess=sess, name=name)
+
+    def load_from_meta_graph(self, filename):
+        super().load_from_meta_graph(filename=filename)
+        self.loss = self.graph.get_tensor_by_name(self.name + '/loss:0')
+        self.accuracy = self.graph.get_tensor_by_name(self.name + '/accuracy:0')
 
     def loss_function(self):
         return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '/softmax'), name=self.name + '/loss')
@@ -29,6 +70,50 @@ class NeuralNet(SupervisedModel):
     def accuracy_function(self):
         correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
         return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '/accuracy')
+
+    @staticmethod
+    def fullyconnected(*, inputs, outputs, trainable=True, activation='relu', init='truncated', name='fullyconnected'):
+        weight_shape = [inputs, outputs]
+        weight_name = name + '/W'
+        bias_name = name + '/b'
+
+        def create_layer(x):
+            weight = NeuralNet.weight(weight_shape, name=weight_name, init=init, trainable=trainable)
+            bias = NeuralNet.bias(outputs, name=bias_name, trainable=trainable)
+
+            fc = tf.reshape(x, [-1, inputs], name=name + '/reshape')
+            fc = tf.add(tf.matmul(fc, weight), bias, name=name + '/add')
+
+            if activation == 'relu':
+                fc = tf.nn.relu(fc, name=name)
+            elif activation == 'softmax':
+                fc = tf.nn.softmax(fc, name=name)
+            else:
+                raise NotImplementedError('%s activation is not implemented (Valid: [\'relu\', \'softmax\'])' % activation)
+
+            return fc
+
+        return create_layer
+
+    @staticmethod
+    def dropout(dropout, name='dropout'):
+        return lambda x: tf.nn.dropout(x, dropout, name=name)
+
+    @staticmethod
+    def rnn_layer(seq_shape, seq_length, num_hidden, classes, name):
+        def create_layer(x):
+            x = tf.transpose(x, [1, 0, 2])
+            x = tf.reshape(x, [-1] + seq_shape)
+            x = tf.split(x, seq_length, 0)
+
+            lstm_cell = rnn.BasicLSTMCell(128, forget_bias=1.0)
+            outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
+
+            weight = tf.Variable(tf.random_normal([num_hidden, classes]), name=name + '_W')
+            bias = tf.Variable(tf.random_normal([classes]), name=name + '_b')
+            return tf.add(tf.matmul(outputs[-1], weight), bias, name=name + '/pred')
+
+        return create_layer
 
     def load(self, filename, sess=None):
         with TFSession(sess, self.graph, self.variables) as sess:
