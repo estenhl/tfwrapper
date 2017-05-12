@@ -171,14 +171,11 @@ class SupervisedModel(ABC):
 
         if val_X is not None and val_y is not None:
             val_generator = self.create_batches(val_X, val_y, 'val.')
-        if X is not None and val_X is None and validate:
+        elif validate and val_generator is None:
             train_len = max(int(len(generator) * 0.8), 1)
             val_generator = generator[train_len:]
             generator = generator[:train_len]
-        elif generator is not None and val_generator is None and validate:
-            train_len = max(int(len(generator) * 0.8), 1)
-            val_generator = generator[train_len:]
-            generator = generator[:train_len]
+
 
         with TFSession(sess, self.graph, init=True) as sess:
             for epoch in range(epochs):
@@ -187,7 +184,7 @@ class SupervisedModel(ABC):
             self.checkpoint_variables(sess)
 
     @abstractmethod
-    def train_epoch(self, batches, epoch_nr, feed_dict={}, val_batches=None, sess=None):
+    def train_epoch(self, generator, epoch_nr, feed_dict={}, val_batches=None, sess=None):
         raise NotImplementedError('SupervisedModel is a generic class')
 
     def predict(self, X, feed_dict={}, sess=None):

@@ -116,11 +116,19 @@ class NeuralNet(SupervisedModel):
                 
                 # TODO (11.05.17): Handle batches as actual batches
                 if val_batches is not None and len(val_batches) > 0:
-                    X, y = val_batches[0]
+                    X = None
+                    y = None
 
                     for batch_X, batch_y in val_batches[1:]:
-                        X = np.concatenate([X, batch_X])
-                        y = np.concatenate([y, batch_y])
+                        if X is None:
+                            X = batch_X
+                        else:
+                            X = np.concatenate([X, batch_X])
+
+                        if y is None:
+                            y = batch_y
+                        else:
+                            y = np.concatenate([y, batch_y])
 
                     X = np.asarray(X)
                     y = np.asarray(y)

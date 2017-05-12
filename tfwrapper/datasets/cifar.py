@@ -53,7 +53,7 @@ def parse_cifar10(size=50000):
     y = []
 
     for i in range(0, 5):
-        if i * 10000 >= size:
+        if len(X) >= size:
             break
 
         batch = os.path.join(datafolder, 'data_batch_%d' % (i + 1))
@@ -68,7 +68,7 @@ def parse_cifar10(size=50000):
             X.append(img)
             y.append(label)
 
-            if (i * 10000) + j >= size:
+            if len(X) >= size:
                 break
 
             if j % 1000 == 0:
