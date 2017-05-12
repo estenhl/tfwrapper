@@ -110,22 +110,3 @@ def test_featureloader_shape():
         assert [size, 73, 73, 64] == dataset.shape
     finally:
         remove_dir(root_folder)
-
-def test_generator():
-    try:
-        num_items = 10
-        batch_size = 2
-        num_batches = int(num_items/batch_size)
-
-        root_folder = create_tmp_dir(size=num_items)
-        dataset = ImageDataset(root_folder=root_folder)
-        generator = dataset.batch_generator(batch_size)
-
-        batches = 0
-        for X, y in generator:
-            assert batch_size == len(X) == len(y)
-            batches += 1
-
-        assert num_batches == batches
-    finally:
-        remove_dir(root_folder)

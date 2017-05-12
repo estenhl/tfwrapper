@@ -172,6 +172,9 @@ class DatasetGenerator():
     def __len__(self):
         return len(self.dataset)
 
+    def __getitem__(self, val):
+        return self.__class__(self.dataset[val], self.batch_size, normalize=self.normalize, shuffle=self.shuffle, infinite=self.infinite)
+
 class Dataset():
 
     @property

@@ -147,7 +147,6 @@ class SupervisedModel(ABC):
         num_batches = int(len(X) / self.batch_size) + 1
         batches = []
         for i in range(num_batches):
-            print('I: %d' % i)
             start = i * self.batch_size
             end = min((i + 1) * self.batch_size, len(X))
             batches.append((X[start:end], y[start:end]))
@@ -158,7 +157,6 @@ class SupervisedModel(ABC):
         if X is not None and y is not None:
             logger.info('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
             generator = self.create_batches(X, y, 'train.')
-            print('CREATED %d BATCHES' % len(generator))
         elif generator is not None:
             logger.info('Training ' + self.name + ' with generator')
             shuffle = False
@@ -178,7 +176,9 @@ class SupervisedModel(ABC):
             val_generator = generator[train_len:]
             generator = generator[:train_len]
         elif generator is not None and val_generator is None and validate:
-            logger.warning('Unable to create validation set for generators on the fly')
+            train_len = max(int(len(generator) * 0.8), 1)
+            val_generator = generator[train_len:]
+            generator = generator[:train_len]
 
         with TFSession(sess, self.graph, init=True) as sess:
             for epoch in range(epochs):
