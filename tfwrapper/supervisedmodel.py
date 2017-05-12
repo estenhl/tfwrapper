@@ -172,9 +172,13 @@ class SupervisedModel(ABC):
         if val_X is not None and val_y is not None:
             val_generator = self.create_batches(val_X, val_y, 'val.')
         elif validate and val_generator is None:
-            train_len = max(int(len(generator) * 0.8), 1)
-            val_generator = generator[train_len:]
-            generator = generator[:train_len]
+            try:
+                train_len = max(int(len(generator) * 0.8), 1)
+                val_generator = generator[train_len:]
+                generator = generator[:train_len]
+            except Exception:
+                val_generator = None
+                logger.warning('Unable to split dataset into train and val when generator has no len')
 
 
         with TFSession(sess, self.graph, init=True) as sess:
