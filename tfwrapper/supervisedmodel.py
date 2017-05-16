@@ -128,7 +128,6 @@ class SupervisedModel(ABC):
 
     def predict(self, X, feed_dict={}, sess=None):
         with TFSession(sess, self.graph, variables=self.variables) as sess:
-            X = np.reshape(X, [-1] + self.X_shape)
             batches = batch_data(X, self.batch_size)
             preds = None
 

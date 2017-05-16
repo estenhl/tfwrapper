@@ -40,6 +40,8 @@ with tf.Session() as sess:
     test.loader.sess = sess
     test_X, test_y = test.X, test.y
 
+print('X.shape: ' + str(X.shape))
+
 with tf.Session() as sess:
     nn = SingleLayerNeuralNet([1536], 2, 1024, sess=sess, name='InceptionV4Test')
     nn.train(X, y, epochs=10, sess=sess)

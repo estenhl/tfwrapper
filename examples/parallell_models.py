@@ -22,7 +22,7 @@ rnn_test_X = np.reshape(test_X, [-1, 28, 28])
 
 with tf.Session() as sess:
 	cnn = ShallowCNN([28, 28, 1], 10, sess=sess, name='ParallellCNN')
-	cnn.train(X, train.y, epochs=3, verbose=True, sess=sess)
+	cnn.train(X, train.y, epochs=3, sess=sess)
 	_, acc = cnn.validate(test_X, test.y, sess=sess)
 	print('CNN Acc before save: %d%%' % (acc * 100))
 
@@ -31,8 +31,8 @@ with tf.Session() as sess:
 		os.mkdir(os.path.dirname(cnn_path))
 	cnn.save(cnn_path, sess=sess)
 
-	rnn = RNN([28], 28, 128, 10, name='ParallellRNN')
-	rnn.train(rnn_X, train.y, epochs=10, verbose=True, sess=sess)
+	rnn = RNN([28], 28, 128, 10, name='ParallellRNN', sess=sess)
+	rnn.train(rnn_X, train.y, epochs=10, sess=sess)
 	_, acc = rnn.validate(rnn_test_X, test.y, sess=sess)
 	print('RNN Acc before save: %d%%' % (acc * 100))
 	rnn_path = os.path.join(curr_path, 'data', 'parallell_rnn')
@@ -46,7 +46,7 @@ with tf.Session() as sess:
 	_, acc = cnn.validate(test_X, test.y, sess=sess)
 	print('CNN Acc after load: %d%%' % (acc * 100))
 
-	rnn = RNN([28], 28, 128, 10, name='ParallellRNN')
+	rnn = RNN([28], 28, 128, 10, name='ParallellRNN', sess=sess)
 	rnn.load(rnn_path, sess=sess)
 	_, acc = rnn.validate(rnn_test_X, test.y, sess=sess)
 	print('RNN Acc after load: %d%%' % (acc * 100))

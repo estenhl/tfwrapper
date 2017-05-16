@@ -91,7 +91,7 @@ class NeuralNet(SupervisedModel):
                     X = None
                     y = None
 
-                    for batch_X, batch_y in val_batches[1:]:
+                    for batch_X, batch_y in val_batches:
                         if X is None:
                             X = batch_X
                         else:

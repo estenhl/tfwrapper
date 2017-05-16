@@ -124,7 +124,7 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
                     y.append(foldername)
 
                     if i % 1000 == 0:
-                        logger.info('Parse %d images from %s' % (i, os.path.join(root, foldername)))
+                        logger.info('Read %d images from %s' % (i, root))
                     i += 1
                 elif verbose:
                     print('Skipping filename ' + filename)
@@ -138,6 +138,7 @@ def parse_folder_with_labels_file(root, labels_file, verbose=False):
     X = []
     y = []
 
+    i = 0
     with open(labels_file, 'r') as f:
         for line in f.readlines():
             label, filename = line.split(',')
@@ -148,7 +149,7 @@ def parse_folder_with_labels_file(root, labels_file, verbose=False):
 
                 
                 if i % 1000 == 0:
-                    logger.info('Parse %d images from %s' % (i, os.path.join(root, foldername)))
+                    logger.info('Read %d images from %s' % (i, root))
                 i += 1
             elif verbose:
                 print('Skipping filename ' + src_file)
