@@ -88,7 +88,10 @@ class SupervisedModel(ABC):
 
         return batches
 
-    def train(self, X=None, y=None, generator=None, epochs=None, feed_dict={}, val_X=None, val_y=None, val_generator=None, validate=True, shuffle=True, sess=None):
+    def train(self, X=None, y=None, generator=None, epochs=None, feed_dict=None, val_X=None, val_y=None, val_generator=None, validate=True, shuffle=True, sess=None):
+        if feed_dict is None:
+            feed_dict = {}
+
         if X is not None and y is not None:
             logger.info('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
             generator = self.create_batches(X, y, 'train.')
@@ -126,7 +129,10 @@ class SupervisedModel(ABC):
     def train_epoch(self, generator, epoch_nr, feed_dict={}, val_batches=None, sess=None):
         raise NotImplementedError('SupervisedModel is a generic class')
 
-    def predict(self, X, feed_dict={}, sess=None):
+    def predict(self, X, feed_dict=None, sess=None):
+        if feed_dict is None:
+            feed_dict = {}
+        
         with TFSession(sess, self.graph, variables=self.variables) as sess:
             batches = batch_data(X, self.batch_size)
             preds = None

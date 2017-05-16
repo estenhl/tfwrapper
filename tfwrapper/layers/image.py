@@ -18,25 +18,25 @@ def normalize_batch(name='batch_normalization'):
     raise NotImplementedError('Batch normalization is not implemented')
 
 
-def flip_up_down(seed=None):
+def flip_up_down(seed=None, name='random_flip_ud'):
     return lambda x: tf.map_fn(lambda img: tf.image.random_flip_up_down(img, seed=seed), x, name=name)
 
 
-def flip_left_right(seed=None):
+def flip_left_right(seed=None, name='random_flip_lr'):
     return lambda x: tf.map_fn(lambda img: tf.image.random_flip_left_right(img, seed=seed), x, name=name)
 
 
-def brightness(max_delta, seed=None):
+def brightness(max_delta, seed=None, name='random_brightness'):
     return lambda x: tf.map_fn(lambda img: tf.image.random_brightness(img, max_delta, seed=seed), x, name=name)
 
 
-def contrast(lower, upper, seed=None):
+def contrast(lower, upper, seed=None, name='random_contrast'):
     return lambda x: tf.map_fn(lambda img: tf.image.random_contrast(img, lower, upper, seed=seed), x, name=name)
 
 
-def hue(max_delta=0.5, seed=None):
+def hue(max_delta=0.5, seed=None, name='random_hue'):
     return lambda x: tf.map_fn(lambda img: tf.image.random_hue(img, max_delta, seed=seed), x, name=name)
 
 
-def saturation(lower, upper, seed=None):
+def saturation(lower, upper, seed=None, name='random_saturation'):
     return lambda x: tf.map_fn(lambda img: tf.image.random_saturation(img, lower, upper, seed=seed), x, name=name)

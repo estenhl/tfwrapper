@@ -146,7 +146,6 @@ def parse_folder_with_labels_file(root, labels_file, verbose=False):
             if os.path.isfile(src_file):
                 X.append(src_file)
                 y.append(label)
-
                 
                 if i % 1000 == 0:
                     logger.info('Read %d images from %s' % (i, root))

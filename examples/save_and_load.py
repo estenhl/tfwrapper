@@ -23,7 +23,7 @@ test_X = np.reshape(test_X, [-1, 28, 28, 1])
 
 with tf.Session() as sess:
 	cnn = ShallowCNN([28, 28, 1], 10, sess=sess, name='SaveAndLoadExample')
-	cnn.train(X, train.y, epochs=5, verbose=True, sess=sess)
+	cnn.train(X, train.y, epochs=5, sess=sess)
 	_, acc = cnn.validate(test_X, test.y, sess=sess)
 	print('Acc before save: %d%%' % (acc * 100))
 
