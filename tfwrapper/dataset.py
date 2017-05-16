@@ -10,17 +10,32 @@ from collections import Counter
 from .logger import logger
 from .tfsession import TFSession
 from tfwrapper import twimage
-from tfwrapper.utils.data import parse_features
-from tfwrapper.utils.data import write_features
+from tfwrapper.utils.files import parse_features
+from tfwrapper.utils.files import write_features
+
+
+def batch_data(data, batch_size):
+    batches = []
+
+    for i in range(0, int(len(data) / batch_size) + 1):
+        start = (i * batch_size)
+        end = min((i + 1) * batch_size, len(data))
+        if start < end:
+            batches.append(data[start:end])
+
+    return batches
+
 
 def normalize_array(arr):
     return (arr - arr.mean()) / arr.std()
+
 
 def shuffle_dataset(X, y):
     idx = np.arange(len(X))
     np.random.shuffle(idx)
 
     return X[idx], y[idx]
+
 
 def balance_dataset(X, y, max_val=0):
     assert len(X) == len(y)
@@ -56,6 +71,7 @@ def balance_dataset(X, y, max_val=0):
 
     return np.asarray(balanced_X), np.asarray(balanced_y)
 
+
 def onehot_array(arr):
     shape = (len(arr), np.amax(arr) + 1)
     onehot = np.zeros(shape)
@@ -63,6 +79,7 @@ def onehot_array(arr):
         onehot[i][arr[i]] = 1
 
     return np.asarray(onehot)
+
 
 def labels_to_indexes(y, sort=True):
     labels = []
@@ -81,6 +98,7 @@ def labels_to_indexes(y, sort=True):
 
     return np.asarray(indices), np.asarray(labels)
 
+
 def split_dataset(X, y, ratio=0.8):
     train_len = int(len(X) * ratio)
     train_X = X[:train_len]
@@ -89,6 +107,7 @@ def split_dataset(X, y, ratio=0.8):
     test_y = y[train_len:]
 
     return np.asarray(train_X), np.asarray(train_y), np.asarray(test_X), np.asarray(test_y)
+
 
 def parse_datastructure(root, suffix='.jpg', verbose=False):
     X = []
@@ -109,6 +128,7 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
 
     return np.asarray(X), np.asarray(y)
 
+
 def parse_folder_with_labels_file(root, labels_file, verbose=False):
     X = []
     y = []
@@ -125,6 +145,7 @@ def parse_folder_with_labels_file(root, labels_file, verbose=False):
 
     return np.asarray(X), np.asarray(y)
 
+
 def drop_classes(X, y, *, keep):
     filtered_X = []
     filtered_y = []
@@ -138,6 +159,7 @@ def drop_classes(X, y, *, keep):
                 print(e)
 
     return np.asarray(filtered_X), np.asarray(filtered_y)
+
 
 class DatasetGenerator():
     def __init__(self, dataset, batch_size, normalize=False, shuffle=False, infinite=False):
@@ -174,6 +196,7 @@ class DatasetGenerator():
 
     def __getitem__(self, val):
         return self.__class__(self.dataset[val], self.batch_size, normalize=self.normalize, shuffle=self.shuffle, infinite=self.infinite)
+
 
 class Dataset():
 
@@ -329,6 +352,7 @@ class Dataset():
 
         return self.__class__(X=X, y=y, **self.kwargs(labels=labels))
 
+
 class ImageDataset(Dataset):
     loaded_X = None
     loaded_y = None
@@ -414,6 +438,7 @@ class ImageDataset(Dataset):
 
         return kwargs
 
+# TODO (16.05.17): This should be rewritten to match the other preprocessor params
 ROTATED = 'rotated'
 ROTATION_STEPS = 'rotation_steps'
 MAX_ROTATION_ANGLE = 'max_rotation_angle'
@@ -421,8 +446,10 @@ BLURRED = 'blurred'
 BLUR_STEPS = 'blur_steps'
 MAX_BLUR_SIGMA = 'max_blur_sigma'
 
+
 def create_name(name, suffixes):
     return "_".join([name] + suffixes)
+
 
 class ImagePreprocessor():
     resize_to = False
@@ -508,6 +535,7 @@ class ImagePreprocessor():
 
         return imgs, names
 
+
 class ImageLoader():
 
     @property
@@ -526,6 +554,7 @@ class ImageLoader():
 
         img = twimage.imread(path)
         return self.preprocessor.process(img, name, label=label)
+
 
 class FeatureLoader(ImageLoader):
     sess = None

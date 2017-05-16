@@ -4,8 +4,8 @@ import random
 import numpy as np
 import pandas as pd
 
-from tfwrapper.utils.data import parse_features
-from tfwrapper.utils.data import write_features
+from tfwrapper.utils.files import parse_features
+from tfwrapper.utils.files import write_features
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 from utils import curr_path

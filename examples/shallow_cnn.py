@@ -5,8 +5,7 @@ from tfwrapper import logger
 from tfwrapper.nets import ShallowCNN
 from tfwrapper.datasets import cifar10
 
-logger.setLevel(logger.WARNING)
-dataset = cifar10(size=30000)
+dataset = cifar10()
 dataset = dataset.normalize()
 dataset = dataset.balance()
 dataset = dataset.shuffle()

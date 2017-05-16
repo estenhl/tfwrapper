@@ -11,7 +11,7 @@ from tfwrapper.dimensionality_reduction import PCA
 
 from utils import curr_path
 
-dataset = flowers()
+dataset = flowers(size=500)
 features_file = os.path.join(curr_path, 'data', 'flowers_inceptionv3.csv')
 
 inception = InceptionV3()
