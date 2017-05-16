@@ -4,7 +4,7 @@ import shutil
 
 from tfwrapper import config
 from tfwrapper import logger
-from tfwrapper.utils.file import file_util
+from tfwrapper.utils.files import safe_mkdir
 from tfwrapper.utils.download import google_drive
 
 DOWNLOAD_DRIVE_ID = "0B1b2bIlebXOqQnJWYUxDZXRhTlE"
@@ -15,16 +15,16 @@ def download_cats_and_dogs():
     if not os.path.exists(FILE_PATH):
         logger.info('Downloading cats vs dogs dataset')
 
-        file_util.safe_mkdir(config.DATA)
-        file_util.safe_mkdir(FILE_PATH)
+        safe_mkdir(config.DATA)
+        safe_mkdir(FILE_PATH)
 
         tmp_dir = os.path.join(FILE_PATH, "tmp")
-        file_util.safe_mkdir(tmp_dir)
+        safe_mkdir(tmp_dir)
 
         zip_destination = os.path.join(tmp_dir, "train.zip")
         google_drive.download_file_from_google_drive(DOWNLOAD_DRIVE_ID, zip_destination)
 
-        file_util.safe_mkdir(IMAGES)
+        safe_mkdir(IMAGES)
         cats = os.path.join(IMAGES, "cat")
         dogs = os.path.join(IMAGES, "dog")
         file_util.safe_mkdir(cats)
