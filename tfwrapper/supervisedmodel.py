@@ -25,12 +25,15 @@ class SupervisedModel(ABC):
             self.X_shape = X_shape
             self.y_size = y_size
             self.name = name
-            self.input_size = np.prod(X_shape)
+
+            if type(y_size) is int:
+                y_size = [y_size]
 
             self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '/X_placeholder')
-            self.y = tf.placeholder(tf.float32, [None, y_size], name=self.name + '/y_placeholder')
+            self.y = tf.placeholder(tf.float32, [None] + y_size, name=self.name + '/y_placeholder')
             self.lr = tf.placeholder(tf.float32, [], name=self.name + '/learning_rate_placeholder')
 
+            self.layers = layers
             prev = self.X
             for layer in layers:
                 prev = layer(prev)
@@ -40,6 +43,7 @@ class SupervisedModel(ABC):
             self.optimizer = self.optimizer_function()
 
             self.graph = sess.graph
+        self.feed_dict = {}
 
     @abstractmethod
     def loss_function(self):
@@ -88,9 +92,23 @@ class SupervisedModel(ABC):
 
         return batches
 
-    def train(self, X=None, y=None, generator=None, epochs=None, feed_dict=None, val_X=None, val_y=None, val_generator=None, validate=True, shuffle=True, sess=None):
+    def parse_feed_dict(self, feed_dict, **kwargs):
         if feed_dict is None:
             feed_dict = {}
+
+        for key in self.feed_dict:
+            placeholder = self.feed_dict[key]['placeholder']
+            value = self.feed_dict[key]['default']
+
+            if key in kwargs:
+                value = kwargs[key]
+
+            feed_dict[placeholder] = value
+
+        return feed_dict
+
+    def train(self, X=None, y=None, generator=None, feed_dict=None, epochs=None, val_X=None, val_y=None, val_generator=None, validate=True, shuffle=True, sess=None, **kwargs):
+        feed_dict = self.parse_feed_dict(feed_dict, **kwargs)
 
         if X is not None and y is not None:
             logger.info('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
@@ -109,9 +127,14 @@ class SupervisedModel(ABC):
 
         if val_X is not None and val_y is not None:
             val_generator = self.create_batches(val_X, val_y, 'val.')
-        elif validate and val_generator is None:
+        elif validate is not False and val_generator is None:
+            if type(validate) is float:
+                test_split = validate
+            else:
+                test_split = 0.2
+            train_split = 1. - test_split
             try:
-                train_len = max(int(len(generator) * 0.8), 1)
+                train_len = max(int(len(generator) * train_split), 1)
                 val_generator = generator[train_len:]
                 generator = generator[:train_len]
             except Exception:
@@ -129,9 +152,8 @@ class SupervisedModel(ABC):
     def train_epoch(self, generator, epoch_nr, feed_dict={}, val_batches=None, sess=None):
         raise NotImplementedError('SupervisedModel is a generic class')
 
-    def predict(self, X, feed_dict=None, sess=None):
-        if feed_dict is None:
-            feed_dict = {}
+    def predict(self, X, feed_dict=None, sess=None, **kwargs):
+        feed_dict = self.parse_feed_dict(feed_dict, **kwargs)
         
         with TFSession(sess, self.graph, variables=self.variables) as sess:
             batches = batch_data(X, self.batch_size)
@@ -148,7 +170,7 @@ class SupervisedModel(ABC):
         return preds
 
     @abstractmethod
-    def validate(self, X, y, feed_dict={}, sess=None):
+    def validate(self, X, y, feed_dict={}, sess=None, **kwargs):
         raise NotImplementedError('SupervisedModel is a generic class')
 
     def save(self, filename, sess=None, **kwargs):

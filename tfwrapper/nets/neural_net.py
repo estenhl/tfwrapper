@@ -3,10 +3,12 @@ import copy
 import random
 import numpy as np
 import tensorflow as tf
-
 from time import process_time
+
+from tfwrapper import logger
 from tfwrapper import TFSession
 from tfwrapper import SupervisedModel
+from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class NeuralNet(SupervisedModel):
     def __init__(self, X_shape, classes, layers, sess=None, name='NeuralNet'):
@@ -108,9 +110,31 @@ class NeuralNet(SupervisedModel):
                     epoch_summary += ' | val_loss: \033[1m\033[32m{:.5}\033[0m\033[0m - val_acc: {:.5}'.format(loss_val, acc_val)
                 print(epoch_summary, '\n')
 
-    def validate(self, X, y, sess=None):
+    def validate(self, X, y, feed_dict=None, sess=None, **kwargs):
+        feed_dict = self.parse_feed_dict(feed_dict, **kwargs)
         with TFSession(sess, self.graph, variables=self.variables) as sess:
             preds = self.predict(X, sess=sess)
             loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.pred: preds, self.y: y})
         
         return loss, acc
+
+    def __add__(self, other):
+        layers = self.layers + other.layers
+        name = '%s_%s' % (self.name, other.name)
+        X_shape = self.X_shape
+        y_size = other.y_size
+
+        if not self.y_size == other.X_shape:
+            errormsg = 'Unable to join neural nets with last layer shape %s and first layer shape %s' % (str(X_shape), str(y_size))
+            logger.error(errormsg)
+            raise InvalidArgumentException(errormsg)
+
+        net = NeuralNet(X_shape, y_size, layers, name=name)
+
+        for key in self.feed_dict:
+            net.feed_dict[key] = self.feed_dict[key]
+
+        for key in other.feed_dict:
+            net.feed_dict[key] = other.feed_dict[key]
+
+        return net

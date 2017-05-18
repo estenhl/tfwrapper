@@ -18,6 +18,7 @@ from .utils import recursive_delete
 from .utils import curr_path
 from .mnist import parse_mnist
 from .cifar import parse_cifar10
+from .cifar import parse_cifar10_test
 from .cifar import parse_cifar100
 from .catsdogs import download_cats_and_dogs
 
@@ -120,10 +121,17 @@ def flowers(size=1360, verbose=False):
 	
 	return dataset
 
-def cifar10(size=50000):
-	X, y = parse_cifar10(size=size)
-	dataset = Dataset(X=X, y=y)
-	return dataset
+def cifar10(size=50000, test=False, include_test=False):
+	if include_test:
+		X, y = parse_cifar10(size=size)
+		test_X, test_y = parse_cifar10_test()
+		return Dataset(X=X, y=y), Dataset(X=test_X, y=test_y)
+	elif test:
+		X, y =parse_cifar10_test(size=size)
+	else:
+		X, y = parse_cifar10(size=size)
+
+	return Dataset(X=X, y=y)
 
 def cifar100(size=50000):
 	X, y = parse_cifar100(size=size)

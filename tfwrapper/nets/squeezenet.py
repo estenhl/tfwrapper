@@ -8,7 +8,7 @@ from .cnn import CNN
 
 class SqueezeNet(CNN):
     def __init__(self, X_shape, classes, sess=None, name='SqueezeNet', version='1.1'):
-        self.keep_prob = tf.placeholder(tf.float32, name=name + '/dropout_placeholder')
+        keep_prob = tf.placeholder(tf.float32, name=name + '/dropout_placeholder')
         if version == '1.1':
             layers = [
                 conv2d(filter=[3, 3], depth=64, strides=2, padding='VALID', init='xavier_normal', name=name + '/conv1'),
@@ -23,7 +23,7 @@ class SqueezeNet(CNN):
                 fire(squeeze_depth=48, expand_depth=192, name=name + '/fire7'),
                 fire(squeeze_depth=64, expand_depth=256, name=name + '/fire8'),
                 fire(squeeze_depth=64, expand_depth=256, name=name + '/fire9'),
-                dropout(self.keep_prob, name=name + '/drop9'),
+                dropout(keep_prob, name=name + '/drop9'),
                 conv2d(filter=[1, 1], depth=classes, strides=1, padding='VALID', init='xavier_normal', name=name + '/conv10'),
                 flatten(name=name + 'avgpool10'),
                 reshape([-1, classes], name=name + '/pred')
@@ -42,7 +42,7 @@ class SqueezeNet(CNN):
                 fire(squeeze_depth=64, expand_depth=256, name=name + '/fire8'),
                 maxpool2d(k=3, strides=2, name=name + '/pool8'),
                 fire(squeeze_depth=64, expand_depth=256, name=name + '/fire9'),
-                dropout(self.keep_prob, name=name + '/drop9'),
+                dropout(keep_prob, name=name + '/drop9'),
                 conv2d(filter=[1, 1], depth=classes, strides=1, padding='VALID', init='xavier_normal', name=name + '/conv10'),
                 flatten(name=name + 'avgpool10'),
                 reshape([-1, classes], name=name + '/pred')
@@ -55,13 +55,7 @@ class SqueezeNet(CNN):
         with TFSession(sess) as sess:
             super().__init__(X_shape, classes, layers, sess=sess, name=name)
 
+        self.feed_dict['keep_prob'] = {'placeholder': keep_prob, 'default': 1.}
+
     def save(self, filename, sess=None, **kwargs):
         return super().save(filename, sess=sess, version=self.version, **kwargs)
-
-    def train(self, X=None, y=None, keep_prob=0.5, generator=None, epochs=None, feed_dict={}, val_X=None, val_y=None, val_generator=None, validate=True, shuffle=True, sess=None):
-        feed_dict[self.keep_prob] = keep_prob
-        return super().train(X=X, y=y, generator=generator, epochs=epochs, feed_dict=feed_dict, val_X=val_X, val_y=val_y, validate=validate, shuffle=shuffle, sess=sess)
-
-    def predict(self, X, feed_dict={}, sess=None):
-        feed_dict[self.keep_prob] = 1
-        return super().predict(X, feed_dict=feed_dict, sess=sess)

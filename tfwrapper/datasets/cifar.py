@@ -72,7 +72,38 @@ def parse_cifar10(size=50000):
                 break
 
             if j % 1000 == 0:
-                logger.info("Read %i of %i images" % ((10000 * i) + j, size))
+                logger.info("Read %i of %i cifar10 images" % ((10000 * i) + j, size))
+
+    logger.info("Read %i images" % len(X))
+
+    return np.asarray(X), np.asarray(y)
+
+def parse_cifar10_test(size=10000):
+    datafolder = download_cifar('cifar10', 'cifar-10-batches-py')
+    metafile = os.path.join(datafolder, 'batches.meta')
+    metadata = unpickle(metafile)
+    label_names = [x.decode('UTF-8') for x in metadata[b'label_names']]
+
+    X = []
+    y = []
+
+    test_file = os.path.join(datafolder, 'test_batch')
+    data = unpickle(test_file)
+    images = data[b'data']
+    labels = data[b'labels']
+
+    for j in range(len(images)):
+        img = parse_cifar_image(images[j])
+        label = label_names[labels[j]]
+
+        X.append(img)
+        y.append(label)
+
+        if len(X) >= size:
+            break
+
+        if j % 1000 == 0:
+            logger.info("Read %i of %i cifar10 test images" % (j, size))
 
     logger.info("Read %i images" % len(X))
 
@@ -101,8 +132,8 @@ def parse_cifar100(size=500000):
         y.append(label)
 
         if i % 1000 == 0:
-            logger.info("Read %i of %i images" % (i, size))
+            logger.info("Read %i of %i cifar100 images" % (i, size))
 
-    logger.info("Read %i images" % len(X))
+    logger.info("Read %i cifar100 images" % len(X))
 
     return np.asarray(X), np.asarray(y)
