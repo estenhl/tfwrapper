@@ -102,6 +102,8 @@ class SupervisedModel(ABC):
 
             if key in kwargs:
                 value = kwargs[key]
+            else:
+                logger.warning('Using default value %s for key %s. Set this value by passing a named parameter (e.g. net.train(..., %s=%s))' % (str(key), str(value), str(key), str(value)))
 
             feed_dict[placeholder] = value
 

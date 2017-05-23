@@ -13,6 +13,8 @@ from tfwrapper import Dataset
 from tfwrapper import ImageDataset
 from tfwrapper.utils.files import download_file
 
+from .wine import headers as wine_headers
+from .wine import download_wine
 from .utils import setup_structure
 from .utils import recursive_delete
 from .utils import curr_path
@@ -137,3 +139,12 @@ def cifar100(size=50000):
 	X, y = parse_cifar100(size=size)
 	dataset = Dataset(X=X, y=y)
 	return dataset
+
+def wine(y=None, include_headers=False):
+	X, y = download_wine(y_index=y)
+	dataset = Dataset(X=np.asarray(X), y=np.reshape(np.asarray(y), (len(y), 1)))
+
+	if include_headers:
+		return dataset, wine_headers
+	else:
+		return dataset

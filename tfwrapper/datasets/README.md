@@ -40,3 +40,13 @@ An example can be seen in [shallow_cnn.py](https://github.com/epigramai/tfwrappe
 
 ###### Example:
 An example can be seen in [kmeans.py](https://github.com/epigramai/tfwrapper/blob/master/examples/kmeans.py)
+#### wine
+178 different wines, with attributes ['Class', 'Alcohol', 'Malic acid', 'Ash', 'Alcalinity of ash', 'Magnesium', 'Total phenols', 'Flavanoids', 'Nonflavanoid phenols', 'Proanthocyanins', 'Color intensity', 'Hue', 'OD280/OD315 of diluted wines', 'Proline']. From [http://archive.ics.uci.edu/ml/datasets/Wine](http://archive.ics.uci.edu/ml/datasets/Wine)
+###### Usage:
+`from tfwrapper.datasets import wine`
+###### Parameters:
+* y_index: Describes which column should be used as a y-value. Either an int or a string. Defaults to None, which means a dataset with no y is returned
+* include_headers: returns both a dataset and the list of column names
+
+###### Example:
+An example can be seen in [kmeans.py](https://github.com/epigramai/tfwrapper/blob/master/examples/linearregression.py)

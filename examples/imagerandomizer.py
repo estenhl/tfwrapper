@@ -7,10 +7,12 @@ from tfwrapper.datasets import cifar10
 
 train = cifar10()
 train = train.translate_labels()
+train = train.shuffle()
 train = train.onehot()
 
 test = cifar10(test=True)
 test = test.translate_labels()
+test = test.shuffle()
 test = test.onehot()
 
 randomizer = ImageRandomizer([32, 32, 3], flip_lr=True, brightness_delta=1, hue_delta=0.2, contrast_range=[0.7, 1], saturation_range=[0.7, 1.3])
