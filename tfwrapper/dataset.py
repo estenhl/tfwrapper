@@ -131,7 +131,7 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
         elif verbose:
             logger.warning('Skipping foldername ' + foldername)
 
-        logger.info('Read %d images from %s' % (len(X), root))
+    logger.info('Read %d images from %s' % (len(X), root))
 
     return np.asarray(X), np.asarray(y)
 
