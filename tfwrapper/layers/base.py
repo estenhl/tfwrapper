@@ -45,7 +45,7 @@ def compute_fan_in_out(weight_shape):
     return fan_in, fan_out
 
 
-def reshape(shape, name):
+def reshape(shape, name='reshape'):
     return lambda x: tf.reshape(x, shape=shape, name=name)
 
 
@@ -60,7 +60,7 @@ def out(*, inputs, outputs, init='truncated', trainable=True, name='pred'):
     return create_layer
 
 
-def relu(name):
+def relu(name='relu'):
     return lambda x: tf.nn.relu(x, name=name)
 
 

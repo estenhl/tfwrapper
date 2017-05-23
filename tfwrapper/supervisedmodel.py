@@ -92,7 +92,7 @@ class SupervisedModel(ABC):
 
         return batches
 
-    def parse_feed_dict(self, feed_dict, **kwargs):
+    def parse_feed_dict(self, feed_dict, log=False, **kwargs):
         if feed_dict is None:
             feed_dict = {}
 
@@ -102,7 +102,7 @@ class SupervisedModel(ABC):
 
             if key in kwargs:
                 value = kwargs[key]
-            else:
+            elif log:
                 logger.warning('Using default value %s for key %s. Set this value by passing a named parameter (e.g. net.train(..., %s=%s))' % (str(key), str(value), str(key), str(value)))
 
             feed_dict[placeholder] = value
@@ -120,7 +120,7 @@ class SupervisedModel(ABC):
             raise InvalidArgumentException(errormsg)
 
     def train(self, X=None, y=None, generator=None, feed_dict=None, epochs=None, val_X=None, val_y=None, val_generator=None, validate=True, shuffle=True, sess=None, **kwargs):
-        feed_dict = self.parse_feed_dict(feed_dict, **kwargs)
+        feed_dict = self.parse_feed_dict(feed_dict, log=True, **kwargs)
 
         if X is not None and y is not None:
             logger.info('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
