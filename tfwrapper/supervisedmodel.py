@@ -109,6 +109,16 @@ class SupervisedModel(ABC):
 
         return feed_dict
 
+    def calculate_learning_rate(self, **kwargs):
+        if type(self.learning_rate) in [float, int]:
+            return self.learning_rate
+        elif callable(self.learning_rate):
+            return self.learning_rate(**kwargs)
+        else:
+            errormsg = 'Invalid type %s for learning rate. (Valid is [\'float\', \'int\', \'func\'])' % type(self.learning_rate)
+            logger.error(errormsg)
+            raise InvalidArgumentException(errormsg)
+
     def train(self, X=None, y=None, generator=None, feed_dict=None, epochs=None, val_X=None, val_y=None, val_generator=None, validate=True, shuffle=True, sess=None, **kwargs):
         feed_dict = self.parse_feed_dict(feed_dict, **kwargs)
 
