@@ -127,9 +127,11 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
                         logger.info('Read %d images from %s' % (i, root))
                     i += 1
                 elif verbose:
-                    print('Skipping filename ' + filename)
+                    logger.warning('Skipping filename ' + filename)
         elif verbose:
-            print('Skipping foldername ' + foldername)
+            logger.warning('Skipping foldername ' + foldername)
+
+        logger.info('Read %d images from %s' % (len(X), root))
 
     return np.asarray(X), np.asarray(y)
 
@@ -151,7 +153,9 @@ def parse_folder_with_labels_file(root, labels_file, verbose=False):
                     logger.info('Read %d images from %s' % (i, root))
                 i += 1
             elif verbose:
-                print('Skipping filename ' + src_file)
+                logger.warning('Skipping filename ' + src_file)
+
+        logger.info('Read %d images from %s' % (len(X), root))
 
     return np.asarray(X), np.asarray(y)
 
@@ -228,8 +232,14 @@ class Dataset():
         
         if 'labels' in kwargs:
             self.labels = kwargs['labels']
+            del kwargs['labels']
         else:
             self.labels = np.asarray([])
+
+        if len(kwargs) > 0:
+            errormsg = 'Invalid key(s) for dataset: %s' % [str(x) for x in kwargs]
+            logger.error(errormsg)
+            raise InvalidArgumentException(errormsg)
 
         if features_file is not None:
             parsed_features = parse_features(features_file)
@@ -414,6 +424,7 @@ class ImageDataset(Dataset):
 
         if 'loader' in kwargs:
             self._loader = kwargs['loader']
+            del kwargs['loader']
         else:
             self._loader = ImageLoader()
             

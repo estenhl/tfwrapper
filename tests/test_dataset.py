@@ -236,3 +236,12 @@ def test_shape():
 	dataset = Dataset(X=X, y=y)
 	
 	assert X.shape == dataset.shape
+
+def test_invalid_arg_throws_exception():
+	exception = False
+	try:
+		dataset = Dataset(x=None, y=None)
+	except Exception:
+		exception = True
+
+	assert exception

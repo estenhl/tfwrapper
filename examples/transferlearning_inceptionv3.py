@@ -41,7 +41,7 @@ with tf.Session() as sess:
     test_X, test_y = test.X, test.y
 
 with tf.Session() as sess:
-    nn = SingleLayerNeuralNet([2048], 2, 1024, sess=sess, name='InceptionV4Test')
+    nn = SingleLayerNeuralNet([2048], 2, 1024, sess=sess, name='InceptionV3Test')
     nn.train(X, y, epochs=10, sess=sess)
     _, acc = nn.validate(test_X, test_y, sess=sess)
     print('Acc: %d%%' % (acc * 100))
