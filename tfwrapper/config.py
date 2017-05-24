@@ -1,13 +1,24 @@
 import os
+
 from pathlib import Path
-from tfwrapper.utils.file import file_util
-CONFIG_PATH = os.path.dirname(os.path.realpath(__file__))
-ROOT = str(Path(CONFIG_PATH).parent)
+from tfwrapper.utils.files import safe_mkdir
 
-DATA = os.path.join(ROOT, "data")
-MODELS = os.path.join(DATA, "models")
-DATASETS = os.path.join(DATA, "datasets")
+class Config():
+	permit_downloads = True
 
-# file_util.safe_mkdir(DATA)
-# file_util.safe_mkdir(MODELS)
-# file_util.safe_mkdir(DATASETS)
+	def __init__(self, root):
+		if root is None:
+			self.permit_downloads = False
+		else:
+			self.DATA = os.path.join(root, 'data')
+			self.MODELS = os.path.join(self.DATA, 'models')
+			self.DATASETS = os.path.join(self.DATA, 'datasets')
+
+			safe_mkdir(root)
+			safe_mkdir(self.DATA)
+			safe_mkdir(self.MODELS)
+			safe_mkdir(self.DATASETS)
+
+ROOT_PATH = os.path.join(os.path.expanduser('~'), '.tfwrapper')
+PERMIT_DOWNLOADS = True
+config = Config(ROOT_PATH, PERMIT_DOWNLOADS)

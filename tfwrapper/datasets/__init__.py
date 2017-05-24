@@ -13,63 +13,18 @@ from tfwrapper import Dataset
 from tfwrapper import ImageDataset
 from tfwrapper.utils.files import download_file
 
+from .wine import headers as wine_headers
+from .wine import download_wine
 from .utils import setup_structure
 from .utils import recursive_delete
 from .utils import curr_path
-from .mnist import download_mnist
+from .mnist import parse_mnist
+from .cifar import parse_cifar10
+from .cifar import parse_cifar10_test
+from .cifar import parse_cifar100
+from .catsdogs import download_cats_and_dogs
 
 curr_path = config.DATASETS
-
-def download_cats_and_dogs(verbose=False):
-	root_path, data_path, labels_file = setup_structure('cats_and_dogs')
-
-	num_refined_files = len(os.listdir(data_path))
-	num_raw_files = 0
-	if os.path.isdir(os.path.join(root_path, 'train')):
-		num_raw_files = len(os.listdir(os.path.join(root_path, 'train')))
-	
-	if num_refined_files < 25000:
-		local_zip = os.path.join(root_path, 'train.zip')
-		if not os.path.isfile(local_zip):
-			print('Downloading dataset cats_and_dogs')
-			raise NotImplementedError('Unable to download zip')
-
-		if num_raw_files < 25000:
-			with zipfile.ZipFile(local_zip, 'r') as f:
-				print('Extracting dataset cats_and_dogs')
-				f.extractall(root_path)
-
-		print('Refining dataset cats_and_dogs')
-		with open(labels_file, 'w') as f:
-			for filename in os.listdir(os.path.join(root_path, 'train')):
-				src_file = os.path.join(root_path, 'train', filename)
-
-				if not filename.lower().endswith('.jpg'):
-					os.remove(src_file)
-					continue
-
-				pref, midf, _ = filename.split('.')
-				dest = pref + '_' + midf + '.jpg'
-				dest_file = os.path.join(data_path, dest)
-
-				if filename.startswith('cat'):
-					f.write('cat,' + dest + '\n')
-				elif filename.startswith('dog'):
-					f.write('dog,' + dest + '\n')
-				else:
-					os.remove(src_file)
-					continue
-
-				img = cv2.imread(src_file)
-				img = cv2.resize(img, (196, 196))
-				cv2.imwrite(dest_file, img)
-				os.remove(src_file)
-
-		os.rmdir(os.path.join(root_path, 'train'))
-		if os.path.isfile(os.path.join(root_path, 'train.zip')):
-			os.remove(os.path.join(root_path, 'train.zip'))
-	
-	return data_path, labels_file
 
 def download_ptb(verbose=False):
 	url = 'http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz'
@@ -134,17 +89,14 @@ def download_flowers(verbose=False):
 
 	return data_folder, labels_file
 
+def cats_and_dogs():
+	data_path = download_cats_and_dogs()
+	dataset = ImageDataset(root_folder=data_path)
 
-def checkboxes(verbose=False):
-	raise NotImplementedError('Deprecated dataset')
-
-def cats_and_dogs(verbose=False):
-	data_path, labels_file = download_cats_and_dogs(verbose=verbose)
-	dataset = ImageDataset(root_folder=data_path, labels_file=labels_file, verbose=verbose)
 	return dataset
 
-def mnist(size=None, imagesize=[28, 28], verbose=False):
-	X, y = download_mnist(size=size, imagesize=imagesize, verbose=verbose)
+def mnist(size=None, imagesize=[28, 28]):
+	X, y = parse_mnist(size=size, imagesize=imagesize)
 	dataset = Dataset(X=X, y=np.asarray(y).flatten())
 	return dataset
 
@@ -170,3 +122,29 @@ def flowers(size=1360, verbose=False):
 		dataset = ImageDataset(root_folder=data_path, labels_file=labels_file)
 	
 	return dataset
+
+def cifar10(size=50000, test=False, include_test=False):
+	if include_test:
+		X, y = parse_cifar10(size=size)
+		test_X, test_y = parse_cifar10_test()
+		return Dataset(X=X, y=y), Dataset(X=test_X, y=test_y)
+	elif test:
+		X, y =parse_cifar10_test(size=size)
+	else:
+		X, y = parse_cifar10(size=size)
+
+	return Dataset(X=X, y=y)
+
+def cifar100(size=50000):
+	X, y = parse_cifar100(size=size)
+	dataset = Dataset(X=X, y=y)
+	return dataset
+
+def wine(y=None, include_headers=False):
+	X, y = download_wine(y_index=y)
+	dataset = Dataset(X=np.asarray(X), y=np.reshape(np.asarray(y), (len(y), 1)))
+
+	if include_headers:
+		return dataset, wine_headers
+	else:
+		return dataset

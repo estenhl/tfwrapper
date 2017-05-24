@@ -1,21 +1,25 @@
 import tensorflow as tf
 import cv2
 import os
-from tfwrapper import twimage
-from tfwrapper.nets.pretrained.pretrained_model import PretrainedModel
-from tfwrapper.utils.download import google_drive
+
 from tfwrapper import config
+from tfwrapper import logger
+from tfwrapper import twimage
+from tfwrapper import TFSession
+from tfwrapper.utils.download import google_drive
+
+from .pretrained_model import PretrainedModel
 
 INCEPTION_PB_PATH = os.path.join(config.MODELS,'inception_v4.pb')
 
-FEATURE_LAYER = "InceptionV4/Logits/PreLogitsFlatten/Reshape:0"
 SUBFEATURES_LAYER = "InceptionV4/InceptionV4/Mixed_7d/concat:0"
 PREDICTIONS = "InceptionV4/Logits/Predictions:0"
 
 DOWNLOAD_ID = '0B1b2bIlebXOqN3JWdHRZc05xdzQ'
 
 class InceptionV4(PretrainedModel):
-    FEATURE_LAYER = "InceptionV4/Logits/PreLogitsFlatten/Reshape:0"
+    DEFAULT_INPUT_LAYER = 'input:0'
+    DEFAULT_FEATURES_LAYER = 'InceptionV4/Logits/PreLogitsFlatten/Reshape:0'
 
     def __init__(self, graph_file=INCEPTION_PB_PATH):
         self.download_if_necessary(graph_file)
@@ -25,42 +29,39 @@ class InceptionV4(PretrainedModel):
             graph_def.ParseFromString(f.read())
             _ = tf.import_graph_def(graph_def, name='')
 
-            PretrainedModel.__init__(self, tf.get_default_graph())
-            tf.reset_default_graph()
+            super().__init__(tf.get_default_graph())
 
-    def get_feature(self, img, sess=None, layer=FEATURE_LAYER):
-        if not sess:
-            sess = tf.Session(graph=self.graph)
+    def run_op(self, to_layer, from_layer, data, sess=None):
+        with TFSession(sess, self.graph) as sess:
+            logger.info('Extracting features from layer ' + from_layer + ' to ' + to_layer)
+            to_tensor = self.graph.get_tensor_by_name(to_layer)   
 
-        tensor = sess.graph.get_tensor_by_name(layer)
-        try:
-            feature = sess.run(tensor, {'input:0': img})
+            try:  
+                feature = sess.run(to_tensor,{from_layer: data})
 
-            return feature[0]
+                return feature[0]
+            except Exception as e:
+                logger.warning('Unable to extract feature')
+                logger.warning(str(e))
+                raise e
 
-        except Exception as e:
-            print(e)
-            print('Unable to get feature')
+    def extract_features(self, img,  layer=DEFAULT_FEATURES_LAYER, sess=None):
+        with TFSession(sess, self.graph) as sess:
+            return self.run_op(layer, self.DEFAULT_INPUT_LAYER, img ,sess=sess)
 
-            return None
+    def extract_features_from_file(self, image_file, layer=DEFAULT_FEATURES_LAYER, sess=None):
+        with TFSession(sess, self.graph) as sess:
+            try:
+                img = twimage.imread(image_file)
+                feature = self.run_op(layer, self.DEFAULT_INPUT_LAYER, img, sess=sess)
 
-    def get_feature_from_file(self, image_file, sess=None, layer=FEATURE_LAYER):
-        if not sess:
-            sess = tf.Session(graph=self.graph)
+                return feature
 
-        tensor = sess.graph.get_tensor_by_name(layer)
-        try:
-            # image_data = tf.gfile.FastGFile(image_file, 'rb').read()
-            img = twimage.imread(image_file)
-            feature = sess.run(tensor, {'input:0': img})
+            except Exception as e:
+                logger.warning('Unable to read image %s' % str(image_file))
+                logger.warning(str(e))
 
-            return feature
-
-        except Exception as e:
-            print(e)
-            print('Unable to get feature for ' + str(image_file))
-
-            return None
+                return None
 
     def download_if_necessary(self, path=INCEPTION_PB_PATH):
         if not os.path.isfile(path):

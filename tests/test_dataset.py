@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 
 from tfwrapper import Dataset
-from tfwrapper.utils.data import write_features
 from tfwrapper.utils.files import remove_dir
+from tfwrapper.utils.files import write_features
 
 from utils import curr_path
 from utils import generate_features
@@ -230,3 +230,18 @@ def test_inherit_labels():
 
 	assert np.array_equal(labels, dataset.labels)
 
+def test_shape():
+	X = np.reshape(np.arange(27), (3, 3, 3))
+	y = np.reshape(np.arange(27), (3, 3, 3))
+	dataset = Dataset(X=X, y=y)
+	
+	assert X.shape == dataset.shape
+
+def test_invalid_arg_throws_exception():
+	exception = False
+	try:
+		dataset = Dataset(x=None, y=None)
+	except Exception:
+		exception = True
+
+	assert exception

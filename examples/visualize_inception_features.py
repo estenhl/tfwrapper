@@ -11,11 +11,11 @@ from tfwrapper.dimensionality_reduction import PCA
 
 from utils import curr_path
 
-dataset = flowers()
-feature_file = os.path.join(curr_path, 'data', 'flower_features.csv')
+dataset = flowers(size=500)
+features_file = os.path.join(curr_path, 'data', 'flowers_inceptionv3.csv')
 
 inception = InceptionV3()
-loader = FeatureLoader(inception, feature_file)
+loader = FeatureLoader(inception, cache=features_file)
 dataset.loader = loader
 
 pca = PCA(50, name='VisualizeFlowersExample')

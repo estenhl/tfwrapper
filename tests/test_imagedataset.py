@@ -5,6 +5,9 @@ import numpy as np
 
 from tfwrapper import ImageLoader
 from tfwrapper import ImageDataset
+from tfwrapper import FeatureLoader
+from tfwrapper import ImagePreprocessor
+from tfwrapper.nets.pretrained import InceptionV3
 
 from utils import curr_path
 from utils import remove_dir
@@ -72,3 +75,38 @@ def test_imagedataset_inheritance():
 
     assert np.array_equal(labels, dataset.labels)
     assert id(loader) == id(dataset.loader)
+
+def test_imageloader_shape():
+    try:
+        size = 10
+        root_folder = create_tmp_dir(size=size)
+        dataset = ImageDataset(root_folder=root_folder)
+
+        assert [size, -1, -1, 3] == dataset.shape
+    finally:
+        remove_dir(root_folder)
+
+def test_resized_imageloader_shape():
+    try:
+        size = 10
+        root_folder = create_tmp_dir(size=size)
+
+        preprocessor = ImagePreprocessor()
+        preprocessor.resize_to = (64, 64)
+        loader = ImageLoader(preprocessor=preprocessor)
+        dataset = ImageDataset(root_folder=root_folder, loader=loader)
+
+        assert [size, 64, 64, 3] == dataset.shape
+    finally:
+        remove_dir(root_folder)
+
+def test_featureloader_shape():
+    try:
+        size = 10
+        root_folder = create_tmp_dir(size=size)
+        loader = FeatureLoader(InceptionV3(), layer='pool:0')
+        dataset = ImageDataset(root_folder=root_folder, loader=loader)
+
+        assert [size, 73, 73, 64] == dataset.shape
+    finally:
+        remove_dir(root_folder)

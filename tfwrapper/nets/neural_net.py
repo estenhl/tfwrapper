@@ -1,104 +1,140 @@
 import sys
+import copy
+import random
 import numpy as np
 import tensorflow as tf
-
 from time import process_time
-from tfwrapper.metrics import accuracy
+
+from tfwrapper import logger
 from tfwrapper import TFSession
 from tfwrapper import SupervisedModel
+from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class NeuralNet(SupervisedModel):
-	def __init__(self, X_shape, classes, layers, sess=None, name='NeuralNet'):
+    def __init__(self, X_shape, classes, layers, sess=None, name='NeuralNet'):
 
-		with TFSession(sess) as sess:
-			super().__init__(X_shape, classes, layers, sess=sess, name=name)
+        with TFSession(sess) as sess:
+            super().__init__(X_shape, classes, layers, sess=sess, name=name)
 
-			self.accuracy = self.accuracy_function()
+            self.accuracy = self.accuracy_function()
 
-			self.graph = sess.graph
+            self.graph = sess.graph
 
+    def loss_function(self):
+        return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '/softmax'), name=self.name + '/loss')
 
-	def loss_function(self):
-		return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '/softmax'), name=self.name + '/loss')
+    def optimizer_function(self):
+        return tf.train.AdamOptimizer(learning_rate=self.lr, name=self.name + '/adam').minimize(self.loss, name=self.name + '/optimizer')
 
-	def optimizer_function(self):
-		return tf.train.AdamOptimizer(learning_rate=self.lr, name=self.name + '/adam').minimize(self.loss, name=self.name + '/optimizer')
+    def accuracy_function(self):
+        correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
+        return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '/accuracy')
 
-	def accuracy_function(self):
-		correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
-		return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '/accuracy')
+    def load(self, filename, sess=None):
+        with TFSession(sess, self.graph, self.variables) as sess:
+            super().load(filename, sess=sess)
 
-	@staticmethod
-	def fullyconnected(*, inputs, outputs, trainable=True, activation='relu', name='fullyconnected'):
-		weight_shape = [inputs, outputs]
-		weight_name = name + '/W'
-		bias_name = name + '/b'
+            self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
+            self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')
 
-		def create_layer(x):
-			weight = NeuralNet.weight(weight_shape, name=weight_name, trainable=trainable)
-			bias = NeuralNet.bias(outputs, name=bias_name, trainable=trainable)
+    def train_epoch(self, batches, epoch_nr, feed_dict={}, val_batches=None, shuffle=False, sess=None):
+        with TFSession(sess, self.graph) as sess:
+            # TODO (11.05.17): Generators has noe __len__
+            try:
+                num_batches = len(batches)
+                num_items = num_batches * self.batch_size - (self.batch_size - len(batches[-1][0]))
+            except Exception as e:
+                num_items = -1
 
-			fc = tf.reshape(x, [-1, inputs], name=name + '/reshape')
-			fc = tf.add(tf.matmul(fc, weight), bias, name=name + '/add')
-			
-			if activation == 'relu':
-				fc = tf.nn.relu(fc, name=name)
-			elif activation == 'softmax':
-				fc = tf.nn.softmax(fc, name=name)
-			else:
-				raise NotImplementedError('%s activation is not implemented (Valid: [\'relu\', \'softmax\'])' % activation)
+            if shuffle:
+                batches = batches.copy()
+                random.shuffle(batches)
+            
+            feed_dict[self.lr] = self.calculate_learning_rate(epoch=epoch_nr)
 
-			return fc
+            epoch_loss_avg = 0
+            epoch_acc_avg = 0
+            epoch_time = 0
 
-		return create_layer
+            batch_count = 0
+            item_count = 0
+            for X, y in batches:
+                feed_dict[self.X] = X
+                feed_dict[self.y] = y
+                
+                start_batch_time = process_time()
+                _, loss_val, acc_val = sess.run([self.optimizer, self.loss, self.accuracy], feed_dict=feed_dict)
+                epoch_time += process_time() - start_batch_time
 
+                epoch_loss_avg += loss_val
+                epoch_acc_avg += acc_val
 
-	@staticmethod
-	def dropout(dropout, name='dropout'):
-		return lambda x: tf.nn.dropout(x, dropout, name=name)
+                batch_count += 1
+                item_count += len(X)
+                # TODO (11.05.17): Use logger
+                if True:
+                    # Display a summary of this batch reusing the same terminal line
+                    sys.stdout.write('\033[K')  # erase previous line in case the new line is shorter
+                    sys.stdout.write('\riter: {:0{}}/{} | batch loss: {:.5} - acc {:.5}' \
+                                     ' | time: {:.3}s'.format(item_count, len(str(num_items)), num_items, 
+                                                            loss_val, acc_val, epoch_time))
+                    sys.stdout.flush()
 
+            epoch_loss_avg /= batch_count
+            epoch_acc_avg /= batch_count
 
-	def load(self, filename, sess=None):
-		with TFSession(sess, self.graph, self.variables) as sess:
-			super().load(filename, sess=sess)
+            # TODO (11.05.17): Use logger
+            if True:
+                epoch_summary = '\nEpoch: \033[1m\033[32m{}\033[0m\033[0m | avg batch loss: \033[1m\033[32m{:.5}\033[0m\033[0m' \
+                                ' - avg acc: {:.5}'.format(epoch_nr + 1, epoch_loss_avg, epoch_acc_avg)
+                
+                # TODO (11.05.17): Handle batches as actual batches
+                if val_batches is not None and len(val_batches) > 0:
+                    X = None
+                    y = None
 
-			self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
-			self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')
+                    for batch_X, batch_y in val_batches:
+                        if X is None:
+                            X = batch_X
+                        else:
+                            X = np.concatenate([X, batch_X])
 
-	def train_epoch(self, X_batches, y_batches, epoch_nr, val_X=None, val_y=None, validate=True, sess=None, verbose=False):
-		with TFSession(sess, self.graph) as sess:
-			num_batches = len(X_batches)
-			num_items = num_batches * self.batch_size - (self.batch_size - len(X_batches[-1]))
-			epoch_loss_avg = 0
-			epoch_acc_avg = 0
-			epoch_time = 0
-			for i in range(num_batches):
-				start_batch_time = process_time()
-				_, loss_val, acc_val = sess.run([self.optimizer, self.loss, self.accuracy],
-												feed_dict={self.X: X_batches[i], self.y: y_batches[i],
-														   self.lr: self.learning_rate})
-				epoch_time += process_time() - start_batch_time
-				epoch_loss_avg += loss_val / num_batches
-				epoch_acc_avg += acc_val / num_batches
-				if verbose:
-					# Display a summary of this batch reuing the same terminal line
-					sys.stdout.write('\033[K')  # erase previous line in case the new line is shorter
-					sys.stdout.write('\riter: {:0{}}/{} | batch loss: {:.5} - acc {:.5}' \
-									 ' | time: {:.3}s'.format(i * self.batch_size + len(X_batches[i]),
-															  len(str(num_items)), num_items, loss_val, acc_val, epoch_time))
-					sys.stdout.flush()
+                        if y is None:
+                            y = batch_y
+                        else:
+                            y = np.concatenate([y, batch_y])
 
-			if verbose:
-				epoch_summary = '\nEpoch: \033[1m\033[32m{}\033[0m\033[0m | avg batch loss: \033[1m\033[32m{:.5}\033[0m\033[0m' \
-								' - avg acc: {:.5}'.format(epoch_nr + 1, epoch_loss_avg, epoch_acc_avg)
-				if validate and (val_X is not None) and (val_y is not None):
-					loss_val, acc_val = self.validate(val_X, val_y, sess=sess, verbose=verbose)
-					epoch_summary += ' | val_loss: \033[1m\033[32m{:.5}\033[0m\033[0m - val_acc: {:.5}'.format(loss_val, acc_val)
-				print(epoch_summary, '\n')
+                    X = np.asarray(X)
+                    y = np.asarray(y)
+                    loss_val, acc_val = self.validate(X, y, sess=sess)
+                    epoch_summary += ' | val_loss: \033[1m\033[32m{:.5}\033[0m\033[0m - val_acc: {:.5}'.format(loss_val, acc_val)
+                print(epoch_summary, '\n')
 
+    def validate(self, X, y, feed_dict=None, sess=None, **kwargs):
+        feed_dict = self.parse_feed_dict(feed_dict, **kwargs)
+        with TFSession(sess, self.graph, variables=self.variables) as sess:
+            preds = self.predict(X, sess=sess)
+            loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.pred: preds, self.y: y})
+        
+        return loss, acc
 
-	def validate(self, X, y, sess=None, verbose=False):
-		with TFSession(sess, self.graph, variables=self.variables) as sess:
-			preds = self.predict(X, sess=sess, verbose=verbose)
-			loss_val = sess.run(self.loss, feed_dict={self.pred: preds, self.y: y})
-		return loss_val, accuracy(preds, y)
+    def __add__(self, other):
+        layers = self.layers + other.layers
+        name = '%s_%s' % (self.name, other.name)
+        X_shape = self.X_shape
+        y_size = other.y_size
+
+        if not self.y_size == other.X_shape:
+            errormsg = 'Unable to join neural nets with last layer shape %s and first layer shape %s' % (str(X_shape), str(y_size))
+            logger.error(errormsg)
+            raise InvalidArgumentException(errormsg)
+
+        net = NeuralNet(X_shape, y_size, layers, name=name)
+
+        for key in self.feed_dict:
+            net.feed_dict[key] = self.feed_dict[key]
+
+        for key in other.feed_dict:
+            net.feed_dict[key] = other.feed_dict[key]
+
+        return net

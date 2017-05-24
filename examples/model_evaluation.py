@@ -9,7 +9,7 @@ from time import process_time
 from tfwrapper.nets import RNN
 from tfwrapper.datasets import mnist
 
-dataset = mnist(size=1000, verbose=True)
+dataset = mnist(size=1000)
 dataset = dataset.normalize()
 dataset = dataset.translate_labels()
 dataset = dataset.onehot()
@@ -18,6 +18,8 @@ dataset = dataset.onehot()
 np.random.seed(4)  # RFC 1149.5
 dataset = dataset.shuffle()
 train_ds, test_ds = dataset.split()
+X = np.squeeze(train_ds.X)
+test_X = np.squeeze(test_ds.X)
 
 learning_rate = 0.001
 batch_size = 128
@@ -39,12 +41,12 @@ for rep in range(nr_of_runs):  # statistics gathering loop
     model.batch_size = batch_size
 
     time_start = process_time()
-    model.train(train_ds.X, train_ds.y, epochs=epochs, verbose=True, validate=True)
+    model.train(X, train_ds.y, epochs=epochs, validate=True)
     time_end = process_time()
     time.append(time_end - time_start)
 
-    predictions = model.predict(test_ds.X)
-    test_size = len(test_ds.X)
+    predictions = model.predict(test_X)
+    test_size = len(test_X)
 
     pred_label = np.argmax(predictions, axis=1)
     real_label = np.argmax(test_ds.y, axis=1)

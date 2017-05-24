@@ -2,22 +2,40 @@ import os
 import cv2
 import scipy.ndimage
 import numpy as np
-import tensorflow as tf 
+import tensorflow as tf
+import pandas as pd
 from random import shuffle
 from collections import Counter
 
+from .logger import logger
+from .tfsession import TFSession
 from tfwrapper import twimage
-from tfwrapper.utils.data import parse_features
-from tfwrapper.utils.data import write_features
+from tfwrapper.utils.files import parse_features
+from tfwrapper.utils.files import write_features
+
+
+def batch_data(data, batch_size):
+    batches = []
+
+    for i in range(0, int(len(data) / batch_size) + 1):
+        start = (i * batch_size)
+        end = min((i + 1) * batch_size, len(data))
+        if start < end:
+            batches.append(data[start:end])
+
+    return batches
+
 
 def normalize_array(arr):
     return (arr - arr.mean()) / arr.std()
+
 
 def shuffle_dataset(X, y):
     idx = np.arange(len(X))
     np.random.shuffle(idx)
 
     return X[idx], y[idx]
+
 
 def balance_dataset(X, y, max_val=0):
     assert len(X) == len(y)
@@ -53,6 +71,7 @@ def balance_dataset(X, y, max_val=0):
 
     return np.asarray(balanced_X), np.asarray(balanced_y)
 
+
 def onehot_array(arr):
     shape = (len(arr), np.amax(arr) + 1)
     onehot = np.zeros(shape)
@@ -60,6 +79,7 @@ def onehot_array(arr):
         onehot[i][arr[i]] = 1
 
     return np.asarray(onehot)
+
 
 def labels_to_indexes(y, sort=True):
     labels = []
@@ -78,6 +98,7 @@ def labels_to_indexes(y, sort=True):
 
     return np.asarray(indices), np.asarray(labels)
 
+
 def split_dataset(X, y, ratio=0.8):
     train_len = int(len(X) * ratio)
     train_X = X[:train_len]
@@ -87,10 +108,12 @@ def split_dataset(X, y, ratio=0.8):
 
     return np.asarray(train_X), np.asarray(train_y), np.asarray(test_X), np.asarray(test_y)
 
+
 def parse_datastructure(root, suffix='.jpg', verbose=False):
     X = []
     y = []
 
+    i = 0
     for foldername in os.listdir(root):
         src = os.path.join(root, foldername)
         if os.path.isdir(src):
@@ -99,17 +122,25 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
                     src_file = os.path.join(src, filename)
                     X.append(src_file)
                     y.append(foldername)
+
+                    if i % 1000 == 0:
+                        logger.info('Read %d images from %s' % (i, root))
+                    i += 1
                 elif verbose:
-                    print('Skipping filename ' + filename)
+                    logger.warning('Skipping filename ' + filename)
         elif verbose:
-            print('Skipping foldername ' + foldername)
+            logger.warning('Skipping foldername ' + foldername)
+
+    logger.info('Read %d images from %s' % (len(X), root))
 
     return np.asarray(X), np.asarray(y)
+
 
 def parse_folder_with_labels_file(root, labels_file, verbose=False):
     X = []
     y = []
 
+    i = 0
     with open(labels_file, 'r') as f:
         for line in f.readlines():
             label, filename = line.split(',')
@@ -117,10 +148,17 @@ def parse_folder_with_labels_file(root, labels_file, verbose=False):
             if os.path.isfile(src_file):
                 X.append(src_file)
                 y.append(label)
+                
+                if i % 1000 == 0:
+                    logger.info('Read %d images from %s' % (i, root))
+                i += 1
             elif verbose:
-                print('Skipping filename ' + src_file)
+                logger.warning('Skipping filename ' + src_file)
+
+        logger.info('Read %d images from %s' % (len(X), root))
 
     return np.asarray(X), np.asarray(y)
+
 
 def drop_classes(X, y, *, keep):
     filtered_X = []
@@ -136,6 +174,44 @@ def drop_classes(X, y, *, keep):
 
     return np.asarray(filtered_X), np.asarray(filtered_y)
 
+
+class DatasetGenerator():
+    def __init__(self, dataset, batch_size, normalize=False, shuffle=False, infinite=False):
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.normalize = normalize
+        self.shuffle = shuffle
+        self.infinite = infinite
+        self.cursor = 0
+
+    def __iter__(self):
+        self.cursor = 0
+        return self
+
+    def __next__(self):
+        if self.cursor >= len(self):
+            if not self.infinite:
+                raise StopIteration
+            
+            self.cursor = 0
+
+        dataset, self.cursor = self.dataset.next_batch(self.cursor, self.batch_size)
+
+        if self.normalize:
+            dataset = dataset.normalize()
+
+        if self.shuffle:
+            dataset = dataset.shuffle()
+
+        return dataset.X, dataset.y
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, val):
+        return self.__class__(self.dataset[val], self.batch_size, normalize=self.normalize, shuffle=self.shuffle, infinite=self.infinite)
+
+
 class Dataset():
 
     @property
@@ -146,14 +222,24 @@ class Dataset():
     def y(self):
         return self._y
 
+    @property
+    def shape(self):
+        return self._X.shape
+
     def __init__(self, X=np.asarray([]), y=np.asarray([]), features=None, features_file=None, verbose=False, **kwargs):
         self._X = X
         self._y = y
         
         if 'labels' in kwargs:
             self.labels = kwargs['labels']
+            del kwargs['labels']
         else:
             self.labels = np.asarray([])
+
+        if len(kwargs) > 0:
+            errormsg = 'Invalid key(s) for dataset: %s' % [str(x) for x in kwargs]
+            logger.error(errormsg)
+            raise InvalidArgumentException(errormsg)
 
         if features_file is not None:
             parsed_features = parse_features(features_file)
@@ -164,26 +250,9 @@ class Dataset():
             self._X = np.asarray(features['features'].tolist())
             self._y = np.asarray(features['label'].tolist())
 
-        self.cursor = 0
-
     def batch_generator(self, batch_size, normalize=False, shuffle=False, infinite=False):
-        while True:
-            while self.cursor < len(self):
-                dataset, self.cursor = self.next_batch(self.cursor, batch_size)
-
-                if normalize:
-                    dataset = dataset.normalize()
-
-                if shuffle:
-                    dataset = dataset.shuffle()
-
-                yield dataset.X, dataset.y
-
-            if not infinite:
-                break
-
-            raise NotImplementedError('Infinite generator is not implemented (for your safety)')
-
+        return DatasetGenerator(self, batch_size, normalize=normalize, shuffle=shuffle, infinite=infinite)
+    
     def next_batch(self, start, batch_size):
         end = start + batch_size
         return self[start:end], end
@@ -303,6 +372,7 @@ class Dataset():
 
         return self.__class__(X=X, y=y, **self.kwargs(labels=labels))
 
+
 class ImageDataset(Dataset):
     loaded_X = None
     loaded_y = None
@@ -332,6 +402,13 @@ class ImageDataset(Dataset):
         return dataset.y
 
     @property
+    def shape(self):
+        if self.loaded_X is not None:
+            return self.loaded_X.shape
+        else:
+            return [len(self)] + self.loader.shape[1:]
+
+    @property
     def loader(self):
         return self._loader
 
@@ -347,6 +424,7 @@ class ImageDataset(Dataset):
 
         if 'loader' in kwargs:
             self._loader = kwargs['loader']
+            del kwargs['loader']
         else:
             self._loader = ImageLoader()
             
@@ -355,7 +433,6 @@ class ImageDataset(Dataset):
         elif root_folder is not None:
             _X, _y = parse_datastructure(root_folder)
 
-        self.cursor = 0
         super().__init__(X=_X, y=_y, **kwargs)
 
     def normalize(self):
@@ -382,6 +459,7 @@ class ImageDataset(Dataset):
 
         return kwargs
 
+# TODO (16.05.17): This should be rewritten to match the other preprocessor params
 ROTATED = 'rotated'
 ROTATION_STEPS = 'rotation_steps'
 MAX_ROTATION_ANGLE = 'max_rotation_angle'
@@ -389,8 +467,10 @@ BLURRED = 'blurred'
 BLUR_STEPS = 'blur_steps'
 MAX_BLUR_SIGMA = 'max_blur_sigma'
 
+
 def create_name(name, suffixes):
     return "_".join([name] + suffixes)
+
 
 class ImagePreprocessor():
     resize_to = False
@@ -476,7 +556,16 @@ class ImagePreprocessor():
 
         return imgs, names
 
+
 class ImageLoader():
+
+    @property
+    def shape(self):
+        if self.preprocessor.resize_to:
+            return [-1] + list(self.preprocessor.resize_to) + [3]
+
+        return [-1, -1, -1, 3]
+
     def __init__(self, preprocessor=ImagePreprocessor()):
         self.preprocessor = preprocessor
 
@@ -487,12 +576,30 @@ class ImageLoader():
         img = twimage.imread(path)
         return self.preprocessor.process(img, name, label=label)
 
+
 class FeatureLoader(ImageLoader):
-    def __init__(self, model, feature_file=None, preprocessor=ImagePreprocessor(), sess=None):
+    sess = None
+
+    @property
+    def shape(self):
+        layer = self.layer
+
+        if layer is None:
+            layer = -1
+
+        return self.model.get_layer_shape(layer)
+
+    def __init__(self, model, layer=None, cache=None, preprocessor=ImagePreprocessor(), sess=None):
         super().__init__(preprocessor=preprocessor)
         self.model = model
-        self.feature_file = feature_file
-        self.features = parse_features(feature_file)
+        self.layer = layer
+
+        self.cache = None
+        self.features = pd.DataFrame(columns = ['filename', 'label', 'features'])
+        if cache:
+            self.cache = cache
+            self.features = parse_features(cache)
+
         self.sess = sess
 
     def load(self, img, name=None, label=None):
@@ -503,25 +610,29 @@ class FeatureLoader(ImageLoader):
         features = []
         records = []
 
-        for i in range(len(imgs)):
-            if names[i] in self.features['filename'].values:
-                print('Skipping %s' % names[i])
-                vector = self.features[self.features['filename'] == names[i]]['features']
-                vector = np.asarray(vector)[0]
-                features.append(vector)
-            else:
-                print('Extracting features for %s' % names[i])
-                vector = self.model.get_feature(imgs[i], sess=self.sess)
-                features.append(vector)
-                record = {'filename': names[i], 'features': vector}
+        with TFSession(self.sess) as sess:
+            for i in range(len(imgs)):
+                if names[i] in self.features['filename'].values:
+                    logger.info('Skipping %s' % names[i])
+                    vector = self.features[self.features['filename'] == names[i]]['features']
+                    vector = np.asarray(vector)[0]
+                    features.append(vector)
+                else:
+                    logger.info('Extracting features for %s' % names[i])
+                    if self.layer is None:
+                        vector = self.model.extract_bottleneck_features(imgs[i], sess=sess)
+                    else:
+                        vector = self.model.extract_features(imgs[i], layer=self.layer, sess=sess)
+                    features.append(vector)
+                    record = {'filename': names[i], 'features': vector}
 
-                if label is not None:
-                    record['label'] = label
+                    if label is not None:
+                        record['label'] = label
 
-                records.append(record)
-                self.features = self.features.append(record, ignore_index=True)
+                    records.append(record)
+                    self.features = self.features.append(record, ignore_index=True)
 
-        if self.feature_file and len(records) > 0:
-            write_features(self.feature_file, records, append=os.path.isfile(self.feature_file))
+            if self.cache and len(records) > 0:
+                write_features(self.cache, records, append=os.path.isfile(self.cache))
 
         return features, names

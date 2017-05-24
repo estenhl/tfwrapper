@@ -1,2 +1,39 @@
+read -p "Permit tfwrapper to store datasets and external models (e.g. Inception) on your computer [Y/n]: " permit_downloads
+permit_downloads=${permit_downloads:-y}
+
+if [ "$permit_downloads" = "y" ]
+then
+    DEFAULT_ROOT_PATH=$HOME/.tfwrapper
+
+    read -p "Location for downloads [$DEFAULT_ROOT_PATH]: " root_path
+    root_path=${root_path:-$DEFAULT_ROOT_PATH}
+else
+    root_path="None"
+fi
+
+template="import os\n"\
+"\n"\
+"from pathlib import Path"\
+"\nfrom tfwrapper.utils.files import safe_mkdir"\
+"\n"\
+"\nclass Config():\n\tpermit_downloads = True\n"\
+"\n"\
+"\tdef __init__(self, root):\n"\
+"\t\tif root is None:\n"\
+"\t\t\tself.permit_downloads = False\n"\
+"\t\telse:\n"\
+"\t\t\tself.DATA = os.path.join(root, 'data')\n"\
+"\t\t\tself.MODELS = os.path.join(self.DATA, 'models')\n"\
+"\t\t\tself.DATASETS = os.path.join(self.DATA, 'datasets')\n"\
+"\n"\
+"\t\t\tsafe_mkdir(root)\n"\
+"\t\t\tsafe_mkdir(self.DATA)\n"\
+"\t\t\tsafe_mkdir(self.MODELS)\n"\
+"\t\t\tsafe_mkdir(self.DATASETS)\n"\
+"\n"\
+"ROOT_PATH = '$root_path'\n"\
+"PERMIT_DOWNLOADS = True\n"\
+"config = Config(ROOT_PATH, PERMIT_DOWNLOADS)"$'\r'
+echo -e $template > tfwrapper/config.py
+
 chmod +x test
-source activate ml
