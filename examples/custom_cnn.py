@@ -4,7 +4,7 @@ import tensorflow as tf
 from tfwrapper.nets import CNN
 from tfwrapper.layers import reshape, conv2d, maxpool2d, fullyconnected, out
 from tfwrapper.datasets import mnist
-from tfwrapper.hyperparameters import modify_at_epoch
+from tfwrapper.hyperparameters import adjust_after_epoch
 
 h = 28
 w = 28
@@ -36,7 +36,7 @@ layers = [
 	out(inputs=512, outputs=num_classes, name=name + '/pred')
 ]
 cnn = CNN([h, w, c], num_classes, layers, name=name)
-cnn.learning_rate = modify_at_epoch(before=0.001, after=0.0005, epoch=3)
+cnn.learning_rate = adjust_after_epoch(3, before=0.001, after=0.0005)
 cnn.train(X, y, epochs=5, validate=False)
 _, acc = cnn.validate(test.X, test.y)
 print('Test accuracy: %d%%' % (acc*100))

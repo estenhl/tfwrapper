@@ -1,6 +1,6 @@
 from tfwrapper import logger
 
-def modify_at_epoch(*, before, after, epoch=150):
+def adjust_after_epoch(epoch=150, *, before, after):
     def modify(**kwargs):
         if 'epoch' in kwargs:
             if kwargs['epoch'] == epoch:
