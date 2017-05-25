@@ -1,15 +1,10 @@
 read -p "Permit tfwrapper to store datasets and external models (e.g. Inception) on your computer [Y/n]: " permit_downloads
 permit_downloads=${permit_downloads:-y}
 
-if [ "$permit_downloads" = "y" ]
-then
-    DEFAULT_ROOT_PATH=$HOME/.tfwrapper
+DEFAULT_ROOT_PATH=$HOME/.tfwrapper
 
-    read -p "Location for downloads [$DEFAULT_ROOT_PATH]: " root_path
-    root_path=${root_path:-$DEFAULT_ROOT_PATH}
-else
-    root_path="None"
-fi
+read -p "Location for downloads [$DEFAULT_ROOT_PATH]: " root_path
+root_path=${root_path:-$DEFAULT_ROOT_PATH}
 
 template="import os\n"\
 "\n"\
@@ -32,8 +27,7 @@ template="import os\n"\
 "\t\t\tsafe_mkdir(self.DATASETS)\n"\
 "\n"\
 "ROOT_PATH = '$root_path'\n"\
-"PERMIT_DOWNLOADS = True\n"\
-"config = Config(ROOT_PATH, PERMIT_DOWNLOADS)"$'\r'
+"config = Config(ROOT_PATH)"$'\r'
 echo -e $template > tfwrapper/config.py
 
 chmod +x test

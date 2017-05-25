@@ -1,5 +1,13 @@
-from .config import config
+import os
+
 from .logger import logger
+
+if os.path.isfile(os.path.join(os.path.dirname(__file__), 'config.py')):
+    from .config import config
+else:
+    logger.error('No config file found! Run ./configure in the root folder')
+    exit()
+
 from .dataset import Dataset
 from .dataset import ImageDataset
 from .dataset import ImageLoader

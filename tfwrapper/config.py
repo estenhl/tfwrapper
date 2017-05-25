@@ -19,6 +19,5 @@ class Config():
 			safe_mkdir(self.MODELS)
 			safe_mkdir(self.DATASETS)
 
-ROOT_PATH = os.path.join(os.path.expanduser('~'), '.tfwrapper')
-PERMIT_DOWNLOADS = True
-config = Config(ROOT_PATH, PERMIT_DOWNLOADS)
+ROOT_PATH = '/Users/esten/.tfwrapper'
+config = Config(ROOT_PATH)

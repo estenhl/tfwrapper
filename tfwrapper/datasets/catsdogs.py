@@ -6,6 +6,7 @@ from tfwrapper import config
 from tfwrapper import logger
 from tfwrapper.utils.files import safe_mkdir
 from tfwrapper.utils.download import google_drive
+from tfwrapper.utils.exceptions import IllegalStateException
 
 DOWNLOAD_DRIVE_ID = "0B1b2bIlebXOqQnJWYUxDZXRhTlE"
 FILE_PATH = os.path.join(config.DATASETS, "catsdogs")
@@ -27,8 +28,8 @@ def download_cats_and_dogs():
         safe_mkdir(IMAGES)
         cats = os.path.join(IMAGES, "cat")
         dogs = os.path.join(IMAGES, "dog")
-        file_util.safe_mkdir(cats)
-        file_util.safe_mkdir(dogs)
+        safe_mkdir(cats)
+        safe_mkdir(dogs)
 
         with zipfile.ZipFile(zip_destination, 'r') as f:
             logger.info('Extracting dataset cats_and_dogs')
