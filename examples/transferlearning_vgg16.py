@@ -8,9 +8,9 @@ from tfwrapper.nets.pretrained import PretrainedVGG16
 from tfwrapper.datasets import imagenet
 from tfwrapper.datasets import cats_and_dogs
 
-dataset = cats_and_dogs(size=100)
+dataset = cats_and_dogs(size=5000)
 dataset = dataset.shuffle()
-dataset = dataset[:100]
+dataset = dataset[:5000]
 dataset = dataset.translate_labels()
 dataset = dataset.onehot()
 train, test = dataset.split(0.8)
@@ -35,8 +35,9 @@ with tf.Session() as sess:
         X = np.reshape(data, (-1, neurons))
         test_X = np.reshape(test_data, (-1, neurons))
         
-        nn = SingleLayerNeuralNet([neurons], 2, 1024, sess=sess, name='VGG16Test')
-        nn.train(X, train.y, epochs=10, sess=sess)
+        nn = SingleLayerNeuralNet([neurons], 2, 64, sess=sess, name='VGG16Test')
+        nn.learning_rate = 0.001
+        nn.train(X, train.y, epochs=150, sess=sess)
         _, acc = nn.validate(test_X, test.y, sess=sess)
         print('Acc at layer %d: %d%%' % (layer, acc * 100))
 
