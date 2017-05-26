@@ -49,6 +49,7 @@ def download_wine(y_index=None, size=178):
         else:
             X.append([float(x) for x in data])
 
+        i += 1
         if i == size:
             break
 
