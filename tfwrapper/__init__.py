@@ -2,10 +2,10 @@ import os
 
 from .logger import logger
 
-if os.path.isfile(os.path.join(os.path.dirname(__file__), 'config.py')):
+if os.path.isfile(os.path.join(os.path.dirname(__file__), os.pardir, '.path')):
     from .config import config
 else:
-    logger.error('No config file found! Run ./configure in the root folder')
+    logger.error('tfwrapper is not configured! Run ./configure in the root folder')
     exit()
 
 from .dataset import Dataset
