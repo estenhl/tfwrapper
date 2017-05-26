@@ -22,8 +22,9 @@ test.loader = ImageLoader(preprocessor=preprocessor)
 
 with tf.Session() as sess:
     vgg = PretrainedVGG16([224, 224, 3], name='PretrainedVGG16', sess=sess)
+    vgg.batch_size = 8
 
-    for layer in [1, 4, 8, 12, 16, -8, -5]:
+    for layer in [13, 17, -8, -5]:
         tensor = vgg.get_tensor(layer)
         data = vgg.run_op(tensor, data=train.X, sess=sess)
         test_data = vgg.run_op(tensor, data=test.X, sess=sess)

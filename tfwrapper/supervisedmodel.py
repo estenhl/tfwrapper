@@ -73,7 +73,17 @@ class SupervisedModel(ABC):
         feed_dict[source] = data
 
         with TFSession(sess, self.graph) as sess:
-            return sess.run(target, feed_dict=feed_dict)
+            batches = batch_data(data, self.batch_size)
+            result = None
+            for batch in batches:
+                feed_dict[source] = batch
+                batch_result = sess.run(target, feed_dict=feed_dict)
+                if result is None:
+                    result = batch_result
+                else:
+                    result = np.concatenate([result, batch_result])
+
+            return result
         
     def checkpoint_variables(self, sess):
         for variable in tf.global_variables():
