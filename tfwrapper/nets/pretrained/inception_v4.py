@@ -33,7 +33,7 @@ class InceptionV4(PretrainedModel):
 
     def run_op(self, to_layer, from_layer, data, sess=None):
         with TFSession(sess, self.graph) as sess:
-            logger.info('Extracting features from layer ' + from_layer + ' to ' + to_layer)
+            logger.debug('Extracting features from layer ' + from_layer + ' to ' + to_layer)
             to_tensor = self.graph.get_tensor_by_name(to_layer)   
 
             try:  

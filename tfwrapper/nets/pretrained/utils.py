@@ -39,7 +39,7 @@ VGG16_TAR_URL = 'http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz'
 VGG16_CKPT_PATH = os.path.join(config.MODELS, 'vgg_16.ckpt')
 VGG16_TAR_PATH = os.path.join(config.MODELS, 'vgg16.tar')
 
-def download_vgg16(path=VGG16_CKPT_PATH):
+def download_vgg16_ckpt(path=VGG16_CKPT_PATH):
 	if not os.path.isfile(path):
 		if not os.path.isfile(VGG16_TAR_PATH):
 			download_file(VGG16_TAR_URL, VGG16_TAR_PATH)
@@ -53,7 +53,14 @@ def download_vgg16(path=VGG16_CKPT_PATH):
 
 	return path
 
-def download_vgg16_npy(path=VGG_16_NPY_PATH):
+VGG16_NPY_URL = 'https://lexiondebug.blob.core.windows.net/mlmodel/models/VGG_16.npy'
+VGG16_NPY_PATH = os.path.join(config.MODELS, 'vgg16.npy')
+
+def download_vgg16_npy(path=VGG16_NPY_PATH):
+	if not os.path.isfile(path):
+		logger.error('IMPLEMENT VGG16_NPY')
+		exit()
+
 	return path
 	
 SSD300_CKPT_URL = 'https://github.com/balancap/SSD-Tensorflow/raw/master/checkpoints/ssd_300_vgg.ckpt.zip'

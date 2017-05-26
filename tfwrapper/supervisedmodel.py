@@ -6,6 +6,7 @@ import tensorflow as tf
 from abc import ABC, abstractmethod
 
 from .dataset import batch_data
+from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 from .logger import logger
@@ -118,6 +119,11 @@ class SupervisedModel(ABC):
             errormsg = 'Invalid type %s for learning rate. (Valid is [\'float\', \'int\', \'func\'])' % type(self.learning_rate)
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
+
+    def assign_variable_value(self, name, value, sess=None):
+        with TFSession(sess, self.graph) as sess:
+            variable = get_variable_by_name(name)
+            sess.run(variable.assign(value))
 
     def train(self, X=None, y=None, generator=None, feed_dict=None, epochs=None, val_X=None, val_y=None, val_generator=None, validate=True, shuffle=True, sess=None, **kwargs):
         feed_dict = self.parse_feed_dict(feed_dict, log=True, **kwargs)

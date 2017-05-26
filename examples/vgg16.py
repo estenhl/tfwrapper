@@ -2,21 +2,22 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
-from tfwrapper.nets import VGG16
-from tfwrapper.datasets import cifar100
+from tfwrapper import twimage
+from tfwrapper import ImageLoader
+from tfwrapper import ImagePreprocessor
+from tfwrapper.nets.pretrained import PretrainedVGG16
+from tfwrapper.datasets import imagenet
+from tfwrapper.datasets import cats_and_dogs
 
+preprocessor = ImagePreprocessor()
+preprocessor.resize_to = (224, 224)
+cats_and_dogs = cats_and_dogs(size=5)[5]
+cats_and_dogs.loader = ImageLoader(preprocessor=preprocessor)
 
-dataset = cifar100()
-dataset = dataset.balance()
-dataset = dataset.shuffle()
-dataset = dataset.translate_labels()
-dataset = dataset.onehot()
-train, test = dataset.split(0.8)
+_, labels = imagenet(include_labels=True)
 
 with tf.Session() as sess:
-    cnn = VGG16([32, 32, 3], classes=100, sess=sess)
-    cnn.learning_rate = 0.01
-    cnn.batch_size = 512
-    cnn.train(train.X, train.y, epochs=50, sess=sess)
-    _, acc = cnn.validate(test.X, test.y)
-    print('Test accuracy: %d%%' % (acc*100))
+    vgg = PretrainedVGG16([224, 224, 3], sess=sess)
+
+    cat_preds = vgg.predict(cats_and_dogs.X, sess=sess)
+    print('Cat prediction: %s' % labels[np.argmax(cat_preds)])

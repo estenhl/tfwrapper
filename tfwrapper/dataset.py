@@ -124,7 +124,7 @@ def parse_datastructure(root, suffix='.jpg', verbose=False):
                     y.append(foldername)
 
                     if i % 1000 == 0:
-                        logger.info('Read %d images from %s' % (i, root))
+                        logger.debug('Read %d images from %s' % (i, root))
                     i += 1
                 elif verbose:
                     logger.warning('Skipping filename ' + filename)
@@ -150,7 +150,7 @@ def parse_folder_with_labels_file(root, labels_file, verbose=False):
                 y.append(label)
                 
                 if i % 1000 == 0:
-                    logger.info('Read %d images from %s' % (i, root))
+                    logger.debug('Read %d images from %s' % (i, root))
                 i += 1
             elif verbose:
                 logger.warning('Skipping filename ' + src_file)
@@ -613,12 +613,12 @@ class FeatureLoader(ImageLoader):
         with TFSession(self.sess) as sess:
             for i in range(len(imgs)):
                 if names[i] in self.features['filename'].values:
-                    logger.info('Skipping %s' % names[i])
+                    logger.debug('Skipping %s' % names[i])
                     vector = self.features[self.features['filename'] == names[i]]['features']
                     vector = np.asarray(vector)[0]
                     features.append(vector)
                 else:
-                    logger.info('Extracting features for %s' % names[i])
+                    logger.debug('Extracting features for %s' % names[i])
                     if self.layer is None:
                         vector = self.model.extract_bottleneck_features(imgs[i], sess=sess)
                     else:

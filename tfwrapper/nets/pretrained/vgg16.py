@@ -1,60 +1,33 @@
+import numpy as np
 import tensorflow as tf
 
+from tfwrapper import logger
 from tfwrapper import TFSession
 from tfwrapper.nets import VGG16
-from tfwrapper.utils import get_variable_by_name
 
-from .utils import VGG16_CKPT_PATH
 from .utils import VGG16_NPY_PATH
-from .utils import download_vgg16
+from .utils import download_vgg16_npy
+
+CHANNEL_MEANS = [103.939, 116.779, 123.68]
 
 class PretrainedVGG16(VGG16):
     def __init__(self, X_shape, *, npy_path=VGG16_NPY_PATH, sess=None, graph=None, name='vgg_16'):
-        super().__init__(X_shape, sess=sess, name='vgg_16')
+        with TFSession(sess) as sess:
+            super().__init__([224, 224, 3], sess=sess, name=name)
 
-        path = download_vgg16(ckpt_path)
-        self.load_from_npy(npy_path, sess=sess)
+            npy_path = download_vgg16_npy(npy_path)
+            self.load_from_npy(npy_path, sess=sess)
 
     def load_from_npy(self, npy_path, sess=None):
-
-
-    def load_from_checkpoint(self, ckpt_path, sess=None):
-        variables = [
-            'vgg_16/fc7/weights',
-            'vgg_16/fc6/weights',
-            'vgg_16/conv5/conv5_3/biases',
-            'vgg_16/fc8/weights',
-            'vgg_16/conv5/conv5_2/weights',
-            'vgg_16/conv5/conv5_2/biases',
-            'vgg_16/conv5/conv5_1/biases',
-            'vgg_16/conv4/conv4_2/weights',
-            'vgg_16/conv5/conv5_1/weights',
-            'vgg_16/conv4/conv4_2/biases',
-            'vgg_16/conv3/conv3_3/biases',
-            'vgg_16/fc7/biases',
-            'vgg_16/conv3/conv3_2/weights',
-            'vgg_16/conv4/conv4_3/biases',
-            'vgg_16/conv2/conv2_2/biases',
-            'vgg_16/conv3/conv3_2/biases',
-            'vgg_16/conv2/conv2_1/weights',
-            'vgg_16/conv3/conv3_3/weights',
-            'vgg_16/conv1/conv1_1/biases',
-            'vgg_16/conv2/conv2_2/weights',
-            'vgg_16/conv2/conv2_1/biases',
-            'vgg_16/conv4/conv4_1/weights',
-            'vgg_16/fc8/biases',
-            'vgg_16/fc6/biases',
-            'vgg_16/conv3/conv3_1/weights',
-            'vgg_16/conv1/conv1_2/weights',
-            'vgg_16/conv4/conv4_1/biases',
-            'vgg_16/conv5/conv5_3/weights',
-            'vgg_16/conv1/conv1_2/biases',
-            'vgg_16/conv4/conv4_3/weights',
-            'vgg_16/conv1/conv1_1/weights',
-            'vgg_16/conv3/conv3_1/biases',
-        ]
-
         with TFSession(sess, self.graph) as sess:
-            sess.run(tf.global_variables_initializer())
-            saver = tf.train.Saver([get_variable_by_name(n) for n in variables])
-            saver.restore(sess, ckpt_path)
+            data = np.load(npy_path, encoding='latin1').item()
+            logger.debug('Loaded vgg16 from %s' % npy_path)
+            for key in data:
+                root_name = '/'.join([self.name, key])
+                weight_name = '/'.join([root_name, 'W'])
+                bias_name = '/'.join([root_name, 'b'])
+
+                self.assign_variable_value(weight_name, data[key][0], sess=sess)
+                self.assign_variable_value(bias_name, data[key][1], sess=sess)
+
+            logger.debug('Injected variables values into %s' % self.name)
