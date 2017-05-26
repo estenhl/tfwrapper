@@ -1,4 +1,4 @@
-read -p "Permit tfwrapper to store datasets and external models (e.g. Inception) on your computer [Y/n (n is unfortunately not permitted :/)]: " permit_downloads
+read -p "Permit tfwrapper to store datasets and external models (e.g. Inception) on your computer [Y/n]: " permit_downloads
 permit_downloads=${permit_downloads:-y}
 
 DEFAULT_ROOT_PATH=$HOME/.tfwrapper
@@ -6,6 +6,6 @@ DEFAULT_ROOT_PATH=$HOME/.tfwrapper
 read -p "Location for downloads [$DEFAULT_ROOT_PATH]: " root_path
 root_path=${root_path:-$DEFAULT_ROOT_PATH}
 
-echo $root_path > '.path'
+echo -n $root_path > '.path'
 
 chmod +x test
