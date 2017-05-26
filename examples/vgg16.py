@@ -1,6 +1,8 @@
+import cv2
 import numpy as np
 import tensorflow as tf
 
+from tfwrapper import twimage
 from tfwrapper import ImageLoader
 from tfwrapper import ImagePreprocessor
 from tfwrapper.nets.pretrained import PretrainedVGG16

@@ -35,9 +35,11 @@ class SupervisedModel(ABC):
             self.lr = tf.placeholder(tf.float32, [], name=self.name + '/learning_rate_placeholder')
 
             self.layers = layers
+            self.tensors = []
             prev = self.X
             for layer in layers:
                 prev = layer(prev)
+                self.tensors.append({'name': prev.name, 'tensor': prev})
             self.pred = prev
 
             self.loss = self.loss_function()
@@ -53,6 +55,25 @@ class SupervisedModel(ABC):
     @abstractmethod
     def optimizer_function(self):
         raise NotImplementedError('SupervisedModel is a generic class')
+
+    def run_op(self, target, *, source=None, data, feed_dict=None, sess=None):
+        if type(target) in [str, int]:
+            target = self.get_tensor(target)
+        elif type(target) is not tf.Tensor:
+            errormsg = 'Invalid type %s for target in run_op. (Valid is [\'str\', \'int\', \'tf.Tensor\'])' % repr(type(target))
+            logger.error(errormsg)
+            raise InvalidArgumentException(errormsg)
+
+        if source is None:
+            source = self.X
+
+        if feed_dict is None:
+            feed_dict = {}
+
+        feed_dict[source] = data
+
+        with TFSession(sess, self.graph) as sess:
+            return sess.run(target, feed_dict=feed_dict)
         
     def checkpoint_variables(self, sess):
         for variable in tf.global_variables():
@@ -222,3 +243,21 @@ class SupervisedModel(ABC):
             self.checkpoint_variables(sess)
 
             # TODO (11.05.17): SHOULD USE METADATA, NOT SURE HOW THOUGH
+
+    def get_tensor(self, val):
+        if type(val) is int:
+            return self.tensors[val]['tensor']
+        elif type(val) is str:
+            for i in range(len(self.tensors)):
+                if self.tensors[i]['name'] == val:
+                    return self.tensors[i]['tensor']
+
+            errormsg = 'Invalid tensor name %s' % val
+        else:
+            errormsg = 'Invalid type %s for get_tensor. (Valid is [\'int\', \'str\'])' % repr(type(val))
+
+        logger.error(errormsg)
+        raise InvalidArgumentException(errormsg)
+
+    def __len__(self):
+        return len(self.tensors)

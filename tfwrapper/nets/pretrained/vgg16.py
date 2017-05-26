@@ -11,7 +11,7 @@ from .utils import download_vgg16_npy
 CHANNEL_MEANS = [103.939, 116.779, 123.68]
 
 class PretrainedVGG16(VGG16):
-    def __init__(self, X_shape, *, npy_path=VGG16_NPY_PATH, sess=None, graph=None, name='vgg_16'):
+    def __init__(self, X_shape, *, npy_path=VGG16_NPY_PATH, sess=None, graph=None, name='VGG16'):
         with TFSession(sess) as sess:
             super().__init__([224, 224, 3], sess=sess, name=name)
 
@@ -21,7 +21,7 @@ class PretrainedVGG16(VGG16):
     def load_from_npy(self, npy_path, sess=None):
         with TFSession(sess, self.graph) as sess:
             data = np.load(npy_path, encoding='latin1').item()
-            logger.debug('Loaded vgg16 from %s' % npy_path)
+            logger.debug('Loaded VGG16 from %s' % npy_path)
             for key in data:
                 root_name = '/'.join([self.name, key])
                 weight_name = '/'.join([root_name, 'W'])
@@ -30,4 +30,4 @@ class PretrainedVGG16(VGG16):
                 self.assign_variable_value(weight_name, data[key][0], sess=sess)
                 self.assign_variable_value(bias_name, data[key][1], sess=sess)
 
-            logger.debug('Injected variables values into %s' % self.name)
+            logger.debug('Injected values into %s' % self.name)
