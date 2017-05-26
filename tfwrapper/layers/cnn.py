@@ -10,8 +10,8 @@ def conv2d(*, filter, depth, strides=1, padding='SAME', activation='relu', init=
         logger.error(errormsg)
         raise InvalidArgumentException(errormsg)
 
-    weight_name = name + '/W'
-    bias_name = name + '/b'
+    weight_name = name + '/weights'
+    bias_name = name + '/biases'
 
     def create_layer(x):
         input_depth = int(x.get_shape()[-1])
