@@ -30,6 +30,7 @@ with tf.Session() as sess:
 
         shape = data.shape
         neurons = np.prod(data.shape[1:])
+        print('Neurons in layer %d: %d' % (layer, neurons))
         X = np.reshape(data, (-1, neurons))
         test_X = np.reshape(test_data, (-1, neurons))
         
