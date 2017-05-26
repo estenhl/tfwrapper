@@ -2,6 +2,7 @@
 A collection of datasets convenient for
 
 #### cats and dogs
+[https://www.kaggle.com/c/dogs-vs-cats/data](https://www.kaggle.com/c/dogs-vs-cats/data) ?
 #### mnist
 60 000 images containing handwritten digits in the range 0 through 9. Originally created (on this form) by [Yann LeCun](http://yann.lecun.com/exdb/mnist/)
 

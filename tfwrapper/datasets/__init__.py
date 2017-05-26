@@ -9,6 +9,7 @@ from shutil import copyfile
 from struct import unpack
 
 from tfwrapper import config
+from tfwrapper import logger
 from tfwrapper import Dataset
 from tfwrapper import ImageDataset
 from tfwrapper.utils.files import download_file
@@ -26,7 +27,7 @@ from .catsdogs import download_cats_and_dogs
 
 curr_path = config.DATASETS
 
-def download_ptb(verbose=False):
+def download_ptb():
 	url = 'http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz'
 	root_path, _, labels_file = setup_structure('penn_tree_bank', create_data_folder=False)
 	local_tar = os.path.join(root_path, 'simple-examples.tgz')
@@ -36,11 +37,10 @@ def download_ptb(verbose=False):
 	data_file = os.path.join(data_path, 'ptb.train.txt')
 	if not (os.path.isdir(examples_path) and os.path.isdir(data_path) and os.path.isfile(data_file)):
 		if not os.path.isfile(local_tar):
-			download_file(url, local_tar, verbose=verbose)
+			download_file(url, local_tar)
 
 		with tarfile.open(local_tar, 'r') as f:
-			if verbose:
-				print('Extracting penn_tree_bank data')
+			logger.info('Extracting penn_tree_bank data')
 			for item in f:
 				f.extract(item, root_path)
 
@@ -49,7 +49,7 @@ def download_ptb(verbose=False):
 
 	return data_file
 
-def download_flowers(verbose=False):
+def download_flowers():
 	url = 'http://www.robots.ox.ac.uk/~vgg/data/flowers/17/17flowers.tgz'
 
 	root_path, data_folder, labels_file = setup_structure('flowers')
@@ -57,11 +57,10 @@ def download_flowers(verbose=False):
 	if not len(os.listdir(data_folder)) > 1000:
 		tgz_file = os.path.join(root_path, '17flowers.tgz')
 		if not os.path.isfile(tgz_file):
-			download_file(url, tgz_file, verbose=verbose)
+			download_file(url, tgz_file)
 
 		with tarfile.open(tgz_file, 'r') as f:
-			if verbose:
-				print('Extracting flowers data')
+			logger.info('Extracting flowers data')
 			for item in f:
 				f.extract(item, root_path)
 
@@ -89,7 +88,9 @@ def download_flowers(verbose=False):
 
 	return data_folder, labels_file
 
-def cats_and_dogs():
+def cats_and_dogs(size=25000):
+	if size is not 25000:
+		logger.warning('Size not implemented for cats and dogs dataset')
 	data_path = download_cats_and_dogs()
 	dataset = ImageDataset(root_folder=data_path)
 
@@ -100,8 +101,8 @@ def mnist(size=None, imagesize=[28, 28]):
 	dataset = Dataset(X=X, y=np.asarray(y).flatten())
 	return dataset
 
-def flowers(size=1360, verbose=False):
-	data_path, labels_file = download_flowers(verbose=verbose)
+def flowers(size=1360):
+	data_path, labels_file = download_flowers()
 
 	if size < 1360:
 		tmp_labels_file = os.path.join(os.path.dirname(labels_file), 'tmp.txt')
@@ -140,8 +141,8 @@ def cifar100(size=50000):
 	dataset = Dataset(X=X, y=y)
 	return dataset
 
-def wine(y=None, include_headers=False):
-	X, y = download_wine(y_index=y)
+def wine(y=None, include_headers=False, size=178):
+	X, y = download_wine(y_index=y, size=size)
 	dataset = Dataset(X=np.asarray(X), y=np.reshape(np.asarray(y), (len(y), 1)))
 
 	if include_headers:

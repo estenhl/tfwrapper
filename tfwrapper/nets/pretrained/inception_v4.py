@@ -22,7 +22,7 @@ class InceptionV4(PretrainedModel):
     DEFAULT_FEATURES_LAYER = 'InceptionV4/Logits/PreLogitsFlatten/Reshape:0'
 
     def __init__(self, graph_file=INCEPTION_PB_PATH):
-        self.download_if_necessary()
+        self.download_if_necessary(graph_file)
 
         with tf.gfile.FastGFile(graph_file, 'rb') as f:
             graph_def = tf.GraphDef()
@@ -65,6 +65,6 @@ class InceptionV4(PretrainedModel):
 
     def download_if_necessary(self, path=INCEPTION_PB_PATH):
         if not os.path.isfile(path):
-            print("Downloading Inception_v4.pb")
+            logger.info('Downloading Inception_v4.pb')
             google_drive.download_file_from_google_drive(DOWNLOAD_ID, path)
-            print("Completed downloading Inception_v4.pb")
+            logger.info('Completed downloading Inception_v4.pb')

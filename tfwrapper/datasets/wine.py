@@ -5,13 +5,12 @@ from tfwrapper import logger
 from tfwrapper.utils.files import download_file
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
-path = os.path.join(config.DATASETS, 'wine')
-data_file = os.path.join(path, 'wine.data')
-
 headers = ['Class', 'Alcohol', 'Malic acid', 'Ash', 'Alcalinity of ash', 'Magnesium', 'Total phenols', 'Flavanoids', 'Nonflavanoid phenols', 'Proanthocyanins', 'Color intensity', 'Hue', 'OD280/OD315 of diluted wines', 'Proline']
 
-def download_wine(y_index=None):
+def download_wine(y_index=None, size=178):
     url = 'http://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data'
+    path = os.path.join(config.DATASETS, 'wine')
+    data_file = os.path.join(path, 'wine.data')
 
     if not os.path.isdir(path):
         os.mkdir(path)
@@ -41,6 +40,7 @@ def download_wine(y_index=None):
     X = []
     y = []
 
+    i = 0
     for line in open(data_file, 'r'):
         data = line.split(',')
         if y_index is not None:
@@ -48,6 +48,12 @@ def download_wine(y_index=None):
             X.append([float(x) for x in data[:y_index] + data[y_index + 1:]])
         else:
             X.append([float(x) for x in data])
+
+        i += 1
+        if i == size:
+            break
+
+    logger.info('Read %i wine instances' % len(X))
 
     if len(y) is None:
         y = None

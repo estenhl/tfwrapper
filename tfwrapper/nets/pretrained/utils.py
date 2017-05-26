@@ -7,10 +7,10 @@ from tfwrapper import logger
 from tfwrapper.utils.files import remove_dir
 from tfwrapper.utils.files import download_file
 
-INCEPTION_PB_PATH = os.path.join(config.DATA,'models','inception_v3.pb')
 INCEPTION_TAR_URL = 'http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz'
-INCEPTION_TAR_PATH = os.path.join(config.DATA,'models', 'inception_v3.tar')
-INCEPTION_PB_TEMP_PATH = os.path.join(config.DATA,'models','inception-2015-12-05', 'classify_image_graph_def.pb')
+INCEPTION_PB_PATH = os.path.join(config.MODELS, 'inception_v3.pb')
+INCEPTION_TAR_PATH = os.path.join(config.MODELS, 'inception_v3.tar')
+INCEPTION_PB_TEMP_PATH = os.path.join(config.MODELS, 'inception-2015-12-05', 'classify_image_graph_def.pb')
 
 def download_inceptionv3(path=INCEPTION_PB_PATH):
 	if not os.path.isfile(path):
@@ -35,9 +35,9 @@ def download_inceptionv3(path=INCEPTION_PB_PATH):
 
 	return path
 
-VGG16_CKPT_PATH = os.path.join(config.DATA, 'models','vgg_16.ckpt')
-VGG16_TAR_PATH = os.path.join(config.DATA, 'models','vgg16.tar')
 VGG16_TAR_URL = 'http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz'
+VGG16_CKPT_PATH = os.path.join(config.MODELS, 'vgg_16.ckpt')
+VGG16_TAR_PATH = os.path.join(config.MODELS, 'vgg16.tar')
 
 def download_vgg16(path=VGG16_CKPT_PATH):
 	if not os.path.isfile(path):
@@ -53,5 +53,8 @@ def download_vgg16(path=VGG16_CKPT_PATH):
 
 	return path
 
+def download_vgg16_npy(path=VGG_16_NPY_PATH):
+	return path
+	
 SSD300_CKPT_URL = 'https://github.com/balancap/SSD-Tensorflow/raw/master/checkpoints/ssd_300_vgg.ckpt.zip'
 

@@ -5,14 +5,18 @@ from tfwrapper.nets import VGG16
 from tfwrapper.utils import get_variable_by_name
 
 from .utils import VGG16_CKPT_PATH
+from .utils import VGG16_NPY_PATH
 from .utils import download_vgg16
 
 class PretrainedVGG16(VGG16):
-    def __init__(self, X_shape, *, ckpt_path=VGG16_CKPT_PATH, sess=None, graph=None, name='vgg_16'):
+    def __init__(self, X_shape, *, npy_path=VGG16_NPY_PATH, sess=None, graph=None, name='vgg_16'):
         super().__init__(X_shape, sess=sess, name='vgg_16')
 
         path = download_vgg16(ckpt_path)
-        self.load_from_checkpoint(ckpt_path, sess=sess)
+        self.load_from_npy(npy_path, sess=sess)
+
+    def load_from_npy(self, npy_path, sess=None):
+
 
     def load_from_checkpoint(self, ckpt_path, sess=None):
         variables = [
