@@ -41,7 +41,7 @@ class InceptionV3(PretrainedModel):
     ]
 
     def __init__(self,graph_file=INCEPTION_PB_PATH):
-        graph_file = download_inceptionv3(graph_file, verbose=True)
+        graph_file = download_inceptionv3(graph_file)
 
         if not os.path.isfile(graph_file):
             raise Exception('Invalid path to inception v3 pb file')

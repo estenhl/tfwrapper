@@ -10,8 +10,8 @@ from tfwrapper.datasets import cats_and_dogs
 
 from utils import curr_path
 
-dataset = cats_and_dogs()
-dataset = dataset.balance(max=500)
+dataset = cats_and_dogs(size=500)
+dataset = dataset.balance(max=150)
 dataset = dataset.shuffle()
 dataset = dataset.translate_labels()
 dataset = dataset.onehot()

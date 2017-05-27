@@ -15,6 +15,8 @@ from .tfsession import TFSession
 METAFILE_SUFFIX = 'tw'
 
 class SupervisedModel(ABC):
+    DEFAULT_BOTTLENECK_LAYER = -2
+
     graph = None
     variables = {}
 
@@ -84,6 +86,20 @@ class SupervisedModel(ABC):
                     result = np.concatenate([result, batch_result])
 
             return result
+
+    def extract_features(self, data, layer, sess=None):
+        if len(data.shape) == 3:
+            data = np.reshape(data, (-1,) + data.shape)
+
+        with TFSession(sess, self.graph) as sess:
+            return self.run_op(layer, data=data, sess=sess)
+
+    def extract_bottleneck_features(self, data, sess=None):
+        with TFSession(sess, self.graph) as sess:
+            features = self.extract_features(data, layer=self.DEFAULT_BOTTLENECK_LAYER, sess=sess)
+            features = features.flatten()
+
+            return features
         
     def checkpoint_variables(self, sess):
         for variable in tf.global_variables():

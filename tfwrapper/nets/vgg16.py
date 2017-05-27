@@ -3,6 +3,8 @@ from tfwrapper.layers import conv2d, maxpool2d, fullyconnected, relu, dropout, s
 from .cnn import CNN
 
 class VGG16(CNN):
+	DEFAULT_BOTTLENECK_LAYER = -5
+
 	def __init__(self, X_shape, classes=1000, sess=None, name='VGG16'):
 		height, width, channels = X_shape
 		
@@ -35,7 +37,7 @@ class VGG16(CNN):
 			dropout(1.0, name=name + '/dropout1'),
 			fullyconnected(inputs=4096, outputs=4096, name=name + '/fc7'),
 			relu(name=name + '/relu2'),
-			dropout(1.0, name=name + '/dropout1'),
+			dropout(1.0, name=name + '/dropout2'),
 			fullyconnected(inputs=4096, outputs=classes, name=name + '/fc8'),
 			softmax(name=name + '/pred')
 		]
