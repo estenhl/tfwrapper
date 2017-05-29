@@ -1,6 +1,7 @@
 import os
 from .logger import logger
 
+
 class Config():
     permit_downloads = True
 
@@ -29,4 +30,5 @@ else:
     ROOT_PATH = os.path.join(os.path.expanduser('~'), '.tfwrapper')
     logger.warning('TFWRAPPER_ROOT_PATH not set. Using:' + str(ROOT_PATH))
 
+logger.info('Testing logging')
 config = Config(ROOT_PATH)
