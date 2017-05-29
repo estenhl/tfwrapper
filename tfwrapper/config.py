@@ -28,7 +28,7 @@ if 'TFWRAPPER_ROOT_PATH' in os.environ:
     ROOT_PATH = os.environ['TFWRAPPER_ROOT_PATH']
 else:
     ROOT_PATH = os.path.join(os.path.expanduser('~'), '.tfwrapper')
-    logger.warning('TFWRAPPER_ROOT_PATH not set. Using:' + str(ROOT_PATH))
+    logger.warning('TFWRAPPER_ROOT_PATH not set. Using: ' + str(ROOT_PATH))
 
 logger.info('Testing logging')
 config = Config(ROOT_PATH)
