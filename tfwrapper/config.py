@@ -24,8 +24,8 @@ class Config():
             os.mkdir(self.DATASETS)
 
 if 'TFWRAPPER_ROOT_PATH' in os.environ:
-    print(os.environ['TFWRAPPER_ROOT_PATH'])
     ROOT_PATH = os.environ['TFWRAPPER_ROOT_PATH']
+    logger.info('TFWRAPPER_ROOT_PATH set to: ' + str(ROOT_PATH))
 else:
     ROOT_PATH = os.path.join(os.path.expanduser('~'), '.tfwrapper')
     logger.warning('TFWRAPPER_ROOT_PATH not set. Using: ' + str(ROOT_PATH))
