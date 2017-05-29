@@ -11,4 +11,5 @@ setup(
     # packages=['tfwrapper', 'tfwrapper.utils'],
     packages=find_packages('.'),
     install_requires=['tensorflow>=1.0.0'],
+    scripts=['configure']
 )
