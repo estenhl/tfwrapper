@@ -1,10 +1,6 @@
 import os
-import cv2
-import scipy.ndimage
 import numpy as np
-import tensorflow as tf
 import pandas as pd
-from random import shuffle
 from collections import Counter
 
 from .logger import logger
@@ -109,16 +105,17 @@ def split_dataset(X, y, ratio=0.8):
     return np.asarray(train_X), np.asarray(train_y), np.asarray(test_X), np.asarray(test_y)
 
 
-def parse_datastructure(root, suffix='.jpg', verbose=False):
+def parse_datastructure(root, allowed_suffixes=['jpg', 'jpeg', 'png'], verbose=False):
     X = []
     y = []
 
     i = 0
+
     for foldername in os.listdir(root):
         src = os.path.join(root, foldername)
         if os.path.isdir(src):
             for filename in os.listdir(src):
-                if filename.lower().endswith(suffix):
+                if filename.lower().split('.')[1] in allowed_suffixes:
                     src_file = os.path.join(src, filename)
                     X.append(src_file)
                     y.append(foldername)
