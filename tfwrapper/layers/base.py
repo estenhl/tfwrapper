@@ -60,8 +60,11 @@ def out(*, inputs, outputs, init='truncated', trainable=True, name='pred'):
     return create_layer
 
 
-def relu(name='relu'):
-    return lambda x: tf.nn.relu(x, name=name)
+def relu(input=None, name='relu'):
+    if input is None:
+        return lambda x: relu(input=x, name=name)
+
+    return tf.nn.relu(input, name=name)
 
 
 def softmax(name):
