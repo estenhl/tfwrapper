@@ -3,8 +3,6 @@ import numpy as np
 
 import tfwrapper
 
-print(tfwrapper.__version__)
-
 from tfwrapper.dataset import parse_datastructure
 from tfwrapper import Dataset
 from tfwrapper.utils.files import write_features
