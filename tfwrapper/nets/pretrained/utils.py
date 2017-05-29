@@ -6,6 +6,7 @@ from tfwrapper import config
 from tfwrapper import logger
 from tfwrapper.utils.files import remove_dir
 from tfwrapper.utils.files import download_file
+from tfwrapper.utils.download import google_drive
 
 INCEPTION_TAR_URL = 'http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz'
 INCEPTION_PB_PATH = os.path.join(config.MODELS, 'inception_v3.pb')
@@ -53,13 +54,13 @@ def download_vgg16_ckpt(path=VGG16_CKPT_PATH):
 
 	return path
 
-VGG16_NPY_URL = 'https://lexiondebug.blob.core.windows.net/mlmodel/models/VGG_16.npy'
+#VGG16_NPY_URL = 'https://lexiondebug.blob.core.windows.net/mlmodel/models/VGG_16.npy'
 VGG16_NPY_PATH = os.path.join(config.MODELS, 'vgg16.npy')
+VGG16_DOWNLOAD_DRIVE_ID = "0B7gC90mSfjC6YVBUWDdZWlhaUnc"
 
 def download_vgg16_npy(path=VGG16_NPY_PATH):
 	if not os.path.isfile(path):
-		logger.error('IMPLEMENT VGG16_NPY')
-		exit()
+		google_drive.download_file_from_google_drive(VGG16_DOWNLOAD_DRIVE_ID, path)
 
 	return path
 	

@@ -4,6 +4,7 @@ from tfwrapper import config
 from tfwrapper import logger
 
 def download_file_from_google_drive(id, destination):
+    logger.info('Downloading file with id %s from google drive to %s' % (repr(id), destination))
     URL = "https://docs.google.com/uc?export=download"
 
     session = requests.Session()

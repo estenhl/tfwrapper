@@ -46,33 +46,3 @@ with tf.Session() as sess:
     nn.train(X, y, epochs=10, sess=sess)
     _, acc = nn.validate(test_X, test_y, sess=sess)
     print('Acc: %d%%' % (acc * 100))
-
-"""
-dataset = cats_and_dogs(size=100)
-dataset = dataset.shuffle()
-dataset = dataset.balance(max=100)
-dataset = dataset.translate_labels()
-dataset = dataset.onehot()
-train, test = dataset.split(0.8)
-
-preprocessor = ImagePreprocessor()
-preprocessor.resize_to = (224, 224)
-train.loader = ImageLoader(preprocessor=preprocessor)
-test.loader = ImageLoader(preprocessor=preprocessor)
-
-with tf.Session() as sess:
-    vgg = PretrainedVGG16([224, 224, 3], name='PretrainedVGG16', sess=sess)
-    vgg.batch_size = 8
-
-    tensor = vgg.get_tensor(-5)
-    data = vgg.run_op(tensor, data=train.X, sess=sess)
-    X = np.reshape(data, (-1, 4096))
-    test_data = vgg.run_op(tensor, data=test.X, sess=sess)
-    test_X = np.reshape(test_data, (-1, 4096))
-    
-    nn = SingleLayerNeuralNet([4096], 2, 64, sess=sess, name='VGG16Test')
-    nn.learning_rate = 0.1
-    nn.train(X, train.y, epochs=10, sess=sess)
-    _, acc = nn.validate(test_X, test.y, sess=sess)
-    print('Acc at layer -5: %d%%' % (acc * 100))
-"""
