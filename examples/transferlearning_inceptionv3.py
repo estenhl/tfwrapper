@@ -11,7 +11,7 @@ from tfwrapper.datasets import cats_and_dogs
 from utils import curr_path
 
 dataset = cats_and_dogs(size=500)
-dataset = dataset.balance(max=150)
+dataset = dataset.balance(max=10)
 dataset = dataset.shuffle()
 dataset = dataset.translate_labels()
 dataset = dataset.onehot()
@@ -22,6 +22,8 @@ if not os.path.isdir(datafolder):
     os.mkdir(datafolder)
 features_file = os.path.join(datafolder, 'catsdogs_inceptionv3.csv')
 
+import time
+start = time.time()
 with tf.Session() as sess:
     inception = InceptionV3()
 
@@ -30,7 +32,6 @@ with tf.Session() as sess:
     train_prep.flip_lr = True
     train_loader = FeatureLoader(inception, cache=features_file, preprocessor=train_prep, sess=sess)
     train.loader = train_loader
-    train.loader.sess = sess
     X, y = train.X, train.y
 
     test_prep = ImagePreprocessor()
