@@ -4,3 +4,4 @@ from .rnn import *
 from .base import *
 from .fire import *
 from .image import *
+from .resnet import *
