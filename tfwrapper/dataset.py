@@ -610,7 +610,7 @@ class FeatureLoader(ImageLoader):
         features = []
         records = []
 
-        with TFSession(self.sess) as sess:
+        with TFSession(graph=self.model.graph) as sess:
             for i in range(len(imgs)):
                 if names[i] in self.features['filename'].values:
                     logger.debug('Skipping %s' % names[i])

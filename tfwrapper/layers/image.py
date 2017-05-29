@@ -1,4 +1,34 @@
+import numpy as np
 import tensorflow as tf
+
+from tfwrapper import logger
+
+
+def _compute_means(x):
+    errormsg = 'Computing channel means is not implemented'
+    logger.error(errormsg)
+    raise NotImplementedError(errormsg)
+
+
+def channel_means(means=None, name='channel_means'): 
+    def create_layer(x):
+        # TODO (28.05.17): Rewrite when pythons stops being stupid with variable name scopes
+        if means is None:
+            channel_means = _compute_channel_means(x)
+        else:
+            channel_means = np.asarray(means)
+
+        # TODO (28.05.17): Rewrite in tensorflow (Although tf.tile is weird AF)
+        num_repetitions = np.prod(x.get_shape().as_list()[1:-1])
+        repeated_means = np.tile(channel_means, num_repetitions)
+        original_shape = x.get_shape().as_list()[1:]
+        repeated_means = np.reshape(repeated_means, original_shape)
+
+        values = tf.Variable(repeated_means, trainable=False, dtype=tf.float32, name=name + '/values')
+
+        return tf.map_fn(lambda img: tf.subtract(img, values), x, name=name)
+
+    return create_layer
 
 
 def resize(img_size, method=tf.image.ResizeMethod.BILINEAR, name='reshape'):

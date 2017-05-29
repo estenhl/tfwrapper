@@ -1,4 +1,4 @@
-from tfwrapper.layers import conv2d, maxpool2d, fullyconnected, relu, dropout, softmax
+from tfwrapper.layers import channel_means, conv2d, maxpool2d, fullyconnected, relu, dropout, softmax
 
 from .cnn import CNN
 
@@ -14,6 +14,7 @@ class VGG16(CNN):
 		fc_input_size = int(height / (2**5)) * int(width / (2**5)) * 512
 
 		layers = [
+			channel_means(means=[103.939, 116.779, 123.68], name=name + '/channel_means'),
 			conv2d(filter=[3, 3], depth=64, name=name + '/conv1_1'),
 			conv2d(filter=[3, 3], depth=64, name=name + '/conv1_2'),
 			maxpool2d(k=2, name=name + '/pool1'),
