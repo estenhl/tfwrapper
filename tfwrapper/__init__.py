@@ -1,14 +1,14 @@
 __version__ = '0.0.8'
 
-import os
+#import os
 
 from .logger import logger
+from .config import config
 
-if os.path.isfile(os.path.join(os.path.dirname(__file__), os.pardir, '.path')):
-    from .config import config
-else:
-    logger.error('tfwrapper is not configured! Run ./configure in the root folder')
-    exit()
+# if os.path.isfile(os.path.join(os.path.dirname(__file__), os.pardir, '.path')):
+# else:
+#     logger.error('tfwrapper is not configured! Run ./configure in the root folder')
+#     exit()
 
 from .dataset import Dataset
 from .dataset import ImageDataset

@@ -1,6 +1,5 @@
 import os
-
-from pathlib import Path
+from .logger import logger
 
 class Config():
     permit_downloads = True
@@ -23,10 +22,11 @@ class Config():
         if not os.path.isdir(self.DATASETS):
             os.mkdir(self.DATASETS)
 
-ROOT_PATH = None
-path_file = os.path.join(os.path.dirname(__file__), os.pardir, '.path')
-if os.path.isfile(path_file):
-    with open(path_file, 'r') as f:
-        ROOT_PATH = f.read().strip()
+if 'TFWRAPPER_ROOT_PATH' in os.environ:
+    print(os.environ['TFWRAPPER_ROOT_PATH'])
+    ROOT_PATH = os.environ['TFWRAPPER_ROOT_PATH']
+else:
+    ROOT_PATH = os.path.join(os.path.expanduser('~'), '.tfwrapper')
+    logger.warning('TFWRAPPER_ROOT_PATH not set. Using:' + str(ROOT_PATH))
 
 config = Config(ROOT_PATH)
