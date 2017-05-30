@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from tfwrapper import TFSession
-from tfwrapper.layers import conv2d, relu, residual_block, maxpool2d, flatten, fullyconnected
+from tfwrapper.layers import conv2d, batch_normalization, relu, residual_block, maxpool2d, flatten, fullyconnected
 
 from .cnn import CNN
 
@@ -18,7 +18,7 @@ class ResNet50(CNN):
         layers = [
             # ZERO PADDING
             conv2d(filter=[7, 7], depth=64, strides=[2, 2], name=name + '/conv1'),
-            # BATCH_NORMALIZE
+            batch_normalization(name='/norm1')
             relu(name=name + '/relu1'),
             maxpool2d(k=3, name=name + '/maxpool'),
             residual_block(filters=residual_filters, depths=64, activation='relu', name=name + '/residual1'),

@@ -14,10 +14,6 @@ def normalize_image(name='image_normalization'):
     return lambda x: tf.map_fn(lambda img: tf.image.per_image_standardization(img), x, name=name)
 
 
-def normalize_batch(name='batch_normalization'):
-    raise NotImplementedError('Batch normalization is not implemented')
-
-
 def flip_up_down(seed=None, name='random_flip_ud'):
     return lambda x: tf.map_fn(lambda img: tf.image.random_flip_up_down(img, seed=seed), x, name=name)
 
