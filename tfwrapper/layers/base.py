@@ -44,6 +44,20 @@ def compute_fan_in_out(weight_shape):
         fan_out = math.sqrt(np.prod(weight_shape))
     return fan_in, fan_out
 
+def batch_normalization(input=None, mean=None, average=None, offset=None, scale=None, name='batch_normalization'):
+    if input is None:
+        return lambda x: normalize_batch(input=x, mean=mean, average=average, offset=offset, scale=scale, name=name)
+
+    if mean is None and average is None:
+        mean, average = tf.nn.moments(input, axes=[0])
+    elif mean is None:
+        mean, _ = tf.nn.moments(input, axes=[0])
+    elif average is None:
+        _, average = tf.nn.moments(input, axes=[0])
+
+    variance_epsilon = 0.0001
+    return tf.nn.batch_normalization(input, mean, variance, offset, variance_epsilon, name=name)
+
 
 def reshape(shape, name='reshape'):
     return lambda x: tf.reshape(x, shape=shape, name=name)

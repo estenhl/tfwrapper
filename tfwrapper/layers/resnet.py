@@ -5,6 +5,7 @@ from tfwrapper import logger
 
 from .cnn import conv2d
 from .base import relu
+from .base import batch_normalize
 
 
 def residual_block(*, input=None, modules=3, shortcut=False, filters=[[1, 1], [3, 3], [1, 1]], depths, strides=[1, 1], activation=None, name='residual'):
@@ -47,12 +48,12 @@ def residual_block(*, input=None, modules=3, shortcut=False, filters=[[1, 1], [3
 
     x = input
     for i in range(modules - 1):
-        x = conv2d(input=x, filter=filters[i], depth=depths[i], strides=list(strides[i]), activation=None, name=name + '/conv%d' % i)
-        #x = batch_normalize(x)
-        x = relu(input=x, name=name + '/relu%d' % i)
+        x = conv2d(input=x, filter=filters[i], depth=depths[i], strides=list(strides[i]), activation=None, name=name + 'module_%d/conv' % i)
+        x = batch_normalization(input=x, name=name + '/module_%d/norm' % i)
+        x = relu(input=x, name=name + '/module_%d/relu' % i)
 
-    x = conv2d(input=x, filter=filters[modules - 1], depth=depths[modules - 1], strides=list(strides[modules - 1]), activation=None, name=name + '/conv%d' % (modules - 1))
-    #x = batch_normalize(x)
+    x = conv2d(input=x, filter=filters[modules - 1], depth=depths[modules - 1], strides=list(strides[modules - 1]), activation=None, name=name + '/module_%d/conv' % (modules - 1))
+    x = batch_normalization(input=x, name=name + '/norm')
 
     if input.get_shape().as_list()[-1] != x.get_shape().as_list()[-1]:
         input = conv2d(input=input, filter=[1, 1], depth=depths[modules - 1], strides=list(strides[modules - 1]), name=name + '/shortcut')
