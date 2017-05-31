@@ -3,6 +3,9 @@ import tensorflow as tf
 from tfwrapper import TFSession
 from tfwrapper.layers import random_crop 
 from tfwrapper.layers import flip_left_right
+from tfwrapper.layers import hue
+from tfwrapper.layers import contrast
+from tfwrapper.layers import saturation
 from tfwrapper.layers import normalize_image
 from tfwrapper.layers import conv2d
 from tfwrapper.layers import batch_normalization
@@ -27,8 +30,11 @@ class ResNet50(CNN):
         seed=12345
 
         layers = [
-            random_crop(padding=4, ratio=0.9, seed=seed, name=name + '/random_crop'),
+            random_crop(padding=3, ratio=0.85, seed=seed, name=name + '/random_crop'),
             flip_left_right(seed=seed, name=name + '/flip_lr'),
+            hue(0.2, seed=seed, name=name + '/hue'),
+            contrast(0.7, 1, seed=seed, name=name + '/contrast'),
+            saturation(0.7, 1.3, seed=seed, name=name + '/saturation'),
             normalize_image(name=name + '/normalize_image'),
             conv2d(filter=[7, 7], depth=64, strides=[2, 2], name=name + '/conv1'),
             batch_normalization(name=name + '/norm1'),
@@ -50,7 +56,7 @@ class ResNet50(CNN):
             residual_block(filters=residual_filters, depths=depths[3], activation='relu', name=name + '/residual14'),
             residual_block(filters=residual_filters, depths=depths[3], activation='relu', name=name + '/residual15'),
             residual_block(filters=residual_filters, depths=depths[3], activation='relu', name=name + '/residual16'),
-            flatten(method='avgpool'),
+            flatten(method='avgpool', name=name + '/flatten'),
             fullyconnected(inputs=2048, outputs=classes, name=name + '/pred'),
         ]
 

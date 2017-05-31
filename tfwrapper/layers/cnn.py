@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
+from tfwrapper import logger
+
 from .base import bias
 from .base import weight
 
