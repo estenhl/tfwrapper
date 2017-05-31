@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
 
-from tfwrapper import Dataset
-from tfwrapper import ImageDataset
+from tfwrapper.dataset import Dataset
+from tfwrapper.dataset import ImageDataset
 
 from utils import remove_dir
 from utils import create_tmp_dir

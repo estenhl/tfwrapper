@@ -3,10 +3,10 @@ import cv2
 import pytest
 import numpy as np
 
-from tfwrapper import ImageLoader
-from tfwrapper import ImageDataset
-from tfwrapper import FeatureLoader
-from tfwrapper import ImagePreprocessor
+from tfwrapper.dataset import ImageDataset
+from tfwrapper.dataset import ImageLoader
+from tfwrapper.dataset import FeatureLoader
+from tfwrapper.dataset import ImagePreprocessor
 from tfwrapper.nets.pretrained import InceptionV3
 
 from utils import curr_path
