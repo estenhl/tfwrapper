@@ -20,6 +20,7 @@ from .cnn import CNN
 class ResNet50(CNN):
     def __init__(self, X_shape, classes, name='ResNet50', sess=None):
         residual_filters = [[1, 1], [3, 3], [1, 1]]
+        
         depths = [
             [64, 64, 256],
             [128, 128, 512],
@@ -40,22 +41,27 @@ class ResNet50(CNN):
             batch_normalization(name=name + '/norm1'),
             relu(name=name + '/relu1'),
             maxpool2d(k=3, name=name + '/maxpool'),
+            
             residual_block(filters=residual_filters, depths=depths[0], activation='relu', name=name + '/residual1'),
             residual_block(filters=residual_filters, depths=depths[0], activation='relu', name=name + '/residual2'),
             residual_block(filters=residual_filters, depths=depths[0], activation='relu', name=name + '/residual3'),
+            
             residual_block(filters=residual_filters, depths=depths[1], activation='relu', name=name + '/residual4'),
             residual_block(filters=residual_filters, depths=depths[1], activation='relu', name=name + '/residual5'),
             residual_block(filters=residual_filters, depths=depths[1], activation='relu', name=name + '/residual6'),
             residual_block(filters=residual_filters, depths=depths[1], activation='relu', name=name + '/residual7'),
+            
             residual_block(filters=residual_filters, depths=depths[2], activation='relu', name=name + '/residual8'),
             residual_block(filters=residual_filters, depths=depths[2], activation='relu', name=name + '/residual9'),
             residual_block(filters=residual_filters, depths=depths[2], activation='relu', name=name + '/residual10'),
             residual_block(filters=residual_filters, depths=depths[2], activation='relu', name=name + '/residual11'),
             residual_block(filters=residual_filters, depths=depths[2], activation='relu', name=name + '/residual12'),
             residual_block(filters=residual_filters, depths=depths[2], activation='relu', name=name + '/residual13'),
+            
             residual_block(filters=residual_filters, depths=depths[3], activation='relu', name=name + '/residual14'),
             residual_block(filters=residual_filters, depths=depths[3], activation='relu', name=name + '/residual15'),
             residual_block(filters=residual_filters, depths=depths[3], activation='relu', name=name + '/residual16'),
+            
             flatten(method='avgpool', name=name + '/flatten'),
             fullyconnected(inputs=2048, outputs=classes, name=name + '/pred'),
         ]

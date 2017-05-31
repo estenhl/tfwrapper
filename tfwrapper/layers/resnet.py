@@ -48,7 +48,7 @@ def residual_block(*, input=None, modules=3, shortcut=False, filters=[[1, 1], [3
 
     x = input
     for i in range(modules - 1):
-        x = conv2d(input=x, filter=filters[i], depth=depths[i], strides=list(strides[i]), activation=None, name=name + 'module_%d/conv' % i)
+        x = conv2d(input=x, filter=filters[i], depth=depths[i], strides=list(strides[i]), activation=None, name=name + '/module_%d/conv' % i)
         #x = batch_normalization(input=x, name=name + '/module_%d/norm' % i)
         x = relu(input=x, name=name + '/module_%d/relu' % i)
 
@@ -63,5 +63,7 @@ def residual_block(*, input=None, modules=3, shortcut=False, filters=[[1, 1], [3
         return x
     elif activation is 'relu':
         return relu(input=x, name=name)
-    else:
-        errormsg = 'Invalid activation %s for residual_block. (Valid is [None, \'relu\'])' % activation
+    
+    errormsg = 'Invalid activation %s for residual_block. (Valid is [None, \'relu\'])' % activation
+    logger.error(errormsg)
+    raise InvalidArgumentException(errormsg)

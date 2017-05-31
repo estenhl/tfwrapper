@@ -6,12 +6,14 @@ from tfwrapper import config
 from tfwrapper import logger
 from tfwrapper.utils.files import remove_dir
 from tfwrapper.utils.files import download_file
-from tfwrapper.utils.download import google_drive
+from tfwrapper.utils.files import download_from_google_drive
+
 
 INCEPTION_TAR_URL = 'http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz'
 INCEPTION_PB_PATH = os.path.join(config.MODELS, 'inception_v3.pb')
 INCEPTION_TAR_PATH = os.path.join(config.MODELS, 'inception_v3.tar')
 INCEPTION_PB_TEMP_PATH = os.path.join(config.MODELS, 'inception-2015-12-05', 'classify_image_graph_def.pb')
+
 
 def download_inceptionv3(path=INCEPTION_PB_PATH):
 	if not os.path.isfile(path):
@@ -36,9 +38,11 @@ def download_inceptionv3(path=INCEPTION_PB_PATH):
 
 	return path
 
+
 VGG16_TAR_URL = 'http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz'
 VGG16_CKPT_PATH = os.path.join(config.MODELS, 'vgg_16.ckpt')
 VGG16_TAR_PATH = os.path.join(config.MODELS, 'vgg16.tar')
+
 
 def download_vgg16_ckpt(path=VGG16_CKPT_PATH):
 	if not os.path.isfile(path):
@@ -54,15 +58,28 @@ def download_vgg16_ckpt(path=VGG16_CKPT_PATH):
 
 	return path
 
-#VGG16_NPY_URL = 'https://lexiondebug.blob.core.windows.net/mlmodel/models/VGG_16.npy'
+
 VGG16_NPY_PATH = os.path.join(config.MODELS, 'vgg16.npy')
-VGG16_DOWNLOAD_DRIVE_ID = "0B7gC90mSfjC6YVBUWDdZWlhaUnc"
+VGG16_DOWNLOAD_DRIVE_ID = '0B7gC90mSfjC6YVBUWDdZWlhaUnc'
+
 
 def download_vgg16_npy(path=VGG16_NPY_PATH):
 	if not os.path.isfile(path):
-		google_drive.download_file_from_google_drive(VGG16_DOWNLOAD_DRIVE_ID, path)
+		download_from_google_drive(VGG16_DOWNLOAD_DRIVE_ID, path)
 
 	return path
-	
+
+
+RESNET50_PATH = os.path.join(config.MODELS, 'resnet50.h5')
+RESNET50_DOWNLOAD_DRIVE_ID = '0B7gC90mSfjC6R19OX05vek9EN3c'
+
+
+def download_resnet50(path=RESNET50_PATH):
+	if not os.path.isfile(path):
+		download_from_google_drive(RESNET50_DOWNLOAD_DRIVE_ID, path)
+
+	return path
+
+
 SSD300_CKPT_URL = 'https://github.com/balancap/SSD-Tensorflow/raw/master/checkpoints/ssd_300_vgg.ckpt.zip'
 

@@ -22,10 +22,3 @@ with tf.Session() as sess:
     cnn.train(train.X, train.y, validate=0.05, epochs=150, sess=sess)
     _, acc = cnn.validate(test.X, test.y, sess=sess)
     print('Test accuracy: %d%%' % (acc*100))
-    preds = cnn.predict(test.X, sess=sess)
-
-    from tfwrapper.metrics import confusion_matrix
-
-    conf_matrix = confusion_matrix(test.y, preds)
-    print(conf_matrix)
-    print(preds[:10])
