@@ -1,7 +1,16 @@
 import tensorflow as tf
 
 from tfwrapper import TFSession
-from tfwrapper.layers import conv2d, batch_normalization, relu, residual_block, maxpool2d, flatten, fullyconnected
+from tfwrapper.layers import random_crop 
+from tfwrapper.layers import flip_left_right
+from tfwrapper.layers import normalize_image
+from tfwrapper.layers import conv2d
+from tfwrapper.layers import batch_normalization
+from tfwrapper.layers import relu
+from tfwrapper.layers import residual_block
+from tfwrapper.layers import maxpool2d
+from tfwrapper.layers import flatten
+from tfwrapper.layers import fullyconnected
 
 from .cnn import CNN
 
@@ -15,8 +24,12 @@ class ResNet50(CNN):
             [512, 512, 2048]
         ]
 
+        seed=12345
+
         layers = [
-            # ZERO PADDING
+            random_crop(padding=4, ratio=0.9, seed=seed, name=name + '/random_crop'),
+            flip_left_right(seed=seed, name=name + '/flip_lr'),
+            normalize_image(name=name + '/normalize_image'),
             conv2d(filter=[7, 7], depth=64, strides=[2, 2], name=name + '/conv1'),
             batch_normalization(name=name + '/norm1'),
             relu(name=name + '/relu1'),
