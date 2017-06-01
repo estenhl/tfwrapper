@@ -141,7 +141,7 @@ class PretrainedResNet50(ResNet50):
                 del layers['fc']
 
             with TFSession(sess, self.graph, init=True) as sess:
-                logger.debug('Loading weights and biases')
+                logger.debug('Injecting weights and biases into %s' % self.name)
                 for variable in layers:
                     name = layers[variable]
                     weight = f[name][name + '_W:0'][()]
@@ -151,7 +151,7 @@ class PretrainedResNet50(ResNet50):
                     self.assign_variable_value('/'.join([self.name, variable, 'b']), bias, sess=sess)
                 logger.debug('Done!')
 
-                logger.debug('Loading gammas and betas')
+                logger.debug('Injecting gammas and betas %s' % self.name)
                 for variable in batch_normalization:
                     name = batch_normalization[variable]
                     weight = f[name][name + '_beta:0'][()]
@@ -160,5 +160,3 @@ class PretrainedResNet50(ResNet50):
                     self.assign_variable_value('/'.join([self.name, variable, 'beta']), weight, sess=sess)
                     self.assign_variable_value('/'.join([self.name, variable, 'gamma']), bias, sess=sess)
                 logger.debug('Done!')
-
-                logger.debug('Injected values into %s' % self.name)

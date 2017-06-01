@@ -19,6 +19,8 @@ from tfwrapper.layers import softmax
 from .cnn import CNN
 
 class ResNet50(CNN):
+    DEFAULT_BOTTLENECK_LAYER = -3
+    
     def __init__(self, X_shape, classes, name='ResNet50', sess=None, **kwargs):
         residual_filters = [[1, 1], [3, 3], [1, 1]]
         
