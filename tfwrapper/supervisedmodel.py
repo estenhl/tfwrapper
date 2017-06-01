@@ -50,6 +50,7 @@ class SupervisedModel(ABC):
             self.optimizer = self.optimizer_function()
 
             self.graph = sess.graph
+        self.init_vars_when_training = True
         self.feed_dict = {}
 
     @abstractmethod
@@ -209,7 +210,7 @@ class SupervisedModel(ABC):
                 logger.warning('Unable to split dataset into train and val when generator has no len')
 
 
-        with TFSession(sess, self.graph, init=True) as sess:
+        with TFSession(sess, self.graph, init=self.init_vars_when_training) as sess:
             for epoch in range(epochs):
                 self.train_epoch(generator, epoch, feed_dict=feed_dict, val_batches=val_generator, shuffle=shuffle, sess=sess)
 

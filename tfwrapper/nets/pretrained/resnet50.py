@@ -18,6 +18,7 @@ class PretrainedResNet50(ResNet50):
 
         path = download_resnet50(RESNET50_PATH)
         self.load_from_h5(path, sess=sess)
+        self.init_vars_when_training = False
 
     def load_from_h5(self, path=RESNET50_PATH, sess=None):
         with h5py.File(path, 'r') as f:
