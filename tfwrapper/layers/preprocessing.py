@@ -47,7 +47,7 @@ def vgg_eval_preprocessing(means=VGG_CHANNEL_MEANS, name=None):
     return [channel_means(means=means, name=name + '/channel_means')]
 
 
-def randomized_preprocessing(normalize=True, name=None):
+def randomized_preprocessing(normalize=True, seed=None, name=None):
     if name is None:
         logger.warning('Preprocessing layers should be given a name!')
         name = 'RandomizedPreprocessing'
@@ -61,6 +61,6 @@ def randomized_preprocessing(normalize=True, name=None):
     ]
 
     if normalize:
-        layers += normalize_image(name=name + '/normalize_image')
+        layers.append(normalize_image(name=name + '/normalize_image'))
 
     return layers

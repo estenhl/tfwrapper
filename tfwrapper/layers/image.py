@@ -58,7 +58,7 @@ def random_crop(*, X=None, padding=(3, 3), ratio=(0.9, 0.9), method=CROP_PADDING
         logger.error(errormsg)
         raise InvalidArgumentException(errormsg)
 
-    if not method in _VALID_PADDINGS:
+    if not method in _VALID_CROP_PADDINGS:
         errormsg = 'Invalid method %s for random_crop. (Must be in %s)' % (str(method), str(_VALID_PADDINGS))
 
     if X is None:

@@ -10,9 +10,11 @@ from .utils import download_resnet50
 
 
 class PretrainedResNet50(ResNet50):
-    def __init__(self, X_shape, y_size=1000, path=RESNET50_PATH, sess=None, name='PretrainedResNet50'):
+    def __init__(self, X_shape, y_size=1000, path=RESNET50_PATH, preprocessing=[], sess=None, name='PretrainedResNet50', **kwargs):
+        preprocessing += vgg_preprocessing(name=name)
+
         with TFSession(sess) as sess:
-            super().__init__(X_shape, y_size, preprocessing=vgg_preprocessing(name=name), sess=sess, name=name)
+            super().__init__(X_shape, y_size, preprocessing=preprocessing, sess=sess, name=name)
 
         path = download_resnet50(RESNET50_PATH)
         self.load_from_h5(path, sess=sess)
@@ -136,7 +138,7 @@ class PretrainedResNet50(ResNet50):
 
             # If the model does not have 1000 ouputs, pretrained weights for the final layer are dropped
             if not self.y_size == 1000:
-                del variables['fc']
+                del layers['fc']
 
             with TFSession(sess, self.graph, init=True) as sess:
                 logger.debug('Loading weights and biases')
