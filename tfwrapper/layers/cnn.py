@@ -7,7 +7,7 @@ from .base import bias
 from .base import weight
 
 
-def conv2d(*, input=None, filter, depth=None, strides=1, padding='SAME', activation='relu', init='truncated', trainable=True, name='conv2d'):
+def conv2d(*, X=None, filter, depth=None, strides=1, padding='SAME', activation='relu', init='truncated', trainable=True, name='conv2d'):
     if len(filter) != 2:
         errormsg = 'conv2d takes filters with exactly 2 dimensions (e.g. [3, 3])'
         logger.error(errormsg)
@@ -29,13 +29,13 @@ def conv2d(*, input=None, filter, depth=None, strides=1, padding='SAME', activat
         logger.error(errormsg)
         raise InvalidArgumentException(errormsg)
 
-    if input is None:
-        return lambda x: conv2d(input=x, filter=filter, depth=depth, strides=strides, padding=padding, activation=activation, init=init, trainable=trainable, name=name)
+    if X is None:
+        return lambda x: conv2d(X=x, filter=filter, depth=depth, strides=strides, padding=padding, activation=activation, init=init, trainable=trainable, name=name)
 
     weight_name = name + '/W'
     bias_name = name + '/b'
 
-    input_depth = int(input.get_shape()[-1])
+    input_depth = int(X.get_shape()[-1])
     if depth is None:
         depth = input_depth
 
@@ -44,7 +44,7 @@ def conv2d(*, input=None, filter, depth=None, strides=1, padding='SAME', activat
 
     w = weight(weight_shape, name=weight_name, trainable=trainable, init=init)
     b = bias(bias_size, name=bias_name, trainable=trainable)
-    conv = tf.nn.conv2d(input, w, strides=strides, padding=padding, name=name)
+    conv = tf.nn.conv2d(X, w, strides=strides, padding=padding, name=name)
     conv = tf.nn.bias_add(conv, b)
 
     if activation is 'relu':
@@ -59,12 +59,18 @@ def conv2d(*, input=None, filter, depth=None, strides=1, padding='SAME', activat
         raise NotImplementedError(errormsg)
 
 
-def maxpool2d(k=2, strides=2, padding='SAME', name='maxpool2d'):
-    return lambda x: tf.nn.max_pool(x, ksize=[1, k, k, 1], strides=[1, strides, strides, 1], padding=padding, name=name)
+def maxpool2d(X=None, k=2, strides=2, padding='SAME', name='maxpool2d'):
+    if X is None:
+        return lambda x: maxpool2d(X=x, k=k, strides=strides, padding=padding, name=name)
+
+    return tf.nn.max_pool(X, ksize=[1, k, k, 1], strides=[1, strides, strides, 1], padding=padding, name=name)
 
 
-def avgpool2d(k=2, strides=2, padding='SAME', name='avgpool2d'):
-    return lambda x: tf.nn.avg_pool(x, ksize=[1, k, k, 1], strides=[1, strides, strides, 1], padding=padding, name=name)
+def avgpool2d(X=None, k=2, strides=2, padding='SAME', name='avgpool2d'):
+    if X is None:
+        return lambda x: avgpool2d(X=x, k=k, strides=strides, padding=padding, name=name)
+
+    return tf.nn.avg_pool(X, ksize=[1, k, k, 1], strides=[1, strides, strides, 1], padding=padding, name=name)
 
 
 def flatten(input=None, method='avgpool', name='flatten'):

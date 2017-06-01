@@ -14,11 +14,12 @@ from tfwrapper.layers import residual_block
 from tfwrapper.layers import maxpool2d
 from tfwrapper.layers import flatten
 from tfwrapper.layers import fullyconnected
+from tfwrapper.layers import softmax
 
 from .cnn import CNN
 
 class ResNet50(CNN):
-    def __init__(self, X_shape, classes, name='ResNet50', sess=None):
+    def __init__(self, X_shape, classes, name='ResNet50', sess=None, **kwargs):
         residual_filters = [[1, 1], [3, 3], [1, 1]]
         
         depths = [
@@ -31,12 +32,6 @@ class ResNet50(CNN):
         seed=12345
 
         layers = [
-            random_crop(padding=3, ratio=0.85, seed=seed, name=name + '/random_crop'),
-            flip_left_right(seed=seed, name=name + '/flip_lr'),
-            hue(0.2, seed=seed, name=name + '/hue'),
-            contrast(0.7, 1, seed=seed, name=name + '/contrast'),
-            saturation(0.7, 1.3, seed=seed, name=name + '/saturation'),
-            normalize_image(name=name + '/normalize_image'),
             conv2d(filter=[7, 7], depth=64, strides=[2, 2], name=name + '/conv1'),
             batch_normalization(name=name + '/norm1'),
             relu(name=name + '/relu1'),
@@ -63,8 +58,9 @@ class ResNet50(CNN):
             residual_block(filters=residual_filters, depths=depths[3], activation='relu', name=name + '/residual16'),
             
             flatten(method='avgpool', name=name + '/flatten'),
-            fullyconnected(inputs=2048, outputs=classes, name=name + '/pred'),
+            fullyconnected(inputs=2048, outputs=classes, name=name + '/fc'),
+            softmax(name=name + '/pred')
         ]
 
         with TFSession(sess) as sess:
-            super().__init__(X_shape, classes, layers, sess=sess, name=name)
+            super().__init__(X_shape, classes, layers, sess=sess, name=name, **kwargs)

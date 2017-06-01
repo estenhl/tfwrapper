@@ -8,7 +8,7 @@ from .base import relu
 from .base import batch_normalization
 
 
-def residual_block(*, input=None, modules=3, shortcut=False, filters=[[1, 1], [3, 3], [1, 1]], depths, strides=[1, 1], activation=None, name='residual'):
+def residual_block(*, X=None, modules=3, shortcut=False, filters=[[1, 1], [3, 3], [1, 1]], depths, strides=[1, 1], activation=None, name='residual'):
     if len(filters) == modules:
         pass
     elif len(filters) == 2:
@@ -43,26 +43,27 @@ def residual_block(*, input=None, modules=3, shortcut=False, filters=[[1, 1], [3
         logger.error(errormsg)
         raise InvalidArgumentException(errormsg)
 
-    if input is None:
-        return lambda x: residual_block(input=x, modules=modules, shortcut=shortcut, filters=filters, depths=depths, strides=strides, name=name)
+    if X is None:
+        return lambda x: residual_block(X=x, modules=modules, shortcut=shortcut, filters=filters, depths=depths, strides=strides, name=name)
 
-    x = input
+    input_X = X
     for i in range(modules - 1):
-        x = conv2d(input=x, filter=filters[i], depth=depths[i], strides=list(strides[i]), activation=None, name=name + '/module_%d/conv' % i)
-        #x = batch_normalization(input=x, name=name + '/module_%d/norm' % i)
-        x = relu(input=x, name=name + '/module_%d/relu' % i)
+        X = conv2d(X=X, filter=filters[i], depth=depths[i], strides=list(strides[i]), activation=None, name=name + '/module_%d/conv' % i)
+        X = batch_normalization(X=X, name=name + '/module_%d/norm' % i)
+        X = relu(X=X, name=name + '/module_%d/relu' % i)
 
-    x = conv2d(input=x, filter=filters[modules - 1], depth=depths[modules - 1], strides=list(strides[modules - 1]), activation=None, name=name + '/module_%d/conv' % (modules - 1))
-    x = batch_normalization(input=x, name=name + '/norm')
+    X = conv2d(X=X, filter=filters[modules - 1], depth=depths[modules - 1], strides=list(strides[modules - 1]), activation=None, name=name + '/module_%d/conv' % (modules - 1))
+    X = batch_normalization(X=X, name=name + '/module_%d/norm' % (modules - 1))
 
-    if input.get_shape().as_list()[-1] != x.get_shape().as_list()[-1]:
-        input = conv2d(input=input, filter=[1, 1], depth=depths[modules - 1], strides=list(strides[modules - 1]), name=name + '/shortcut')
+    if input_X.get_shape().as_list()[-1] != X.get_shape().as_list()[-1]:
+        input_X = conv2d(X=input_X, filter=[1, 1], depth=depths[modules - 1], strides=list(strides[modules - 1]), name=name + '/shortcut')
+        input_X = batch_normalization(X=input_X, name=name + '/shortcut/norm')
 
-    x = tf.add(input, x, name=name)
+    X = tf.add(input_X, X, name=name)
     if activation is None:
-        return x
+        return X
     elif activation is 'relu':
-        return relu(input=x, name=name)
+        return relu(X=X, name=name)
     
     errormsg = 'Invalid activation %s for residual_block. (Valid is [None, \'relu\'])' % activation
     logger.error(errormsg)

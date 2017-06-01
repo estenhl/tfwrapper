@@ -11,10 +11,10 @@ from tfwrapper import SupervisedModel
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class NeuralNet(SupervisedModel):
-    def __init__(self, X_shape, classes, layers, sess=None, name='NeuralNet'):
+    def __init__(self, X_shape, classes, layers, sess=None, name='NeuralNet', **kwargs):
 
         with TFSession(sess) as sess:
-            super().__init__(X_shape, classes, layers, sess=sess, name=name)
+            super().__init__(X_shape, classes, layers, sess=sess, name=name, **kwargs)
 
             self.accuracy = self.accuracy_function()
 

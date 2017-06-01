@@ -23,7 +23,7 @@ class SupervisedModel(ABC):
     learning_rate = 0.1
     batch_size = 128
 
-    def __init__(self, X_shape, y_size, layers, sess=None, name='SupervisedModel'):
+    def __init__(self, X_shape, y_size, layers, preprocessing=[], sess=None, name='SupervisedModel'):
         with TFSession(sess) as sess:
             self.X_shape = X_shape
             self.y_size = y_size
@@ -36,6 +36,8 @@ class SupervisedModel(ABC):
             self.y = tf.placeholder(tf.float32, [None] + y_size, name=self.name + '/y_placeholder')
             self.lr = tf.placeholder(tf.float32, [], name=self.name + '/learning_rate_placeholder')
 
+            layers = preprocessing + layers
+            
             self.layers = layers
             self.tensors = []
             prev = self.X
