@@ -3,7 +3,7 @@ import h5py
 from tfwrapper import logger
 from tfwrapper import TFSession
 from tfwrapper.nets import ResNet50
-from tfwrapper.layers import inception_preprocessing
+from tfwrapper.layers import vgg_preprocessing
 
 from .utils import RESNET50_PATH
 from .utils import download_resnet50
@@ -12,7 +12,7 @@ from .utils import download_resnet50
 class PretrainedResNet50(ResNet50):
     def __init__(self, X_shape, y_size=1000, path=RESNET50_PATH, sess=None, name='PretrainedResNet50'):
         with TFSession(sess) as sess:
-            super().__init__(X_shape, y_size, preprocessing=inception_preprocessing(name=name), sess=sess, name=name)
+            super().__init__(X_shape, y_size, preprocessing=vgg_preprocessing(name=name), sess=sess, name=name)
 
         path = download_resnet50(RESNET50_PATH)
         self.load_from_h5(path, sess=sess)
@@ -134,7 +134,7 @@ class PretrainedResNet50(ResNet50):
                 'residual16/module_2/norm': 'bn5c_branch2c',
             }
 
-
+            # If the model does not have 1000 ouputs, pretrained weights for the final layer are dropped
             if not self.y_size == 1000:
                 del variables['fc']
 
@@ -158,20 +158,5 @@ class PretrainedResNet50(ResNet50):
                     self.assign_variable_value('/'.join([self.name, variable, 'beta']), weight, sess=sess)
                     self.assign_variable_value('/'.join([self.name, variable, 'gamma']), bias, sess=sess)
                 logger.debug('Done!')
-
-                for key in f:
-                    found = False
-                    for var in layers:
-                        if layers[var] == key:
-                            found = True
-                            break
-
-                    for var in batch_normalization:
-                        if batch_normalization[var] == key:
-                            found = True
-                            break
-
-                    if not found:
-                        print('%s: %s' % (str(key), str(f[key])))
 
                 logger.debug('Injected values into %s' % self.name)

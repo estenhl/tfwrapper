@@ -9,8 +9,6 @@ from tfwrapper.utils.exceptions import InvalidArgumentException
 from .utils import VGG16_NPY_PATH
 from .utils import download_vgg16_npy
 
-CHANNEL_MEANS = [103.939, 116.779, 123.68]
-
 class PretrainedVGG16(VGG16):
     def __init__(self, X_shape=[224, 224, 3], npy_path=VGG16_NPY_PATH, sess=None, name='PretrainedVGG16'):
         with TFSession(sess) as sess:

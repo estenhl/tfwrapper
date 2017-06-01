@@ -75,8 +75,8 @@ def batch_normalization(X=None, mean=None, variance=None, offset=0, scale=1, nam
         logger.error(errormsg)
         raise InvalidArgumentException(errormsg)
 
-    beta = tf.Variable(offset, dtype=tf.float32, trainable=False, name=name + '/beta')
-    gamma = tf.Variable(scale, dtype=tf.float32, trainable=False, name=name + '/gamma')
+    beta = tf.Variable(offset, dtype=tf.float32, trainable=True, name=name + '/beta')
+    gamma = tf.Variable(scale, dtype=tf.float32, trainable=True, name=name + '/gamma')
     variance_epsilon = tf.Variable(0.0001, trainable=False, name=name + '/epsilon')
 
     return tf.nn.batch_normalization(X, mean, variance, beta, gamma, variance_epsilon, name=name)

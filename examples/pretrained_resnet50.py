@@ -19,5 +19,6 @@ with tf.Session() as sess:
 
     cat_preds = resnet.predict(cats_and_dogs.X, sess=sess)
     for i in range(len(cat_preds)):
-        preds = cat_preds[i].argsort()[-3:][::-1]
-        print('%s: %s' % (cats_and_dogs.y[i], str(['%s, %.3f' % (labels[x], cat_preds[i][x]]) for x in preds)))
+        preds = [(j, cat_preds[i][j]) for j in range(len(cat_preds[i]))]
+        preds = sorted(preds, key=lambda x: x[1], reverse=True)
+        print([labels[j[0]] for j in preds[:5]])

@@ -92,3 +92,24 @@ def test_dropout():
 
     assert name + '/mul:0' == tensor.name
     assert np.array_equal(values.shape, result.shape)
+
+def test_channel_means():
+    name = 'test_channel_means'
+    imgs = np.zeros((2, 4, 4, 3))
+    for i in range(2):
+        for j in range(4):
+            for k in range(4):
+                imgs[i][j][k] = np.asarray([1, 2, 3]) * (i + 1)
+
+    layer = channel_means(means=np.asarray([1, 2, 3]))
+
+    with tf.Session() as sess:
+        tensor = layer(tf.Variable(imgs, dtype=tf.float32))
+        sess.run(tf.global_variables_initializer())
+        result = sess.run(tensor)
+
+    for i in range(2):
+        for j in range(4):
+            for k in range(4):
+                assert np.array_equal(result[i][j][k], np.asarray([1, 2, 3]) * i)
+

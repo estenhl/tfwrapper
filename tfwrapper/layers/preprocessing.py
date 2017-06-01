@@ -2,14 +2,26 @@ import tensorflow as tf
 
 from tfwrapper import logger
 
-from .image import random_crop
-from .image import flip_left_right
 from .image import hue
 from .image import contrast
 from .image import saturation
+from .image import random_crop
+from .image import channel_means
+from .image import flip_left_right
 from .image import normalize_image
 
+
+# https://gist.github.com/baraldilorenzo/07d7802847aaad0a35d3, lines 59-61
+VGG_CHANNEL_MEANS = [103.939, 116.779, 123.68]
+
+
 def inception_preprocessing(name=None):
+    logger.warning('Using Inception preprocessing for EVALUATION (as opposed to TRAINING)')
+    return inception_eval_preprocessing(name=name)
+
+
+# https://github.com/tensorflow/models/blob/master/slim/preprocessing/inception_preprocessing.py
+def inception_eval_preprocessing(name=None):
     if name is None:
         logger.warning('Preprocessing layers should be given a name!')
         name = 'InceptionPreprocessing'
@@ -19,12 +31,22 @@ def inception_preprocessing(name=None):
         lambda x: tf.multiply(x, 2.0, name=name + '/multiply')
     ]
 
-def vgg_preprocessing(name=None):
+
+def vgg_preprocessing(means=VGG_CHANNEL_MEANS, name=None):
+    logger.warning('Using VGG preprocessing for EVALUATION (as opposed to TRAINING)')
+    return vgg_eval_preprocessing(means=means, name=name)
+
+
+# https://github.com/tensorflow/models/blob/master/slim/preprocessing/vgg_preprocessing.py
+def vgg_eval_preprocessing(means=VGG_CHANNEL_MEANS, name=None):
     if name is None:
         logger.warning('Preprocessing layers should be given a name!')
         name = 'VGGPreprocessing'
 
     # TODO (01.06.17): Add centralized cropping
+    return [channel_means(means=means, name=name + '/channel_means')]
+
+
 def randomized_preprocessing(normalize=True, name=None):
     if name is None:
         logger.warning('Preprocessing layers should be given a name!')

@@ -1,4 +1,4 @@
-from tfwrapper.layers import conv2d, maxpool2d, fullyconnected, relu, dropout, softmax
+from tfwrapper.layers import channel_means, conv2d, maxpool2d, fullyconnected, relu, dropout, softmax
 
 from .cnn import CNN
 
