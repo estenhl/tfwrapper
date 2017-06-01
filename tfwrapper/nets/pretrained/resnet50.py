@@ -152,7 +152,7 @@ class PretrainedResNet50(ResNet50):
                     self.assign_variable_value('/'.join([self.name, variable, 'b']), bias, sess=sess)
                 logger.debug('Done!')
 
-                logger.debug('Injecting gammas and betas %s' % self.name)
+                logger.debug('Injecting gammas and betas into %s' % self.name)
                 for variable in batch_normalization:
                     name = batch_normalization[variable]
                     weight = f[name][name + '_beta:0'][()]
