@@ -5,7 +5,7 @@ import shutil
 from tfwrapper import config
 from tfwrapper import logger
 from tfwrapper.utils.files import safe_mkdir
-from tfwrapper.utils.download import google_drive
+from tfwrapper.utils.files import download_from_google_drive
 from tfwrapper.utils.exceptions import IllegalStateException
 
 DOWNLOAD_DRIVE_ID = "0B1b2bIlebXOqQnJWYUxDZXRhTlE"
@@ -23,7 +23,7 @@ def download_cats_and_dogs():
         safe_mkdir(tmp_dir)
 
         zip_destination = os.path.join(tmp_dir, "train.zip")
-        google_drive.download_file_from_google_drive(DOWNLOAD_DRIVE_ID, zip_destination)
+        download_from_google_drive(DOWNLOAD_DRIVE_ID, zip_destination)
 
         safe_mkdir(IMAGES)
         cats = os.path.join(IMAGES, "cat")

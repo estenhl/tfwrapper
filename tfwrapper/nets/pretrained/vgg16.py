@@ -4,16 +4,20 @@ import tensorflow as tf
 from tfwrapper import logger
 from tfwrapper import TFSession
 from tfwrapper.nets import VGG16
+from tfwrapper.utils.exceptions import InvalidArgumentException
 
 from .utils import VGG16_NPY_PATH
 from .utils import download_vgg16_npy
 
-CHANNEL_MEANS = [103.939, 116.779, 123.68]
-
 class PretrainedVGG16(VGG16):
-    def __init__(self, X_shape, *, npy_path=VGG16_NPY_PATH, sess=None, graph=None, name='VGG16'):
+    def __init__(self, X_shape=[224, 224, 3], npy_path=VGG16_NPY_PATH, sess=None, name='PretrainedVGG16'):
         with TFSession(sess) as sess:
-            super().__init__([224, 224, 3], sess=sess, name=name)
+            if list(X_shape) != [224, 224, 3]:
+                errormsg = 'Pretrained VGG16 only handles X_shape of [224, 224, 3]'
+                logger.error(errormsg)
+                raise InvalidArgumentException(errormsg)
+
+            super().__init__(X_shape, sess=sess, name=name)
 
             npy_path = download_vgg16_npy(npy_path)
             self.load_from_npy(npy_path, sess=sess)

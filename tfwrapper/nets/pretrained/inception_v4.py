@@ -6,7 +6,7 @@ from tfwrapper import config
 from tfwrapper import logger
 from tfwrapper import twimage
 from tfwrapper import TFSession
-from tfwrapper.utils.download import google_drive
+from tfwrapper.utils.files import download_from_google_drive
 
 from .pretrained_model import PretrainedModel
 
@@ -66,5 +66,5 @@ class InceptionV4(PretrainedModel):
     def download_if_necessary(self, path=INCEPTION_PB_PATH):
         if not os.path.isfile(path):
             logger.info('Downloading Inception_v4.pb')
-            google_drive.download_file_from_google_drive(DOWNLOAD_ID, path)
+            google_drive.download_from_google_drive(DOWNLOAD_ID, path)
             logger.info('Completed downloading Inception_v4.pb')

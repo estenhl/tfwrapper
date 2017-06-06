@@ -7,7 +7,7 @@ from tfwrapper.utils.exceptions import InvalidArgumentException
 from .cnn import CNN
 
 class SqueezeNet(CNN):
-    def __init__(self, X_shape, classes, sess=None, name='SqueezeNet', version='1.1'):
+    def __init__(self, X_shape, classes, sess=None, name='SqueezeNet', version='1.1', **kwargs):
         keep_prob = tf.placeholder(tf.float32, name=name + '/dropout_placeholder')
         if version == '1.1':
             layers = [
@@ -53,7 +53,7 @@ class SqueezeNet(CNN):
 
         self.version = version
         with TFSession(sess) as sess:
-            super().__init__(X_shape, classes, layers, sess=sess, name=name)
+            super().__init__(X_shape, classes, layers, sess=sess, name=name, **kwargs)
 
         self.feed_dict['keep_prob'] = {'placeholder': keep_prob, 'default': 1.}
 

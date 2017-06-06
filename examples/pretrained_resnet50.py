@@ -3,7 +3,7 @@ import tensorflow as tf
 
 from tfwrapper import ImageLoader
 from tfwrapper import ImagePreprocessor
-from tfwrapper.nets.pretrained import PretrainedVGG16
+from tfwrapper.nets.pretrained import PretrainedResNet50
 from tfwrapper.datasets import imagenet
 from tfwrapper.datasets import cats_and_dogs
 
@@ -15,7 +15,10 @@ cats_and_dogs.loader = ImageLoader(preprocessor=preprocessor)
 _, labels = imagenet(include_labels=True)
 
 with tf.Session() as sess:
-    vgg = PretrainedVGG16([224, 224, 3], sess=sess)
+    resnet = PretrainedResNet50([224, 224, 3], sess=sess)
 
-    cat_preds = vgg.predict(cats_and_dogs.X, sess=sess)
-    print('Cat prediction: %s' % labels[np.argmax(cat_preds)])
+    cat_preds = resnet.predict(cats_and_dogs.X, sess=sess)
+    for i in range(len(cat_preds)):
+        preds = [(j, cat_preds[i][j]) for j in range(len(cat_preds[i]))]
+        preds = sorted(preds, key=lambda x: x[1], reverse=True)
+        print([labels[j[0]] for j in preds[:5]])

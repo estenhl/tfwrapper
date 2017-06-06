@@ -2,13 +2,18 @@ import math
 import numpy as np
 import tensorflow as tf
 
+from tfwrapper import logger
+
 
 def bias(size, init='zeros', trainable=True, name='bias'):
     return weight([size], init=init, trainable=trainable, name=name)
 
 
-def weight(shape, init='truncated', stddev=0.02, trainable=True, name='weight'):
+def weight(shape, init='truncated', trainable=True, name='weight', **kwargs):
     if init == 'truncated':
+        stddev = 0.02
+        if 'stddev' in kwargs:
+            stddev = kwargs['stddev']
         w = tf.truncated_normal(shape, stddev=stddev)
     elif init == 'he_normal':
         # He et al., http://arxiv.org/abs/1502.01852
@@ -44,25 +49,76 @@ def compute_fan_in_out(weight_shape):
         fan_out = math.sqrt(np.prod(weight_shape))
     return fan_in, fan_out
 
+def batch_normalization(X=None, mean=None, variance=None, offset=0, scale=1, name='batch_normalization'):
+    if X is None:
+        return lambda x: batch_normalization(X=x, mean=mean, variance=variance, offset=offset, scale=scale, name=name)
 
-def reshape(shape, name='reshape'):
-    return lambda x: tf.reshape(x, shape=shape, name=name)
+    _, _, _, depth = X.get_shape().as_list()
+
+    if mean is None and variance is None:
+        mean, variance = tf.nn.moments(X, axes=[0])
+    elif mean is None:
+        mean, _ = tf.nn.moments(X, axes=[0])
+    elif variance is None:
+        _, variance = tf.nn.moments(X, axes=[0])
+
+    if type(offset) is float or type(offset) is int:
+        offset = np.repeat(float(offset), depth)
+    elif type(offset) is list or type(offset) is tuple:
+        pass
+    else:
+        errormsg = 'Invalid offset %s. (Valid is [\'int\', \'float\', \'list\', \'tuple\'])' % offset
+        logger.error(errormsg)
+        raise InvalidArgumentException(errormsg)
+    
+    if type(scale) is float or type(scale) is int:
+        scale = np.repeat(float(scale), depth)
+    elif type(scale) is list or type(scale) is tuple:
+        pass
+    else:
+        errormsg = 'Invalid scale %s. (Valid is [\'int\', \'float\', \'list\', \'tuple\'])' % offset
+        logger.error(errormsg)
+        raise InvalidArgumentException(errormsg)
+
+    beta = tf.Variable(offset, dtype=tf.float32, trainable=True, name=name + '/beta')
+    gamma = tf.Variable(scale, dtype=tf.float32, trainable=True, name=name + '/gamma')
+    variance_epsilon = tf.Variable(0.0001, trainable=False, name=name + '/epsilon')
+
+    return tf.nn.batch_normalization(X, mean, variance, beta, gamma, variance_epsilon, name=name)
 
 
-def out(*, inputs, outputs, init='truncated', trainable=True, name='pred'):
+def reshape(X=None, shape=None, name='reshape'):
+    if X is None:
+        return lambda x: reshape(X=x, shape=shape, name=name)
+
+    if shape is None:
+        logger.warning('Reshape layer %s has noe new shape' % name)
+        return X
+
+    return tf.reshape(X, shape=shape, name=name)
+
+
+def out(X=None, *, inputs, outputs, init='truncated', trainable=True, name='pred'):
+    if X is None:
+        return lambda x: out(X=x, inputs=inputs, outputs=outputs, init=init, trainable=trainable, name=name)
+    
+    logger.warning('This layer is an abomination, and should never be used')
     weight_shape = [inputs, outputs]
 
-    def create_layer(x):
-        w = weight(weight_shape, init=init, name=name + '/W', trainable=trainable)
-        b = bias(outputs, name=name + '/b')
-        return tf.add(tf.matmul(x, w), b, name=name)
+    W = weight(weight_shape, init=init, name=name + '/W', trainable=trainable)
+    b = bias(outputs, name=name + '/b')
 
-    return create_layer
+    return tf.add(tf.matmul(X, W), b, name=name)
+
+def relu(X=None, name='relu'):
+    if X is None:
+        return lambda x: relu(X=x, name=name)
+
+    return tf.nn.relu(X, name=name)
 
 
-def relu(name='relu'):
-    return lambda x: tf.nn.relu(x, name=name)
+def softmax(X=None, name='softmax'):
+    if X is None:
+        return lambda x: softmax(X=x, name=name)
 
-
-def softmax(name):
-    return lambda x: tf.nn.softmax(x, name=name)
+    return tf.nn.softmax(X, name=name)

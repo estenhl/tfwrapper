@@ -11,10 +11,10 @@ from tfwrapper import SupervisedModel
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class NeuralNet(SupervisedModel):
-    def __init__(self, X_shape, classes, layers, sess=None, name='NeuralNet'):
+    def __init__(self, X_shape, classes, layers, sess=None, name='NeuralNet', **kwargs):
 
         with TFSession(sess) as sess:
-            super().__init__(X_shape, classes, layers, sess=sess, name=name)
+            super().__init__(X_shape, classes, layers, sess=sess, name=name, **kwargs)
 
             self.accuracy = self.accuracy_function()
 
@@ -24,7 +24,7 @@ class NeuralNet(SupervisedModel):
         return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '/softmax'), name=self.name + '/loss')
 
     def optimizer_function(self):
-        return tf.train.AdamOptimizer(learning_rate=self.lr, name=self.name + '/adam').minimize(self.loss, name=self.name + '/optimizer')
+        return tf.train.AdamOptimizer(learning_rate=self.lr, beta1=0.9, beta2=0.999, epsilon=1e-5, name=self.name + '/adam').minimize(self.loss, name=self.name + '/optimizer')
 
     def accuracy_function(self):
         correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))

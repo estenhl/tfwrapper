@@ -1,6 +1,7 @@
 from .cnn import CNN
 from .rnn import RNN
 from .vgg16 import VGG16
+from .resnet50 import ResNet50
 from .neural_net import NeuralNet
 from .squeezenet import SqueezeNet
 from .shallow_cnn import ShallowCNN
