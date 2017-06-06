@@ -21,7 +21,7 @@ train, test = dataset.split(0.8)
 datafolder = os.path.join(curr_path, 'data')
 if not os.path.isdir(datafolder):
     os.mkdir(datafolder)
-features_file = os.path.join(datafolder, 'catsdogs_resnet.csv')
+features_file = os.path.join(datafolder, 'catsdogs_resnet50.csv')
 
 
 with tf.Session() as sess:
@@ -41,7 +41,6 @@ with tf.Session() as sess:
     test.loader = test_loader
     test.loader.sess = sess
     test_X, test_y = test.X, test.y
-
 
 with tf.Session() as sess:
     nn = SingleLayerNeuralNet([2048], 2, 1024, sess=sess)

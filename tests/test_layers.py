@@ -28,7 +28,30 @@ def test_weight():
 
     assert shape == evaluated_shape
     assert name + ':0' == tensor.name
+"""
+def test_batch_normalization():
+    X = np.reshape(np.random.uniform(low=0, high=255, size=3 * 3 * 3 * 2), (3, 3, 3, 2))
+    var = tf.Variable(X, dtype=tf.float32)
+    name = 'test_bn'
 
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        tensor = batch_normalization(X=var, name=name)
+        sess.run(tf.global_variables_initializer())
+        result = sess.run(tensor)
+
+    mean = np.mean(X, axis=0)
+    variance = np.var(X, axis=0)
+    for i in range(len(X)):
+            print(X[i])
+            X[i] = (X[i] - mean) / variance
+
+    # TODO (02.06.17): Reimplement when TF fixes (currently returns name + '/add')
+    #assert name + ':0' == tensor.name
+    assert X.shape == result.shape
+    assert np.array_equal(X, result)
+
+"""
 def test_reshape():
     shape = np.asarray([10, 10])
     length = np.prod(shape)

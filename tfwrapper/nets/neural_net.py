@@ -24,7 +24,7 @@ class NeuralNet(SupervisedModel):
         return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '/softmax'), name=self.name + '/loss')
 
     def optimizer_function(self):
-        return tf.train.AdamOptimizer(learning_rate=self.lr, name=self.name + '/adam').minimize(self.loss, name=self.name + '/optimizer')
+        return tf.train.AdamOptimizer(learning_rate=self.lr, beta1=0.9, beta2=0.999, epsilon=1e-5, name=self.name + '/adam').minimize(self.loss, name=self.name + '/optimizer')
 
     def accuracy_function(self):
         correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
@@ -51,6 +51,7 @@ class NeuralNet(SupervisedModel):
                 random.shuffle(batches)
             
             feed_dict[self.lr] = self.calculate_learning_rate(epoch=epoch_nr)
+            print(self.calculate_learning_rate(epoch=epoch_nr))
 
             epoch_loss_avg = 0
             epoch_acc_avg = 0

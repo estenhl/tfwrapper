@@ -37,7 +37,7 @@ class ResNet50(CNN):
             conv2d(filter=[7, 7], depth=64, strides=[2, 2], name=name + '/conv1'),
             batch_normalization(name=name + '/norm1'),
             relu(name=name + '/relu1'),
-            maxpool2d(k=3, name=name + '/maxpool'),
+            maxpool2d(k=3, strides=2, name=name + '/maxpool'),
             
             residual_block(filters=residual_filters, depths=depths[0], activation='relu', name=name + '/residual1'),
             residual_block(filters=residual_filters, depths=depths[0], activation='relu', name=name + '/residual2'),

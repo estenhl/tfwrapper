@@ -54,7 +54,7 @@ def conv2d(*, X=None, filter, depth=None, strides=1, padding='SAME', activation=
     elif activation is None:
         return conv
     else:
-        errormsg = '%s activation is not implemented (Valid: [\'relu\', \'softmax\', \'none\'])' % activation
+        errormsg = '%s activation is not implemented (Valid: [\'relu\', \'softmax\', None])' % activation
         logger.error(errormsg)
         raise NotImplementedError(errormsg)
 

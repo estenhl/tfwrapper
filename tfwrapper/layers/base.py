@@ -2,13 +2,18 @@ import math
 import numpy as np
 import tensorflow as tf
 
+from tfwrapper import logger
+
 
 def bias(size, init='zeros', trainable=True, name='bias'):
     return weight([size], init=init, trainable=trainable, name=name)
 
 
-def weight(shape, init='truncated', stddev=0.02, trainable=True, name='weight'):
+def weight(shape, init='truncated', trainable=True, name='weight', **kwargs):
     if init == 'truncated':
+        stddev = 0.02
+        if 'stddev' in kwargs:
+            stddev = kwargs['stddev']
         w = tf.truncated_normal(shape, stddev=stddev)
     elif init == 'he_normal':
         # He et al., http://arxiv.org/abs/1502.01852
@@ -87,6 +92,7 @@ def reshape(shape, name='reshape'):
 
 
 def out(*, inputs, outputs, init='truncated', trainable=True, name='pred'):
+    logger.warning('This layer is an abomination, and should never be used')
     weight_shape = [inputs, outputs]
 
     def create_layer(x):
