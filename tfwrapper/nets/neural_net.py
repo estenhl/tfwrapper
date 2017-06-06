@@ -51,7 +51,6 @@ class NeuralNet(SupervisedModel):
                 random.shuffle(batches)
             
             feed_dict[self.lr] = self.calculate_learning_rate(epoch=epoch_nr)
-            print(self.calculate_learning_rate(epoch=epoch_nr))
 
             epoch_loss_avg = 0
             epoch_acc_avg = 0

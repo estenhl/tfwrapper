@@ -87,21 +87,28 @@ def batch_normalization(X=None, mean=None, variance=None, offset=0, scale=1, nam
     return tf.nn.batch_normalization(X, mean, variance, beta, gamma, variance_epsilon, name=name)
 
 
-def reshape(shape, name='reshape'):
-    return lambda x: tf.reshape(x, shape=shape, name=name)
+def reshape(X=None, shape=None, name='reshape'):
+    if X is None:
+        return lambda x: reshape(X=x, shape=shape, name=name)
+
+    if shape is None:
+        logger.warning('Reshape layer %s has noe new shape' % name)
+        return X
+
+    return tf.reshape(X, shape=shape, name=name)
 
 
-def out(*, inputs, outputs, init='truncated', trainable=True, name='pred'):
+def out(X=None, *, inputs, outputs, init='truncated', trainable=True, name='pred'):
+    if X is None:
+        return lambda x: out(X=x, inputs=inputs, outputs=outputs, init=init, trainable=trainable, name=name)
+    
     logger.warning('This layer is an abomination, and should never be used')
     weight_shape = [inputs, outputs]
 
-    def create_layer(x):
-        w = weight(weight_shape, init=init, name=name + '/W', trainable=trainable)
-        b = bias(outputs, name=name + '/b')
-        return tf.add(tf.matmul(x, w), b, name=name)
+    W = weight(weight_shape, init=init, name=name + '/W', trainable=trainable)
+    b = bias(outputs, name=name + '/b')
 
-    return create_layer
-
+    return tf.add(tf.matmul(X, W), b, name=name)
 
 def relu(X=None, name='relu'):
     if X is None:
@@ -110,5 +117,8 @@ def relu(X=None, name='relu'):
     return tf.nn.relu(X, name=name)
 
 
-def softmax(name):
-    return lambda x: tf.nn.softmax(x, name=name)
+def softmax(X=None, name='softmax'):
+    if X is None:
+        return lambda x: softmax(X=x, name=name)
+
+    return tf.nn.softmax(X, name=name)

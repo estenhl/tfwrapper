@@ -85,7 +85,7 @@ def random_crop(*, X=None, padding=(3, 3), ratio=(0.9, 0.9), method=CROP_PADDING
     return resize(X=cropped, img_size=(height, width), name=name)
 
 
-def resize(*, X=None, img_size, method=tf.image.ResizeMethod.BILINEAR, name='reshape'):
+def resize(X=None, *, img_size, method=tf.image.ResizeMethod.BILINEAR, name='reshape'):
     if X is None:
         return lambda x: resize(X=x, img_size=img_size, method=method, name=name)
 

@@ -7,7 +7,7 @@ from .base import bias
 from .base import weight
 
 
-def conv2d(*, X=None, filter, depth=None, strides=1, padding='SAME', activation='relu', init='truncated', trainable=True, name='conv2d'):
+def conv2d(X=None, *, filter, depth=None, strides=1, padding='SAME', activation='relu', init='truncated', trainable=True, name='conv2d'):
     if len(filter) != 2:
         errormsg = 'conv2d takes filters with exactly 2 dimensions (e.g. [3, 3])'
         logger.error(errormsg)
@@ -73,17 +73,17 @@ def avgpool2d(X=None, k=2, strides=2, padding='SAME', name='avgpool2d'):
     return tf.nn.avg_pool(X, ksize=[1, k, k, 1], strides=[1, strides, strides, 1], padding=padding, name=name)
 
 
-def flatten(input=None, method='avgpool', name='flatten'):
-    if input is None:
-        return lambda x: flatten(input=x, method=method, name=name)
+def flatten(X=None, method='avgpool', name='flatten'):
+    if X is None:
+        return lambda x: flatten(X=x, method=method, name=name)
 
-    _, height, width, _ = input.get_shape()
+    _, height, width, _ = X.get_shape()
     filtersize = [1, int(height), int(width), 1]
 
     if method == 'avgpool':
-        return tf.nn.avg_pool(input, ksize=filtersize, strides=filtersize, padding='SAME', name=name)
+        return tf.nn.avg_pool(X, ksize=filtersize, strides=filtersize, padding='SAME', name=name)
     elif method == 'maxpool':
-        return tf.nn.max_pool(input, ksize=filtersize, strides=filtersize, padding='SAME', name=name)
+        return tf.nn.max_pool(X, ksize=filtersize, strides=filtersize, padding='SAME', name=name)
     else:
         errormsg = '%s method for flatten not implemented (Valid: [\'avgpool\', \'maxpool\'])' % method
         logger.error(errormsg)
