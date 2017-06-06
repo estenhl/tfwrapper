@@ -23,7 +23,6 @@ class ShallowCNN(CNN):
         fc_input_size = twice_reduce(height)*twice_reduce(width)*64
 
         layers = [
-            reshape([-1, height, width, channels], name=name + '/reshape'),
             conv2d(filter=[3, 3], depth=32, name=name + '/conv1'),
             maxpool2d(k=2, name=name + '/pool1'),
             conv2d(filter=[3, 3], depth=64, name=name + '/conv2'),
