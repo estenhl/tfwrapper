@@ -5,7 +5,7 @@ import numpy as np
 import tfwrapper
 
 from tfwrapper.dataset import parse_datastructure
-from tfwrapper import Dataset
+from tfwrapper.dataset import Dataset
 from tfwrapper.utils.files import write_features
 
 from utils import curr_path

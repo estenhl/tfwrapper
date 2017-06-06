@@ -102,7 +102,7 @@ def out(X=None, *, inputs, outputs, init='truncated', trainable=True, name='pred
     if X is None:
         return lambda x: out(X=x, inputs=inputs, outputs=outputs, init=init, trainable=trainable, name=name)
     
-    logger.warning('This layer is an abomination, and should never be used')
+    logger.warning('The "out"-layer is an abomination, and should never be used')
     weight_shape = [inputs, outputs]
 
     W = weight(weight_shape, init=init, name=name + '/W', trainable=trainable)
