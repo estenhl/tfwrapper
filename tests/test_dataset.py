@@ -1,4 +1,5 @@
 import os
+import shutil
 import numpy as np
 
 import tfwrapper
@@ -13,10 +14,19 @@ from utils import generate_features
 
 def test_parse_datastructure():
     root_path = os.path.join(os.path.dirname(__file__), 'data/testset')
+    if not os.path.isdir(root_path):
+        os.mkdir(root_path)
+        os.mkdir(os.path.join(root_path, '1'))
+        os.mkdir(os.path.join(root_path, '2'))
+
+        img_path = os.path.join(curr_path, 'data', 'cat.jpg')
+        shutil.copyfile(img_path, os.path.join(root_path, '1', 'cat.jpg'))
+        shutil.copyfile(img_path, os.path.join(root_path, '2', 'cat.jpg'))
+    
     X, y = parse_datastructure(root_path)
 
     assert X.shape[0] == 2
-    assert X.shape[0] == 2
+    assert y.shape[0] == 2
 
 
 def test_create_from_data():

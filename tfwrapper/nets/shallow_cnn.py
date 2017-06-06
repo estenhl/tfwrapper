@@ -30,7 +30,7 @@ class ShallowCNN(CNN):
             conv2d(filter=[3, 3], depth=64, name=name + '/conv3'),
             maxpool2d(k=2, name=name + '/pool2'),
             fullyconnected(inputs=fc_input_size, outputs=512, name=name + '/fc'),
-            dropout(keep_prob, name=name + '/dropout'),
+            dropout(keep_prob=keep_prob, name=name + '/dropout'),
             out(inputs=512, outputs=classes, name=name + '/pred')
         ]
 

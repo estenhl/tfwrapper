@@ -23,7 +23,7 @@ class SqueezeNet(CNN):
                 fire(squeeze_depth=48, expand_depth=192, name=name + '/fire7'),
                 fire(squeeze_depth=64, expand_depth=256, name=name + '/fire8'),
                 fire(squeeze_depth=64, expand_depth=256, name=name + '/fire9'),
-                dropout(keep_prob, name=name + '/drop9'),
+                dropout(keep_prob=keep_prob, name=name + '/drop9'),
                 conv2d(filter=[1, 1], depth=classes, strides=1, padding='VALID', init='xavier_normal', name=name + '/conv10'),
                 flatten(name=name + 'avgpool10'),
                 reshape([-1, classes], name=name + '/pred')
@@ -42,7 +42,7 @@ class SqueezeNet(CNN):
                 fire(squeeze_depth=64, expand_depth=256, name=name + '/fire8'),
                 maxpool2d(k=3, strides=2, name=name + '/pool8'),
                 fire(squeeze_depth=64, expand_depth=256, name=name + '/fire9'),
-                dropout(keep_prob, name=name + '/drop9'),
+                dropout(keep_prob=keep_prob, name=name + '/drop9'),
                 conv2d(filter=[1, 1], depth=classes, strides=1, padding='VALID', init='xavier_normal', name=name + '/conv10'),
                 flatten(name=name + 'avgpool10'),
                 reshape([-1, classes], name=name + '/pred')

@@ -118,7 +118,7 @@ def parse_datastructure(root, allowed_suffixes=['jpg', 'jpeg', 'png'], verbose=F
         src = os.path.join(root, foldername)
         if os.path.isdir(src):
             for filename in os.listdir(src):
-                if filename.lower().split('.')[1] in allowed_suffixes:
+                if filename.lower().split('.')[-1] in allowed_suffixes:
                     src_file = os.path.join(src, filename)
                     X.append(src_file)
                     y.append(foldername)

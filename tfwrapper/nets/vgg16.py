@@ -34,10 +34,12 @@ class VGG16(CNN):
             maxpool2d(k=2, name=name + '/pool5'),
             fullyconnected(inputs=fc_input_size, outputs=4096, name=name + '/fc6'),
             relu(name=name + '/relu1'),
-            dropout(1.0, name=name + '/dropout1'),
+            # TODO (06.06.17: Should be replaced with a real keep_prob value
+            dropout(keep_prob=1.0, name=name + '/dropout1'),
             fullyconnected(inputs=4096, outputs=4096, name=name + '/fc7'),
             relu(name=name + '/relu2'),
-            dropout(1.0, name=name + '/dropout2'),
+            # TODO (06.06.17: Should be replaced with a real keep_prob value
+            dropout(keep_prob=1.0, name=name + '/dropout2'),
             fullyconnected(inputs=4096, outputs=classes, name=name + '/fc8'),
             softmax(name=name + '/pred')
         ]
