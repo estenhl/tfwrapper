@@ -1,8 +1,9 @@
 from tfwrapper import TFSession
+from tfwrapper.models import FrozenModel
 
-from .frozenmodel import FrozenModel
 from .utils import RESNET50_PB_PATH
 from .utils import ensure_resnet50_pb
+
 
 class FrozenResNet50(FrozenModel):
     input_tensor = 'resnet_v2_50/Input:0'

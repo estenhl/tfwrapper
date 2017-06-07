@@ -5,14 +5,16 @@ import numpy as np
 import tensorflow as tf
 from abc import ABC, abstractmethod
 
+
+from tfwrapper import logger
+from tfwrapper import TFSession
 from tfwrapper.dataset.dataset import batch_data
 from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
-from .logger import logger
-from .tfsession import TFSession
 
 METAFILE_SUFFIX = 'tw'
+
 
 class SupervisedModel(ABC):
     DEFAULT_BOTTLENECK_LAYER = -2

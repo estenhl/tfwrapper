@@ -3,7 +3,7 @@ import os
 from tfwrapper import ImageLoader
 from tfwrapper import ImageDataset
 from tfwrapper import ImagePreprocessor
-from tfwrapper.nets import ShallowCNN
+from tfwrapper.models.nets import ShallowCNN
 
 from .validation import Validator
 from .validation import kfold_validation

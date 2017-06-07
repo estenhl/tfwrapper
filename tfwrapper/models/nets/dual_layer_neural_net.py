@@ -2,8 +2,11 @@ import numpy as np
 import tensorflow as tf
 
 from tfwrapper import TFSession
-from tfwrapper.nets import NeuralNet
-from tfwrapper.layers import fullyconnected, out
+from tfwrapper.layers import fullyconnected
+from tfwrapper.layers import out
+
+from .neural_net import NeuralNet
+
 
 class DualLayerNeuralNet(NeuralNet):
 	def __init__(self, X_shape, y_size, hidden1, hidden2, sess=None, name='DualLayerNeuralNet'):

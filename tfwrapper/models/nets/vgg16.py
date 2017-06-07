@@ -1,4 +1,14 @@
-from tfwrapper.layers import channel_means, conv2d, maxpool2d, fullyconnected, relu, dropout, softmax
+import numpy as np
+
+from tfwrapper import logger
+from tfwrapper import TFSession
+from tfwrapper.layers import channel_means
+from tfwrapper.layers import conv2d
+from tfwrapper.layers import maxpool2d
+from tfwrapper.layers import fullyconnected
+from tfwrapper.layers import relu
+from tfwrapper.layers import dropout
+from tfwrapper.layers import softmax
 
 from .cnn import CNN
 from .utils import VGG16_NPY_PATH
@@ -51,7 +61,7 @@ class VGG16(CNN):
     def load_from_npy(self, path, sess=None):
         with TFSession(sess, self.graph) as sess:
             data = np.load(path, encoding='latin1').item()
-            logger.debug('Loaded VGG16 from %s' % npy_path)
+            logger.debug('Loaded VGG16 from %s' % path)
             for key in data:
                 root_name = '/'.join([self.name, key])
                 weight_name = '/'.join([root_name, 'W'])
@@ -68,3 +78,5 @@ class VGG16(CNN):
         with TFSession(sess) as sess:
             model = VGG16([224, 224, 3], 1000, name=name, sess=sess)
             model.load_from_npy(path, sess=sess)
+
+        return model

@@ -7,7 +7,7 @@ from time import process_time
 
 from tfwrapper import logger
 from tfwrapper import TFSession
-from tfwrapper import SupervisedModel
+from tfwrapper.models import SupervisedModel
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class NeuralNet(SupervisedModel):

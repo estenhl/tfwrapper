@@ -1,8 +1,9 @@
 from tfwrapper import TFSession
+from tfwrapper.models import FrozenModel
 
-from .frozenmodel import FrozenModel
 from .utils import INCEPTIONV4_PB_PATH
 from .utils import ensure_inception_v4_pb
+
 
 class FrozenInceptionV4(FrozenModel):
     input_tensor = 'input:0'
