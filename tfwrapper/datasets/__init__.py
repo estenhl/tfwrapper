@@ -112,15 +112,18 @@ def flowers(size=1360):
             lines = f.readlines()
 
         num_classes = 17
-        num_flowers_per_class = int(math.ceil(size / num_classes))
+        num_flowers_per_class = int(math.floor(size / num_classes))
+
+        class_counts = np.repeat(num_flowers_per_class, num_classes)
+        for i in range(size - num_flowers_per_class * num_classes):
+            class_counts[i] += 1
+
         total_flowers_per_class = 80
         with open(tmp_labels_file, 'w') as f:
-            i = 0
-            while True:
-                f.write(lines[i])
-                i += 1
-                if i == size:
-                    break
+            for i in range(num_classes):
+                for j in range(class_counts[i]):
+                    f.write(lines[(i * total_flowers_per_class) + j])
+
         dataset = ImageDataset(root_folder=data_path, labels_file=tmp_labels_file)
         os.remove(tmp_labels_file)
     else:
