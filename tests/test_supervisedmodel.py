@@ -3,8 +3,8 @@ import json
 import numpy as np
 import tensorflow as tf
 
-from tfwrapper.nets import SingleLayerNeuralNet
-from tfwrapper.supervisedmodel import METAFILE_SUFFIX
+from tfwrapper.models.nets import SingleLayerNeuralNet
+from tfwrapper.models.supervisedmodel import METAFILE_SUFFIX
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 from utils import curr_path

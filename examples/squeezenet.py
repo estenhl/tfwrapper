@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from tfwrapper.nets import SqueezeNet
+from tfwrapper.models.nets import SqueezeNet
 from tfwrapper.datasets import cifar10
 
 dataset = cifar10()

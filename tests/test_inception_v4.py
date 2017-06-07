@@ -2,7 +2,7 @@ import os
 import cv2
 import tensorflow as tf
 
-from tfwrapper.frozen import FrozenInceptionV4
+from tfwrapper.models.frozen import FrozenInceptionV4
 
 from utils import curr_path
 

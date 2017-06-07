@@ -2,8 +2,8 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from tfwrapper.nets import RNN
-from tfwrapper.nets import ShallowCNN
+from tfwrapper.models.nets import RNN
+from tfwrapper.models.nets import ShallowCNN
 from tfwrapper.datasets import mnist
 
 from utils import curr_path

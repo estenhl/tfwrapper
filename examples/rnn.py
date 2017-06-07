@@ -4,7 +4,7 @@ import tensorflow as tf
 import tensorflow as tf
 from tensorflow.contrib import rnn
 
-from tfwrapper.nets import RNN
+from tfwrapper.models.nets import RNN
 from tfwrapper.datasets import mnist
 
 dataset = mnist(size=10000)

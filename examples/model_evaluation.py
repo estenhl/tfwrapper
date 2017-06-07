@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import log_loss
 from time import process_time
 
-from tfwrapper.nets import RNN
+from tfwrapper.models.nets import RNN
 from tfwrapper.datasets import mnist
 
 dataset = mnist(size=1000)

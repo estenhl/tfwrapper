@@ -4,8 +4,8 @@ import tensorflow as tf
 from tfwrapper import ImageDataset
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
-from tfwrapper.nets import SingleLayerNeuralNet
-from tfwrapper.nets.pretrained import InceptionV3
+from tfwrapper.models.nets import SingleLayerNeuralNet
+from tfwrapper.models.frozen import FrozenInceptionV3
 from tfwrapper.ensembles import Booster
 from tfwrapper.datasets import cats_and_dogs
 
@@ -23,7 +23,7 @@ if not os.path.isdir(datafolder):
     os.mkdir(datafolder)
 features_file = os.path.join(datafolder, 'catsdogs_inceptionv3.csv')
 
-inception = InceptionV3()
+inception = FrozenInceptionV3()
 
 train_prep = ImagePreprocessor()
 train_prep.resize_to = (299, 299)

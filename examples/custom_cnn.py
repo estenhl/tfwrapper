@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from tfwrapper.nets import CNN
+from tfwrapper.models.nets import CNN
 from tfwrapper.layers import reshape, conv2d, maxpool2d, fullyconnected, out
 from tfwrapper.datasets import mnist
 from tfwrapper.hyperparameters import adjust_after_epoch
@@ -27,7 +27,7 @@ name = 'ExampleCustomCNN'
 # TODO: make dependent on list of maxpool factors 'k'
 twice_reduce = lambda x: -1 * ((-1 * x) // 4)
 layers = [
-	reshape([-1, h, w, c], name=name + '/reshape'),
+	reshape(shape=[-1, h, w, c], name=name + '/reshape'),
 	conv2d(filter=[5, 5], depth=32, name=name + '/conv1'),
 	maxpool2d(k=2, name=name + '/pool1'),
 	conv2d(filter=[5, 5], depth=64, name=name + '/conv2'),

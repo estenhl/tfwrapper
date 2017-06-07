@@ -4,8 +4,8 @@ import tensorflow as tf
 
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
-from tfwrapper.nets import SingleLayerNeuralNet
-from tfwrapper.frozen import FrozenResNet50
+from tfwrapper.models.nets import SingleLayerNeuralNet
+from tfwrapper.models.frozen import FrozenResNet50
 from tfwrapper.datasets import imagenet
 from tfwrapper.datasets import cats_and_dogs
 

@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 from tfwrapper import logger
-from tfwrapper.nets import ShallowCNN
+from tfwrapper.models.nets import ShallowCNN
 from tfwrapper.datasets import cifar10
 
 dataset = cifar10()

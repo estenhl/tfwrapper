@@ -4,8 +4,8 @@ import tensorflow as tf
 from tfwrapper import ImageDataset
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
-from tfwrapper.nets import SingleLayerNeuralNet
-from tfwrapper.frozen import FrozenInceptionV4
+from tfwrapper.models.nets import SingleLayerNeuralNet
+from tfwrapper.models.frozen import FrozenInceptionV4
 from tfwrapper.datasets import cats_and_dogs
 
 from utils import curr_path

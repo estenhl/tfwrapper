@@ -1,8 +1,8 @@
 import numpy as np
 
 from tfwrapper import twimage
-from tfwrapper.nets import SqueezeNet
-from tfwrapper.nets import ImageRandomizer
+from tfwrapper.models.nets import SqueezeNet
+from tfwrapper.models.nets import ImageRandomizer
 from tfwrapper.datasets import cifar10
 
 train = cifar10()
