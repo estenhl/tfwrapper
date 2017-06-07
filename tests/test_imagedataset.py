@@ -7,7 +7,7 @@ from tfwrapper.dataset import ImageDataset
 from tfwrapper.dataset import ImageLoader
 from tfwrapper.dataset import FeatureLoader
 from tfwrapper.dataset import ImagePreprocessor
-from tfwrapper.nets.pretrained import InceptionV3
+from tfwrapper.frozen import FrozenInceptionV3
 
 from utils import curr_path
 from utils import remove_dir
@@ -97,16 +97,5 @@ def test_resized_imageloader_shape():
         dataset = ImageDataset(root_folder=root_folder, loader=loader)
 
         assert [size, 64, 64, 3] == dataset.shape
-    finally:
-        remove_dir(root_folder)
-
-def test_featureloader_shape():
-    try:
-        size = 10
-        root_folder = create_tmp_dir(size=size)
-        loader = FeatureLoader(InceptionV3(), layer='pool:0')
-        dataset = ImageDataset(root_folder=root_folder, loader=loader)
-
-        assert [size, 73, 73, 64] == dataset.shape
     finally:
         remove_dir(root_folder)

@@ -13,15 +13,6 @@ from tfwrapper.utils.files import write_features
 class FeatureLoader(ImageLoader):
     sess = None
 
-    @property
-    def shape(self):
-        layer = self.layer
-
-        if layer is None:
-            layer = -1
-
-        return self.model.get_layer_shape(layer)
-
     def __init__(self, model, layer=None, cache=None, preprocessor=ImagePreprocessor(), sess=None):
         super().__init__(preprocessor=preprocessor)
         self.model = model

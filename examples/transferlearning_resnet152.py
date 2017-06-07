@@ -1,11 +1,12 @@
 import os
+import numpy as np
 import tensorflow as tf
 
-from tfwrapper import ImageDataset
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
 from tfwrapper.nets import SingleLayerNeuralNet
-from tfwrapper.frozen import FrozenInceptionV3
+from tfwrapper.frozen import FrozenResNet152
+from tfwrapper.datasets import imagenet
 from tfwrapper.datasets import cats_and_dogs
 
 from utils import curr_path
@@ -20,29 +21,29 @@ train, test = dataset.split(0.8)
 datafolder = os.path.join(curr_path, 'data')
 if not os.path.isdir(datafolder):
     os.mkdir(datafolder)
-features_file = os.path.join(datafolder, 'catsdogs_inceptionv3.csv')
+features_file = os.path.join(datafolder, 'catsdogs_resnet152.csv')
 
-import time
-start = time.time()
+
 with tf.Session() as sess:
-    inception = FrozenInceptionV3(sess=sess)
+    resnet = FrozenResNet152(sess=sess)
 
     train_prep = ImagePreprocessor()
-    train_prep.resize_to = (299, 299)
+    train_prep.resize_to = (224, 224)
     train_prep.flip_lr = True
-    train_loader = FeatureLoader(inception, cache=features_file, preprocessor=train_prep, sess=sess)
+    train_loader = FeatureLoader(resnet, cache=features_file, preprocessor=train_prep, sess=sess)
     train.loader = train_loader
+    train.loader.sess = sess
     X, y = train.X, train.y
 
     test_prep = ImagePreprocessor()
-    test_prep.resize_to = (299, 299)
-    test_loader = FeatureLoader(inception, cache=features_file, preprocessor=test_prep, sess=sess)
+    test_prep.resize_to = (224, 224)
+    test_loader = FeatureLoader(resnet, cache=features_file, preprocessor=test_prep, sess=sess)
     test.loader = test_loader
     test.loader.sess = sess
     test_X, test_y = test.X, test.y
 
 with tf.Session() as sess:
-    nn = SingleLayerNeuralNet([2048], 2, 1024, sess=sess, name='InceptionV3Test')
+    nn = SingleLayerNeuralNet([2048], 2, 1024, sess=sess)
     nn.train(X, y, epochs=10, sess=sess)
     _, acc = nn.validate(test_X, test_y, sess=sess)
     print('Acc: %d%%' % (acc * 100))

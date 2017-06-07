@@ -9,14 +9,11 @@ from tfwrapper import TFSession
 
 
 class FrozenModel(ABC):
-    def __init__(self, path, *, input_tensor, output_tensor, bottleneck_tensor, name='FrozenModel', sess=None):
+    def __init__(self, path, name='FrozenModel', sess=None):
         if not os.path.isfile(path):
             raise Exception('Invalid path to inception v3 pb file')
 
         self.graph_file = path
-        self.input_tensor = input_tensor
-        self.output_tensor = output_tensor
-        self.bottleneck_tensor = bottleneck_tensor
 
         with TFSession(sess) as sess:
             with tf.gfile.FastGFile(path,'rb') as f:
@@ -27,7 +24,7 @@ class FrozenModel(ABC):
                 self.graph = sess.graph
 
     def run_op(self, X, *, src, dest, sess=None):
-        with TFSession(sess) as sess:
+        with TFSession(sess, self.graph) as sess:
             logger.debug('Running operation from layer ' + src + ' to ' + dest)
 
             if type(dest) is str:
@@ -44,14 +41,11 @@ class FrozenModel(ABC):
         if dest is None:
             dest = self.bottleneck_tensor
 
-        with TFSession(sess) as sess:
-            return self.run_op(src=self.input_tensor, dest=dest, X=X, sess=sess)
+        return self.run_op(X, src=self.input_tensor, dest=dest, sess=sess)
 
     def extract_bottleneck_features(self, X, sess=None):
-        with TFSession(sess) as sess:
-            features = self.extract_features(X, sess=sess)
-            return np.squeeze(features)
+        features = self.extract_features(X, dest=self.bottleneck_tensor, sess=sess)
+        return np.squeeze(features)
 
     def predict(self, X, sess=None):
-        with TFSession(sess) as sess:
-            return self.run_op(src=self.input_tensor, dest=self.output_tensor, X=X, sess=sess)
+        return self.run_op(X, src=self.input_tensor, dest=self.output_tensor, sess=sess)

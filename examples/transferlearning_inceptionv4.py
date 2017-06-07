@@ -5,7 +5,7 @@ from tfwrapper import ImageDataset
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
 from tfwrapper.nets import SingleLayerNeuralNet
-from tfwrapper.nets.pretrained import InceptionV4
+from tfwrapper.frozen import FrozenInceptionV4
 from tfwrapper.datasets import cats_and_dogs
 
 from utils import curr_path
@@ -23,7 +23,7 @@ if not os.path.isdir(datafolder):
 features_file = os.path.join(datafolder, 'catsdogs_inceptionv4.csv')
 
 with tf.Session() as sess:
-    inception = InceptionV4()
+    inception = FrozenInceptionV4()
 
     train_prep = ImagePreprocessor()
     train_prep.resize_to = (299, 299)

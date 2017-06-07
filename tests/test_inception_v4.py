@@ -2,7 +2,7 @@ import os
 import cv2
 import tensorflow as tf
 
-from tfwrapper.nets.pretrained import InceptionV4
+from tfwrapper.frozen import FrozenInceptionV4
 
 from utils import curr_path
 
@@ -13,28 +13,23 @@ class TestInceptionV4():
     @classmethod
     def setup_class(cls):
         cls.sess = tf.Session()
-        cls.inception = InceptionV4()
+        cls.inception = FrozenInceptionV4()
 
     @classmethod
     def teardown_class(cls):
         cls.sess.close()
 
-    def test_from_file(self):
-    	features = self.inception.extract_features_from_file(cat_img, sess=self.sess)
-
-    	assert (1536, ) == features.shape
-
     def test_from_data(self):
-    	img = cv2.imread(cat_img)
-    	features = self.inception.extract_features(img, sess=self.sess)
+        img = cv2.imread(cat_img)
+        features = self.inception.extract_features(img, sess=self.sess)
 
-    	assert (1536, ) == features.shape
+        assert (1, 1536) == features.shape
 
     def test_from_op(self):
         img = cv2.imread(cat_img)
-        features = self.inception.run_op(InceptionV4.DEFAULT_FEATURES_LAYER, InceptionV4.DEFAULT_INPUT_LAYER, img, sess=self.sess)
+        features = self.inception.run_op(img, src=FrozenInceptionV4.input_tensor, dest=FrozenInceptionV4.bottleneck_tensor, sess=self.sess)
 
-        assert (1536, ) == features.shape
+        assert (1, 1536) == features.shape
 
     def test_bottleneck(self):
         img = cv2.imread(cat_img)
@@ -43,4 +38,4 @@ class TestInceptionV4():
         assert (1536, ) == features.shape
 
 
-	
+    

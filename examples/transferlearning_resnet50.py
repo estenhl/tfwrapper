@@ -5,7 +5,7 @@ import tensorflow as tf
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
 from tfwrapper.nets import SingleLayerNeuralNet
-from tfwrapper.nets.pretrained import PretrainedResNet50
+from tfwrapper.frozen import FrozenResNet50
 from tfwrapper.datasets import imagenet
 from tfwrapper.datasets import cats_and_dogs
 
@@ -25,19 +25,19 @@ features_file = os.path.join(datafolder, 'catsdogs_resnet50.csv')
 
 
 with tf.Session() as sess:
-    vgg = PretrainedResNet50([224, 224, 3], sess=sess)
+    resnet = FrozenResNet50(sess=sess)
 
     train_prep = ImagePreprocessor()
     train_prep.resize_to = (224, 224)
     train_prep.flip_lr = True
-    train_loader = FeatureLoader(vgg, cache=features_file, preprocessor=train_prep, sess=sess)
+    train_loader = FeatureLoader(resnet, cache=features_file, preprocessor=train_prep, sess=sess)
     train.loader = train_loader
     train.loader.sess = sess
     X, y = train.X, train.y
 
     test_prep = ImagePreprocessor()
     test_prep.resize_to = (224, 224)
-    test_loader = FeatureLoader(vgg, cache=features_file, preprocessor=test_prep, sess=sess)
+    test_loader = FeatureLoader(resnet, cache=features_file, preprocessor=test_prep, sess=sess)
     test.loader = test_loader
     test.loader.sess = sess
     test_X, test_y = test.X, test.y

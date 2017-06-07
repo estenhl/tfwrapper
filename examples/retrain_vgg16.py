@@ -13,6 +13,7 @@ dataset = dataset.translate_labels()
 dataset = dataset.onehot()
 train, test = dataset.split(0.8)
 
+
 with tf.Session() as sess:
     cnn = VGG16([32, 32, 3], classes=100, sess=sess)
     cnn.learning_rate = 0.01

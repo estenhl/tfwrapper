@@ -1,6 +1,8 @@
 from tfwrapper.layers import channel_means, conv2d, maxpool2d, fullyconnected, relu, dropout, softmax
 
 from .cnn import CNN
+from .utils import VGG16_NPY_PATH
+from .utils import ensure_vgg16_npy
 
 class VGG16(CNN):
     DEFAULT_BOTTLENECK_LAYER = -5
@@ -46,3 +48,23 @@ class VGG16(CNN):
 
         super().__init__(X_shape, classes, layers, sess=sess, name=name)
 
+    def load_from_npy(self, path, sess=None):
+        with TFSession(sess, self.graph) as sess:
+            data = np.load(path, encoding='latin1').item()
+            logger.debug('Loaded VGG16 from %s' % npy_path)
+            for key in data:
+                root_name = '/'.join([self.name, key])
+                weight_name = '/'.join([root_name, 'W'])
+                bias_name = '/'.join([root_name, 'b'])
+
+                self.assign_variable_value(weight_name, data[key][0], sess=sess)
+                self.assign_variable_value(bias_name, data[key][1], sess=sess)
+
+            logger.debug('Injected values into %s' % self.name)
+
+    @staticmethod
+    def from_npy(path=VGG16_NPY_PATH, name='PretrainedVGG16', sess=None):
+        path = ensure_vgg16_npy(path)
+        with TFSession(sess) as sess:
+            model = VGG16([224, 224, 3], 1000, name=name, sess=sess)
+            model.load_from_npy(path, sess=sess)

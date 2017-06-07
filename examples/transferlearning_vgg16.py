@@ -5,7 +5,7 @@ import tensorflow as tf
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
 from tfwrapper.nets import SingleLayerNeuralNet
-from tfwrapper.nets.pretrained import PretrainedVGG16
+from tfwrapper.frozen import FrozenVGG16
 from tfwrapper.datasets import imagenet
 from tfwrapper.datasets import cats_and_dogs
 
@@ -24,7 +24,7 @@ if not os.path.isdir(datafolder):
 features_file = os.path.join(datafolder, 'catsdogs_vgg16.csv')
 
 with tf.Session() as sess:
-    vgg = PretrainedVGG16([224, 224, 3], name='PretrainedVGG16', sess=sess)
+    vgg = FrozenVGG16(sess=sess)
 
     train_prep = ImagePreprocessor()
     train_prep.resize_to = (224, 224)
