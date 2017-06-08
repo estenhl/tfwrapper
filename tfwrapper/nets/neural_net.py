@@ -10,6 +10,7 @@ from time import process_time
 from tfwrapper import logger
 from tfwrapper import TFSession
 from tfwrapper import SupervisedModel
+from tfwrapper.layers import fullyconnected, out, recurring
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class NeuralNet(SupervisedModel):
@@ -30,9 +31,9 @@ class NeuralNet(SupervisedModel):
             X_size = np.prod(X_shape)
 
             layers = [
-                cls.fullyconnected(inputs=X_size, outputs=hidden, name=name + '/hidden'),
-                cls.out(inputs=hidden, outputs=y_size, name=name + '/pred')
-                ]
+                fullyconnected(inputs=X_size, outputs=hidden, name=name + '/hidden'),
+                out(inputs=hidden, outputs=y_size, name=name + '/pred')
+            ]
 
             return cls.from_shape(X_shape=X_shape, y_size=y_size, layers=layers, sess=sess, name=name)
 
@@ -42,9 +43,9 @@ class NeuralNet(SupervisedModel):
             X_size = np.prod(X_shape)
 
             layers = [
-                cls.fullyconnected(inputs=X_size, outputs=hidden1, name=name + '/hidden1'),
-                cls.fullyconnected(inputs=hidden1, outputs=hidden2, name=name + '/hidden2'),
-                cls.out(inputs=hidden2, outputs=y_size, name=name + '/pred')
+                fullyconnected(inputs=X_size, outputs=hidden1, name=name + '/hidden1'),
+                fullyconnected(inputs=hidden1, outputs=hidden2, name=name + '/hidden2'),
+                out(inputs=hidden2, outputs=y_size, name=name + '/pred')
             ]
 
             return cls.from_shape(X_shape=X_shape, y_size=y_size, layers=layers, sess=sess, name=name)
@@ -52,7 +53,7 @@ class NeuralNet(SupervisedModel):
     @classmethod
     def rnn(cls, seq_shape, seq_length, num_hidden, y_size, sess=None, name='RNN'):
         X_shape = seq_shape + [seq_length]
-        layers = [cls.rnn_layer(seq_shape, seq_length, num_hidden, y_size, name=name)]
+        layers = [recurring(seq_shape, seq_length, num_hidden, y_size, name=name)]
 
         return cls.from_shape(X_shape=X_shape, y_size=y_size, layers=layers, sess=sess, name=name)
 
@@ -70,50 +71,6 @@ class NeuralNet(SupervisedModel):
     def accuracy_function(self):
         correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
         return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '/accuracy')
-
-    @staticmethod
-    def fullyconnected(*, inputs, outputs, trainable=True, activation='relu', init='truncated', name='fullyconnected'):
-        weight_shape = [inputs, outputs]
-        weight_name = name + '/W'
-        bias_name = name + '/b'
-
-        def create_layer(x):
-            weight = NeuralNet.weight(weight_shape, name=weight_name, init=init, trainable=trainable)
-            bias = NeuralNet.bias(outputs, name=bias_name, trainable=trainable)
-
-            fc = tf.reshape(x, [-1, inputs], name=name + '/reshape')
-            fc = tf.add(tf.matmul(fc, weight), bias, name=name + '/add')
-
-            if activation == 'relu':
-                fc = tf.nn.relu(fc, name=name)
-            elif activation == 'softmax':
-                fc = tf.nn.softmax(fc, name=name)
-            else:
-                raise NotImplementedError('%s activation is not implemented (Valid: [\'relu\', \'softmax\'])' % activation)
-
-            return fc
-
-        return create_layer
-
-    @staticmethod
-    def dropout(dropout, name='dropout'):
-        return lambda x: tf.nn.dropout(x, dropout, name=name)
-
-    @staticmethod
-    def rnn_layer(seq_shape, seq_length, num_hidden, classes, name):
-        def create_layer(x):
-            x = tf.transpose(x, [1, 0, 2])
-            x = tf.reshape(x, [-1] + seq_shape)
-            x = tf.split(x, seq_length, 0)
-
-            lstm_cell = rnn.BasicLSTMCell(128, forget_bias=1.0)
-            outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
-
-            weight = tf.Variable(tf.random_normal([num_hidden, classes]), name=name + '_W')
-            bias = tf.Variable(tf.random_normal([classes]), name=name + '_b')
-            return tf.add(tf.matmul(outputs[-1], weight), bias, name=name + '/pred')
-
-        return create_layer
 
     def load(self, filename, sess=None):
         with TFSession(sess, self.graph, self.variables) as sess:
