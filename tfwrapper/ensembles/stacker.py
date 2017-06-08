@@ -6,11 +6,6 @@ from tfwrapper.dataset import Dataset
 
 import time
 
-# Logistic Regression
-from sklearn import datasets
-from sklearn import metrics
-from sklearn.linear_model import LogisticRegression
-# load the iris datasets
 
 class Stacker():
     def __init__(self, prediction_models, decision_model, name='Stacker'):
