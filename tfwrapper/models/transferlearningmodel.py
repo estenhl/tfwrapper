@@ -23,9 +23,7 @@ class TransferLearningModel():
             X, y = dataset.X, dataset.y
 
         with TFSession(sess, self.prediction_model.graph) as sess2:
-            print('Training model %s %s' % (self.prediction_model.name, time.time()))
             self.prediction_model.train(X, y, epochs=epochs, sess=sess2)
-            print('Finished model %s %s' % (self.prediction_model.name, time.time()))
 
     def validate(self, dataset, *, preprocessor=None, sess=None):
         with TFSession(sess, self.feature_model.graph) as sess1:

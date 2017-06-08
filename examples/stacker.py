@@ -11,11 +11,15 @@ from tfwrapper.models.frozen import FrozenVGG16
 from tfwrapper.models.nets import SingleLayerNeuralNet
 from tfwrapper.models import TransferLearningModel
 from tfwrapper.ensembles import Stacker
-from tfwrapper.hyperparameters import adjust_after_epoch
+from tfwrapper.hyperparameters import adjust_at_epochs
 
 from utils import curr_path
+
+
+logger.setLevel(logger.INFO)
+
 dataset = flowers()
-dataset = dataset.shuffle()
+dataset = dataset.shuffle(12346)
 dataset = dataset.translate_labels()
 dataset = dataset.onehot()
 train, test = dataset.split(0.8)
@@ -34,36 +38,37 @@ models = []
 
 inception_v3 = FrozenInceptionV3()
 nn = SingleLayerNeuralNet([2048], 17, 1024, name='InceptionV3')
-nn.learning_rate = adjust_after_epoch(25, before=0.01, after=0.001)
-model = TransferLearningModel(inception_v3, nn, features_cache=incv3_features_file, name='TF1')
+nn.learning_rate = adjust_at_epochs([10, 20], [0.01, 0.001, 0.0001])
+model = TransferLearningModel(inception_v3, nn, features_cache=incv3_features_file, name='TL1')
 models.append(model)
 
 inception_v4 = FrozenInceptionV4()
 nn = SingleLayerNeuralNet([1536], 17, 1024, name='InceptionV4')
-nn.learning_rate = adjust_after_epoch(25, before=0.01, after=0.001)
-model = TransferLearningModel(inception_v4, nn, features_cache=incv4_features_file, name='TF2')
+nn.learning_rate = adjust_at_epochs([10, 20], [0.01, 0.001, 0.0001])
+model = TransferLearningModel(inception_v4, nn, features_cache=incv4_features_file, name='TL2')
 models.append(model)
 
 resnet50 = FrozenResNet50()
 nn = SingleLayerNeuralNet([2048], 17, 1024, name='ResNet50')
-nn.learning_rate = adjust_after_epoch(25, before=0.01, after=0.001)
-model = TransferLearningModel(resnet50, nn, features_cache=resnet50_features_file, name='TF3')
+nn.learning_rate = adjust_at_epochs([10, 20], [0.01, 0.001, 0.0001])
+model = TransferLearningModel(resnet50, nn, features_cache=resnet50_features_file, name='TL3')
 models.append(model)
 
 resnet152 = FrozenResNet152()
 nn = SingleLayerNeuralNet([2048], 17, 1024, name='ResNet152')
-nn.learning_rate = adjust_after_epoch(25, before=0.01, after=0.001)
-model = TransferLearningModel(resnet152, nn, features_cache=resnet152_features_file, name='TF4')
+nn.learning_rate = adjust_at_epochs([10, 20], [0.01, 0.001, 0.0001])
+model = TransferLearningModel(resnet152, nn, features_cache=resnet152_features_file, name='TL4')
 models.append(model)
 
 vgg16 = FrozenVGG16()
 nn = SingleLayerNeuralNet([4096], 17, 1024, name='VGG16')
-nn.learning_rate = adjust_after_epoch(25, before=0.01, after=0.001)
-model = TransferLearningModel(vgg16, nn, features_cache=vgg16_features_file, name='TF5')
+nn.learning_rate = adjust_at_epochs([10, 20], [0.01, 0.001, 0.0001])
+model = TransferLearningModel(vgg16, nn, features_cache=vgg16_features_file, name='TL5')
 models.append(model)
 
-decision_model = SingleLayerNeuralNet([5], 17, 24, name='DecisionModel')
-stacker = Stacker(models, decision_model)
-stacker.train(train, epochs=50)
+decision_model = SingleLayerNeuralNet([5, 17], 17, 1024, name='DecisionModel')
+decision_model.learning_rate = adjust_at_epochs([30, 70], [0.01, 0.001, 0.0001])
+stacker = Stacker(models, decision_model, name='StackingEnsemble')
+stacker.train(train, epochs=[30, 100])
 _, acc = stacker.validate(test)
-print('Acc: %d%%' % (acc * 100))
+print('Ensemble acc: %.2f%%' % (acc * 100))
