@@ -1,5 +1,4 @@
 import tensorflow as tf
-
 from tfwrapper import TFSession
 
 class LinearRegression():

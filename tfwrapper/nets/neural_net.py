@@ -3,22 +3,64 @@ import copy
 import random
 import numpy as np
 import tensorflow as tf
+
+from tensorflow.contrib import rnn
 from time import process_time
 
 from tfwrapper import logger
 from tfwrapper import TFSession
 from tfwrapper import SupervisedModel
+from tfwrapper.layers import fullyconnected, out, recurring
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class NeuralNet(SupervisedModel):
-    def __init__(self, X_shape, classes, layers, sess=None, name='NeuralNet', **kwargs):
+    def __init__(self, X_shape=None, y_size=None, layers=None, sess=None, name='NeuralNet', **kwargs):
+        super().__init__(name=name)
+        if X_shape is not None and y_size is not None and layers is not None:
+            with TFSession(sess) as sess:
+                self.fill_from_shape(sess, X_shape, y_size, layers, **kwargs)
+                self.post_init()
 
+    def post_init(self):
+        super().post_init()
+        self.accuracy = self.accuracy_function()
+
+    @classmethod
+    def single_layer(cls, X_shape, y_size, hidden, sess=None, name='SingleLayerNeuralNet'):
         with TFSession(sess) as sess:
-            super().__init__(X_shape, classes, layers, sess=sess, name=name, **kwargs)
+            X_size = np.prod(X_shape)
 
-            self.accuracy = self.accuracy_function()
+            layers = [
+                fullyconnected(inputs=X_size, outputs=hidden, name=name + '/hidden'),
+                out(inputs=hidden, outputs=y_size, name=name + '/pred')
+            ]
 
-            self.graph = sess.graph
+            return cls.from_shape(X_shape=X_shape, y_size=y_size, layers=layers, sess=sess, name=name)
+
+    @classmethod
+    def dual_layer(cls, X_shape, y_size, hidden1, hidden2, sess=None, name='DualLayerNeuralNet'):
+        with TFSession(sess) as sess:
+            X_size = np.prod(X_shape)
+
+            layers = [
+                fullyconnected(inputs=X_size, outputs=hidden1, name=name + '/hidden1'),
+                fullyconnected(inputs=hidden1, outputs=hidden2, name=name + '/hidden2'),
+                out(inputs=hidden2, outputs=y_size, name=name + '/pred')
+            ]
+
+            return cls.from_shape(X_shape=X_shape, y_size=y_size, layers=layers, sess=sess, name=name)
+
+    @classmethod
+    def rnn(cls, seq_shape, seq_length, num_hidden, y_size, sess=None, name='RNN'):
+        X_shape = seq_shape + [seq_length]
+        layers = [recurring(seq_shape, seq_length, num_hidden, y_size, name=name)]
+
+        return cls.from_shape(X_shape=X_shape, y_size=y_size, layers=layers, sess=sess, name=name)
+
+    def load_from_meta_graph(self, filename):
+        super().load_from_meta_graph(filename=filename)
+        self.loss = self.graph.get_tensor_by_name(self.name + '/loss:0')
+        self.accuracy = self.graph.get_tensor_by_name(self.name + '/accuracy:0')
 
     def loss_function(self):
         return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '/softmax'), name=self.name + '/loss')

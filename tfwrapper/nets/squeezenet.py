@@ -7,7 +7,22 @@ from tfwrapper.utils.exceptions import InvalidArgumentException
 from .cnn import CNN
 
 class SqueezeNet(CNN):
-    def __init__(self, X_shape, classes, sess=None, name='SqueezeNet', version='1.1', **kwargs):
+    def __init__(self, X_shape=None, y_size=None, sess=None, name='SqueezeNet', version='1.1', **kwargs):
+        super().__init__(name=name)
+        if X_shape is not None and y_size is not None:
+            with TFSession(sess) as sess:
+                self.fill_from_shape(sess, X_shape, y_size, version, **kwargs)
+                self.post_init()
+
+    @classmethod
+    def from_shape(cls, X_shape, y_size, sess=None, name='SqueezeNet', version='1.1', **kwargs):
+        model = cls(X_shape=None, y_size=None, name=name)
+        model.fill_from_shape(sess=sess, X_shape=X_shape, y_size=y_size, version='1.1', **kwargs)
+        model.post_init()
+        return model
+
+    def fill_from_shape(self, sess, X_shape, y_size, version, **kwargs):
+        name = self.name
         keep_prob = tf.placeholder(tf.float32, name=name + '/dropout_placeholder')
         if version == '1.1':
             layers = [
@@ -24,9 +39,9 @@ class SqueezeNet(CNN):
                 fire(squeeze_depth=64, expand_depth=256, name=name + '/fire8'),
                 fire(squeeze_depth=64, expand_depth=256, name=name + '/fire9'),
                 dropout(keep_prob=keep_prob, name=name + '/drop9'),
-                conv2d(filter=[1, 1], depth=classes, strides=1, padding='VALID', init='xavier_normal', name=name + '/conv10'),
+                conv2d(filter=[1, 1], depth=y_size, strides=1, padding='VALID', init='xavier_normal', name=name + '/conv10'),
                 flatten(name=name + 'avgpool10'),
-                reshape([-1, classes], name=name + '/pred')
+                reshape([-1, y_size], name=name + '/pred')
             ]
         elif version == '1.0':
             layers = [
@@ -43,9 +58,9 @@ class SqueezeNet(CNN):
                 maxpool2d(k=3, strides=2, name=name + '/pool8'),
                 fire(squeeze_depth=64, expand_depth=256, name=name + '/fire9'),
                 dropout(keep_prob=keep_prob, name=name + '/drop9'),
-                conv2d(filter=[1, 1], depth=classes, strides=1, padding='VALID', init='xavier_normal', name=name + '/conv10'),
+                conv2d(filter=[1, 1], depth=y_size, strides=1, padding='VALID', init='xavier_normal', name=name + '/conv10'),
                 flatten(name=name + 'avgpool10'),
-                reshape([-1, classes], name=name + '/pred')
+                reshape([-1, y_size], name=name + '/pred')
             ]
         else:
             raise NotImplementedError(
@@ -53,7 +68,7 @@ class SqueezeNet(CNN):
 
         self.version = version
         with TFSession(sess) as sess:
-            super().__init__(X_shape, classes, layers, sess=sess, name=name, **kwargs)
+            super().fill_from_shape(sess, X_shape, y_size, layers, **kwargs)
 
         self.feed_dict['keep_prob'] = {'placeholder': keep_prob, 'default': 1.}
 

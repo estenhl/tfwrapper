@@ -5,14 +5,14 @@ import numpy as np
 import tensorflow as tf
 from abc import ABC, abstractmethod
 
+from .logger import logger
+from .tfsession import TFSession
 from tfwrapper.dataset.dataset import batch_data
 from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
-from .logger import logger
-from .tfsession import TFSession
-
-METAFILE_SUFFIX = 'tw'
+META_GRAPH_SUFFIX = 'meta'
+METADATA_SUFFIX = 'tw'
 
 class SupervisedModel(ABC):
     DEFAULT_BOTTLENECK_LAYER = -2
@@ -23,11 +23,37 @@ class SupervisedModel(ABC):
     learning_rate = 0.1
     batch_size = 128
 
-    def __init__(self, X_shape, y_size, layers, preprocessing=[], sess=None, name='SupervisedModel'):
+    # TODO: migrate constructor calls to .with_shape and remove method calls from __init__
+    def __init__(self, X_shape=None, y_size=None, layers=None, preprocessing=[], sess=None, name='SupervisedModel'):
+        self.name = name
+        if X_shape is not None and y_size is not None and layers is not None:
+            self.fill_from_shape(sess, X_shape, y_size, layers, preprocessing)
+            self.post_init()
+
+    def post_init(self):
+        self.input_size = np.prod(self.X_shape)
+        self.loss = self.loss_function()
+        self.optimizer = self.optimizer_function()
+
+    @classmethod
+    def from_shape(cls, X_shape, y_size, layers, preprocessing=[], sess=None, name='SupervisedModel'):
+        model = cls(X_shape=None, y_size=None, name=name)
+        model.fill_from_shape(sess=sess, X_shape=X_shape, y_size=y_size, layers=layers, preprocessing=preprocessing)
+        model.post_init()
+        return model
+
+    @classmethod
+    def from_meta_graph(cls, filename, name):
+        model = cls(X_shape=None, y_size=None, name=name)
+        model.load_from_meta_graph(filename)
+        model.post_init()
+        return model
+
+    def fill_from_shape(self, sess, X_shape, y_size, layers, preprocessing=[]):
         with TFSession(sess) as sess:
             self.X_shape = X_shape
+            self.input_size = np.prod(X_shape)
             self.y_size = y_size
-            self.name = name
 
             if type(y_size) is int:
                 y_size = [y_size]
@@ -46,12 +72,28 @@ class SupervisedModel(ABC):
                 self.tensors.append({'name': prev.name, 'tensor': prev})
             self.pred = prev
 
-            self.loss = self.loss_function()
-            self.optimizer = self.optimizer_function()
-
             self.graph = sess.graph
         self.init_vars_when_training = True
         self.feed_dict = {}
+
+    def load_from_meta_graph(self, filename):
+        with TFSession() as sess:
+            metagraph_filename = '%s.%s' % (filename, META_GRAPH_SUFFIX)
+            new_saver = tf.train.import_meta_graph(metagraph_filename, clear_devices=True)
+            new_saver.restore(sess, metagraph_filename)
+
+            graph = tf.get_default_graph()
+            self.graph = graph
+            self.X = graph.get_tensor_by_name(self.name + '/X_placeholder:0')
+            self.y = graph.get_tensor_by_name(self.name + '/y_placeholder:0')
+            self.lr = graph.get_tensor_by_name(self.name + '/learning_rate_placeholder:0')
+            self.pred = graph.get_tensor_by_name(self.name + '/pred:0')
+
+            self.X_shape = self.X.shape
+            self.input_size = np.prod(self.X_shape)
+            self.y_size = len(self.y)
+
+            self.checkpoint_variables(sess)
 
     @abstractmethod
     def loss_function(self):
@@ -103,7 +145,7 @@ class SupervisedModel(ABC):
             features = features.flatten()
 
             return features
-        
+
     def checkpoint_variables(self, sess):
         for variable in tf.global_variables():
             self.variables[variable.name] = sess.run(variable)
@@ -113,7 +155,7 @@ class SupervisedModel(ABC):
             errormsg = '%sX and %sy must be same length, not %d and %d' % (prefix, prefix, len(X), len(y))
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
-        
+
         if not (len(X.shape) >= 2 and list(X.shape[1:]) == self.X_shape):
             errormsg = '%sX with shape %s does not match given X_shape %s' % (prefix, str(X.shape), str(self.X_shape))
             logger.error(errormsg)
@@ -221,7 +263,7 @@ class SupervisedModel(ABC):
 
     def predict(self, X, feed_dict=None, sess=None, **kwargs):
         feed_dict = self.parse_feed_dict(feed_dict, **kwargs)
-        
+
         with TFSession(sess, self.graph, variables=self.variables) as sess:
             batches = batch_data(X, self.batch_size)
             preds = None
@@ -243,7 +285,7 @@ class SupervisedModel(ABC):
     def save(self, filename, sess=None, **kwargs):
         with TFSession(sess, self.graph, variables=self.variables) as sess:
             saver = tf.train.Saver()
-            saver.save(sess, filename)
+            saver.save(sess, filename, meta_graph_suffix=META_GRAPH_SUFFIX)
 
             metadata = kwargs
             metadata['name'] = self.name
@@ -252,7 +294,7 @@ class SupervisedModel(ABC):
             metadata['batch_size'] = self.batch_size
             metadata['time'] = str(datetime.datetime.now())
 
-            metadata_filename = '%s.%s' % (filename, METAFILE_SUFFIX)
+            metadata_filename = '%s.%s' % (filename, METADATA_SUFFIX)
             with open(metadata_filename, 'w') as f:
                 f.write(json.dumps(metadata, indent=2))
 
