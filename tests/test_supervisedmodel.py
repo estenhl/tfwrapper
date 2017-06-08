@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from tfwrapper.nets import SingleLayerNeuralNet
-from tfwrapper.supervisedmodel import METAFILE_SUFFIX
+from tfwrapper.supervisedmodel import METADATA_SUFFIX
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 from utils import curr_path
@@ -79,7 +79,7 @@ def test_save_metadata():
             sess.run(tf.global_variables_initializer())
             model.save(filename, sess=sess)
 
-            metadata_filename = '%s.%s' % (filename, METAFILE_SUFFIX)
+            metadata_filename = '%s.%s' % (filename, METADATA_SUFFIX)
 
             assert os.path.isfile(metadata_filename)
             with open(metadata_filename, 'r') as f:
@@ -105,7 +105,7 @@ def test_save_labels():
             sess.run(tf.global_variables_initializer())
             model.save(filename, labels=labels, sess=sess)
 
-            metadata_filename = '%s.%s' % (filename, METAFILE_SUFFIX)
+            metadata_filename = '%s.%s' % (filename, METADATA_SUFFIX)
 
             assert os.path.isfile(metadata_filename)
             with open(metadata_filename, 'r') as f:

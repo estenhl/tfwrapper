@@ -38,7 +38,7 @@ class SupervisedModel(ABC):
     @classmethod
     def from_shape(cls, X_shape, y_size, layers, preprocessing=[], sess=None, name='SupervisedModel'):
         model = cls(X_shape=None, y_size=None, name=name)
-        model.fill_from_shape(sess=sess, X_shape=X_shape, y_size=y_size, layers=layers)
+        model.fill_from_shape(sess=sess, X_shape=X_shape, y_size=y_size, layers=layers, preprocessing=preprocessing)
         model.post_init()
         return model
 
@@ -49,7 +49,7 @@ class SupervisedModel(ABC):
         model.post_init()
         return model
 
-    def fill_from_shape(self, sess, X_shape, y_size, layers, preprocessing):
+    def fill_from_shape(self, sess, X_shape, y_size, layers, preprocessing=[]):
         with TFSession(sess) as sess:
             self.X_shape = X_shape
             self.input_size = np.prod(X_shape)
