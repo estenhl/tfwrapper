@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import log_loss
 from time import process_time
 
-from tfwrapper.nets import RNN
+from tfwrapper.nets import NeuralNet
 from tfwrapper.datasets import mnist
 
 dataset = mnist(size=1000)
@@ -36,7 +36,7 @@ conf = []   # confusion matrix for each run
 # Train the model several times to get a better idea of its performance
 for rep in range(nr_of_runs):  # statistics gathering loop
     tf.reset_default_graph()
-    model = RNN([28], 28, 128, 10, name='RNN_example')
+    model = NeuralNet.recurrent([28], 28, 128, 10, name='RNN_example')
     model.learning_rate = learning_rate
     model.batch_size = batch_size
 

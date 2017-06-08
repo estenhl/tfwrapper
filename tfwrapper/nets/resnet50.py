@@ -68,7 +68,7 @@ class ResNet50(CNN):
         ]
 
         with TFSession(sess) as sess:
-            super().__init__(X_shape, classes, layers, sess=sess, name=name, **kwargs)
+            super().from_shape(X_shape, classes, layers, sess=sess, name=name, **kwargs)
 
     def load_from_h5(self, path, sess=None):
         with h5py.File(path, 'r') as f:
