@@ -13,12 +13,12 @@ class Stacker():
         self.decision_model = decision_model
         self.name = name
 
-    def _compute_predictions(self, dataset, sess=None):
+    def _compute_predictions(self, dataset, preprocessor=None, sess=None):
         preds = self.prediction_models[0].predict(dataset, sess=sess)
         combined_preds = np.expand_dims(preds, axis=0)
 
         for model in self.prediction_models[1:]:
-            preds = model.predict(dataset, sess=sess)
+            preds = model.predict(dataset, preprocessor=preprocessor, sess=sess)
             preds = np.expand_dims(preds, axis=0)
             combined_preds = np.concatenate([combined_preds, preds], axis=0)
         
@@ -31,7 +31,7 @@ class Stacker():
 
         return p2
 
-    def train(self, dataset, *, epochs, sess=None):
+    def train(self, dataset, *, epochs, preprocessor=None, sess=None):
         if type(epochs) is int:
             epochs = [epochs, epochs]
         elif type(epochs) is list:
@@ -40,18 +40,18 @@ class Stacker():
             # TODO (08.06.17): Fix exception and stuff
             logger.error('Invalid epochs')
         for model in self.prediction_models:
-            model.train(dataset, epochs=epochs[0], sess=sess)
+            model.train(dataset, preprocessor=preprocessor, epochs=epochs[0], sess=sess)
 
-        preds = self._compute_predictions(dataset, sess=sess)
+        preds = self._compute_predictions(dataset, preprocessor=preprocessor, sess=sess)
 
         with TFSession(sess, self.decision_model.graph) as sess:
             self.decision_model.train(preds, dataset.y, epochs=epochs[1], sess=sess)
 
-    def validate(self, dataset, sess=None):
-        preds = self._compute_predictions(dataset, sess=sess)
+    def validate(self, dataset, preprocessor=None, sess=None):
+        preds = self._compute_predictions(dataset, preprocessor=preprocessor, sess=sess)
 
         for model in self.prediction_models:
-            _, acc = model.validate(dataset, sess=sess)
+            _, acc = model.validate(dataset, preprocessor=preprocessor, sess=sess)
             print('%s acc: %.2f%%' % (model.name, (acc * 100)))
 
         variables = self.decision_model.variables
