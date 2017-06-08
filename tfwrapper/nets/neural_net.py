@@ -51,7 +51,7 @@ class NeuralNet(SupervisedModel):
             return cls.from_shape(X_shape=X_shape, y_size=y_size, layers=layers, sess=sess, name=name)
 
     @classmethod
-    def rnn(cls, seq_shape, seq_length, num_hidden, y_size, sess=None, name='RNN'):
+    def recurrent(cls, seq_shape, seq_length, num_hidden, y_size, sess=None, name='RNN'):
         X_shape = seq_shape + [seq_length]
         layers = [recurring(seq_shape, seq_length, num_hidden, y_size, name=name)]
 
@@ -171,7 +171,7 @@ class NeuralNet(SupervisedModel):
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
 
-        net = NeuralNet(X_shape, y_size, layers, name=name)
+        net = NeuralNet.from_shape(X_shape, y_size, layers, name=name)
 
         for key in self.feed_dict:
             net.feed_dict[key] = self.feed_dict[key]

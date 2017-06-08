@@ -44,7 +44,7 @@ class ImageRandomizer(CNN):
             random.shuffle(layers)
 
         with TFSession(sess) as sess:
-            super().__init__(X_shape, X_shape, layers, sess=sess, name=name)
+            super().from_shape(X_shape, X_shape, layers, sess=sess, name=name)
 
     def loss_function(self):
         return tf.Variable(1)

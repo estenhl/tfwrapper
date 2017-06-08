@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
-from tfwrapper.nets import SingleLayerNeuralNet
+from tfwrapper.nets import NeuralNet
 from tfwrapper.frozen import FrozenResNet152
 from tfwrapper.datasets import imagenet
 from tfwrapper.datasets import cats_and_dogs
@@ -43,7 +43,7 @@ with tf.Session() as sess:
     test_X, test_y = test.X, test.y
 
 with tf.Session() as sess:
-    nn = SingleLayerNeuralNet([2048], 2, 1024, sess=sess)
+    nn = NeuralNet.single_layer([2048], 2, 1024, sess=sess)
     nn.train(X, y, epochs=10, sess=sess)
     _, acc = nn.validate(test_X, test_y, sess=sess)
     print('Acc: %d%%' % (acc * 100))

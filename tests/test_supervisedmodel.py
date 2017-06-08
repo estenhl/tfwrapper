@@ -3,7 +3,7 @@ import json
 import numpy as np
 import tensorflow as tf
 
-from tfwrapper.nets import SingleLayerNeuralNet
+from tfwrapper.nets import NeuralNet
 from tfwrapper.supervisedmodel import METADATA_SUFFIX
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
@@ -11,7 +11,7 @@ from utils import curr_path
 from utils import remove_dir
 
 def test_mismatching_lengths():
-    model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
+    model = NeuralNet.single_layer([28, 28, 1], 3, 5)
     X = np.zeros([50, 28, 28, 1])
     y = np.zeros([100, 3])
 
@@ -24,7 +24,7 @@ def test_mismatching_lengths():
     assert exception
 
 def test_invalid_X_shape():
-    model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
+    model = NeuralNet.single_layer([28, 28, 1], 3, 5)
     X = np.zeros([100, 28, 28, 2])
     y = np.zeros([100, 3])
 
@@ -37,7 +37,7 @@ def test_invalid_X_shape():
     assert exception
 
 def test_y_without_onehot():
-    model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
+    model = NeuralNet.single_layer([28, 28, 1], 3, 5)
     X = np.zeros([100, 28, 28, 1])
     y = np.zeros([100])
 
@@ -50,7 +50,7 @@ def test_y_without_onehot():
     assert exception
 
 def test_invalid_classes():
-    model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
+    model = NeuralNet.single_layer([28, 28, 1], 3, 5)
     X = np.zeros([100, 28, 28, 1])
     y = np.zeros([100, 5])
 
@@ -74,7 +74,7 @@ def test_save_metadata():
         filename = os.path.join(folder, 'test')
 
         with tf.Session() as sess:
-            model = SingleLayerNeuralNet(X_shape, y_size, 1, name=name, sess=sess)
+            model = NeuralNet.single_layer(X_shape, y_size, 1, name=name, sess=sess)
             model.batch_size = batch_size
             sess.run(tf.global_variables_initializer())
             model.save(filename, sess=sess)
@@ -101,7 +101,7 @@ def test_save_labels():
         filename = os.path.join(folder, 'test')
 
         with tf.Session() as sess:
-            model = SingleLayerNeuralNet([1], 1, 1, sess=sess)
+            model = NeuralNet.single_layer([1], 1, 1, sess=sess)
             sess.run(tf.global_variables_initializer())
             model.save(filename, labels=labels, sess=sess)
 
@@ -116,7 +116,7 @@ def test_save_labels():
         remove_dir(folder)
 
 def test_train_X_y():
-    model = SingleLayerNeuralNet([1], 1, 5)
+    model = NeuralNet.single_layer([1], 1, 5)
     X = np.reshape(np.arange(10), [10, 1])
     y = np.reshape(np.arange(10), [10, 1])
 
@@ -137,7 +137,7 @@ def data_generator(size=10, batch_size=5):
         yield X[i * batch_size:(i + 1) * batch_size], y[i * batch_size:(i + 1) * batch_size]
 
 def test_train_generator():
-    model = SingleLayerNeuralNet([1], 1, 5)
+    model = NeuralNet.single_layer([1], 1, 5)
     generator = data_generator()
 
     exception = False
@@ -150,7 +150,7 @@ def test_train_generator():
     assert not exception
 
 def test_no_data():
-    model = SingleLayerNeuralNet([10], 3, 5)
+    model = NeuralNet.single_layer([10], 3, 5)
 
     exception = False
     try:

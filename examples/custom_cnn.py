@@ -35,7 +35,7 @@ layers = [
 	fullyconnected(inputs=twice_reduce(h)*twice_reduce(w)*64, outputs=512, name=name + '/fc'),
 	out(inputs=512, outputs=num_classes, name=name + '/pred')
 ]
-cnn = CNN([h, w, c], num_classes, layers, name=name)
+cnn = CNN.from_shape([h, w, c], num_classes, layers, name=name)
 cnn.learning_rate = adjust_after_epoch(3, before=0.001, after=0.0005)
 cnn.train(X, y, epochs=5, validate=False)
 _, acc = cnn.validate(test.X, test.y)

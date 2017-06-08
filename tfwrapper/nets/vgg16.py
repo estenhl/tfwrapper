@@ -46,7 +46,7 @@ class VGG16(CNN):
             softmax(name=name + '/pred')
         ]
 
-        super().__init__(X_shape, classes, layers, sess=sess, name=name)
+        super().from_shape(X_shape, classes, layers, sess=sess, name=name)
 
     def load_from_npy(self, path, sess=None):
         with TFSession(sess, self.graph) as sess:

@@ -2,7 +2,7 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from tfwrapper.nets import ShallowCNN
+from tfwrapper.nets import CNN
 from tfwrapper.datasets import mnist
 
 from utils import curr_path
@@ -22,7 +22,7 @@ X = np.reshape(X, [-1, 28, 28, 1])
 test_X = np.reshape(test_X, [-1, 28, 28, 1])
 
 with tf.Session() as sess:
-	cnn = ShallowCNN([28, 28, 1], 10, sess=sess, name='SaveAndLoadExample')
+	cnn = CNN.shallow([28, 28, 1], 10, sess=sess, name='SaveAndLoadExample')
 	cnn.train(X, train.y, epochs=5, sess=sess)
 	_, acc = cnn.validate(test_X, test.y, sess=sess)
 	print('Acc before save: %d%%' % (acc * 100))
@@ -35,7 +35,7 @@ with tf.Session() as sess:
 tf.reset_default_graph()
 
 with tf.Session() as sess:
-	loaded_cnn = ShallowCNN([28, 28, 1], 10, name='SaveAndLoadExample', sess=sess)
+	loaded_cnn = CNN.shallow([28, 28, 1], 10, name='SaveAndLoadExample', sess=sess)
 	loaded_cnn.load(model_path, sess=sess)
 	_, acc = loaded_cnn.validate(test_X, test.y, sess=sess)
 	print('Acc after load: %d%%' % (acc * 100))
