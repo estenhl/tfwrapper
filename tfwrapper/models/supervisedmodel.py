@@ -19,9 +19,6 @@ METAFILE_SUFFIX = 'tw'
 class SupervisedModel(ABC):
     DEFAULT_BOTTLENECK_LAYER = -2
 
-    graph = None
-    variables = {}
-
     learning_rate = 0.1
     batch_size = 128
 
@@ -52,6 +49,8 @@ class SupervisedModel(ABC):
             self.optimizer = self.optimizer_function()
 
             self.graph = sess.graph
+
+        self.variables = {}
         self.init_vars_when_training = True
         self.feed_dict = {}
 
@@ -107,8 +106,8 @@ class SupervisedModel(ABC):
             return features
         
     def checkpoint_variables(self, sess):
-        for variable in tf.global_variables():
-            self.variables[variable.name] = sess.run(variable)
+        for variable in tf.trainable_variables():
+            self.variables[variable.name] = {'tensor': variable, 'value': sess.run(variable)}
 
     def create_batches(self, X, y, prefix=''):
         if not len(X) == len(y):
@@ -203,6 +202,7 @@ class SupervisedModel(ABC):
             else:
                 test_split = 0.2
             train_split = 1. - test_split
+
             try:
                 train_len = max(int(len(generator) * train_split), 1)
                 val_generator = generator[train_len:]
