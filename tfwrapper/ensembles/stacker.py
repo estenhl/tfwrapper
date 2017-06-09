@@ -14,7 +14,7 @@ class Stacker():
         self.name = name
 
     def _compute_predictions(self, dataset, preprocessor=None, sess=None):
-        preds = self.prediction_models[0].predict(dataset, sess=sess)
+        preds = self.prediction_models[0].predict(dataset, preprocessor=preprocessor, sess=sess)
         combined_preds = np.expand_dims(preds, axis=0)
 
         for model in self.prediction_models[1:]:
