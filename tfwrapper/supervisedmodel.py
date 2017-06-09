@@ -7,7 +7,8 @@ from abc import ABC, abstractmethod
 
 from .logger import logger
 from .tfsession import TFSession
-from tfwrapper.dataset.dataset import batch_data
+from tfwrapper.dataset.dataset import batch_data, Dataset
+from tfwrapper.dataset.dataset_generator import DatasetGenerator
 from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
@@ -63,7 +64,7 @@ class SupervisedModel(ABC):
             self.lr = tf.placeholder(tf.float32, [], name=self.name + '/learning_rate_placeholder')
 
             layers = preprocessing + layers
-            
+
             self.layers = layers
             self.tensors = []
             prev = self.X
@@ -222,10 +223,12 @@ class SupervisedModel(ABC):
 
         if X is not None and y is not None:
             logger.info('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
-            generator = self.create_batches(X, y, 'train.')
+            # Create a basic sample generator for the provided data
+            generator = DatasetGenerator(Dataset(X=X, y=y), self.batch_size, shuffle=shuffle)
         elif generator is not None:
             logger.info('Training ' + self.name + ' with generator')
-            shuffle = False
+            if not generator.shuffle and shuffle:
+                logger.warning('Your specified generator is not set to shuffle, yet shuffle was specified for training')
         else:
             errormsg = 'Either X and y or a generator must be supplied'
             logger.error(errormsg)
@@ -236,7 +239,7 @@ class SupervisedModel(ABC):
             epochs = 1
 
         if val_X is not None and val_y is not None:
-            val_generator = self.create_batches(val_X, val_y, 'val.')
+            val_generator = DatasetGenerator(Dataset(X=val_X, y=val_y), self.batch_size, shuffle=False)
         elif validate is not False and val_generator is None:
             if type(validate) is float:
                 test_split = validate
@@ -244,7 +247,7 @@ class SupervisedModel(ABC):
                 test_split = 0.2
             train_split = 1. - test_split
             try:
-                train_len = max(int(len(generator) * train_split), 1)
+                train_len = max(int(generator.get_base_length() * train_split), 1)
                 val_generator = generator[train_len:]
                 generator = generator[:train_len]
             except Exception:
@@ -253,23 +256,31 @@ class SupervisedModel(ABC):
 
         with TFSession(sess, self.graph, init=self.init_vars_when_training) as sess:
             for epoch in range(epochs):
-                self.train_epoch(generator, epoch, feed_dict=feed_dict, val_batches=val_generator, shuffle=shuffle, sess=sess)
+                self.train_epoch(generator, epoch, feed_dict=feed_dict, val_generator=val_generator, sess=sess)
 
             self.checkpoint_variables(sess)
 
     @abstractmethod
-    def train_epoch(self, generator, epoch_nr, feed_dict={}, val_batches=None, sess=None):
+    def train_epoch(self, generator, epoch_nr, feed_dict=None, val_generator=None, sess=None):
         raise NotImplementedError('SupervisedModel is a generic class')
 
-    def predict(self, X, feed_dict=None, sess=None, **kwargs):
-        feed_dict = self.parse_feed_dict(feed_dict, **kwargs)
+    def predict(self, X=None, generator=None, feed_dict=None, sess=None, **kwargs):
+        if X is not None:
+            generator = DatasetGenerator(Dataset(X=X, y=np.full(len(X), -1)), self.batch_size, shuffle=False)
+        elif generator is None:
+            errormsg = 'Either X and y or a generator must be supplied'
+            logger.error(errormsg)
+            raise InvalidArgumentException(errormsg)
+        if generator.shuffle:
+            logger.warning('Disabling validation generator\'s shuffle')
+            generator.shuffle = False
 
+        feed_dict = self.parse_feed_dict(feed_dict, **kwargs)
         with TFSession(sess, self.graph, variables=self.variables) as sess:
-            batches = batch_data(X, self.batch_size)
             preds = None
 
-            for batch in batches:
-                feed_dict[self.X] = batch
+            for batch_X, _ in generator:
+                feed_dict[self.X] = batch_X
                 batch_preds = sess.run(self.pred, feed_dict=feed_dict)
                 if preds is not None:
                     preds = np.concatenate([preds, batch_preds])
@@ -279,7 +290,7 @@ class SupervisedModel(ABC):
         return preds
 
     @abstractmethod
-    def validate(self, X, y, feed_dict={}, sess=None, **kwargs):
+    def validate(self, X=None, y=None, generator=None, feed_dict=None, sess=None, **kwargs):
         raise NotImplementedError('SupervisedModel is a generic class')
 
     def save(self, filename, sess=None, **kwargs):

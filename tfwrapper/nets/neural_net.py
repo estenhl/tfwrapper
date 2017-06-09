@@ -11,6 +11,8 @@ from tfwrapper import logger
 from tfwrapper import TFSession
 from tfwrapper import SupervisedModel
 from tfwrapper.layers import fullyconnected, out, recurring
+from tfwrapper import Dataset
+from tfwrapper.dataset import DatasetGenerator
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 class NeuralNet(SupervisedModel):
@@ -79,30 +81,27 @@ class NeuralNet(SupervisedModel):
             self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
             self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')
 
-    def train_epoch(self, batches, epoch_nr, feed_dict={}, val_batches=None, shuffle=False, sess=None):
+    def train_epoch(self, generator, epoch_nr, feed_dict=None, val_generator=None, sess=None):
+        if feed_dict is None:
+            feed_dict = {}
         with TFSession(sess, self.graph) as sess:
-            # TODO (11.05.17): Generators has noe __len__
             try:
-                num_batches = len(batches)
-                num_items = num_batches * self.batch_size - (self.batch_size - len(batches[-1][0]))
+                num_items = len(generator)
             except Exception as e:
                 num_items = -1
 
-            if shuffle:
-                batches = batches.copy()
-                random.shuffle(batches)
-            
             feed_dict[self.lr] = self.calculate_learning_rate(epoch=epoch_nr)
 
             epoch_loss_avg = 0
             epoch_acc_avg = 0
             epoch_time = 0
 
-            batch_count = 0
             item_count = 0
-            for X, y in batches:
-                feed_dict[self.X] = X
-                feed_dict[self.y] = y
+            batch_count = 0
+            # Note: it's up to the Generator to shuffle on iter() start
+            for batch_count, (batch_X, batch_y) in enumerate(generator):
+                feed_dict[self.X] = batch_X
+                feed_dict[self.y] = batch_y
                 
                 start_batch_time = process_time()
                 _, loss_val, acc_val = sess.run([self.optimizer, self.loss, self.accuracy], feed_dict=feed_dict)
@@ -111,8 +110,7 @@ class NeuralNet(SupervisedModel):
                 epoch_loss_avg += loss_val
                 epoch_acc_avg += acc_val
 
-                batch_count += 1
-                item_count += len(X)
+                item_count += len(batch_X)
                 # TODO (11.05.17): Use logger
                 if True:
                     # Display a summary of this batch reusing the same terminal line
@@ -121,7 +119,7 @@ class NeuralNet(SupervisedModel):
                                      ' | time: {:.3}s'.format(item_count, len(str(num_items)), num_items, 
                                                             loss_val, acc_val, epoch_time))
                     sys.stdout.flush()
-
+            batch_count += 1
             epoch_loss_avg /= batch_count
             epoch_acc_avg /= batch_count
 
@@ -130,32 +128,26 @@ class NeuralNet(SupervisedModel):
                 epoch_summary = '\nEpoch: \033[1m\033[32m{}\033[0m\033[0m | avg batch loss: \033[1m\033[32m{:.5}\033[0m\033[0m' \
                                 ' - avg acc: {:.5}'.format(epoch_nr + 1, epoch_loss_avg, epoch_acc_avg)
                 
-                # TODO (11.05.17): Handle batches as actual batches
-                if val_batches is not None and len(val_batches) > 0:
-                    X = None
-                    y = None
-
-                    for batch_X, batch_y in val_batches:
-                        if X is None:
-                            X = batch_X
-                        else:
-                            X = np.concatenate([X, batch_X])
-
-                        if y is None:
-                            y = batch_y
-                        else:
-                            y = np.concatenate([y, batch_y])
-
-                    X = np.asarray(X)
-                    y = np.asarray(y)
-                    loss_val, acc_val = self.validate(X, y, sess=sess)
+                if val_generator is not None and len(val_generator) > 0:
+                    loss_val, acc_val = self.validate(generator=val_generator, sess=sess)
                     epoch_summary += ' | val_loss: \033[1m\033[32m{:.5}\033[0m\033[0m - val_acc: {:.5}'.format(loss_val, acc_val)
                 print(epoch_summary, '\n')
 
-    def validate(self, X, y, feed_dict=None, sess=None, **kwargs):
-        feed_dict = self.parse_feed_dict(feed_dict, **kwargs)
+    def validate(self, X=None, y=None, generator=None, feed_dict=None, sess=None, **kwargs):
+        if X is not None and y is not None:
+            generator = DatasetGenerator(Dataset(X=X, y=y), self.batch_size, shuffle=False)
+        elif generator is None:
+            errormsg = 'Either X and y or a generator must be supplied'
+            logger.error(errormsg)
+            raise InvalidArgumentException(errormsg)
+        if generator.shuffle:
+            logger.info('Disabling validation generator\'s shuffle')
+            generator.shuffle = False
+
+        feed_dict = self.parse_feed_dict(feed_dict, **kwargs)  # TODO (09.06.17) This isn't used. Why?
         with TFSession(sess, self.graph, variables=self.variables) as sess:
-            preds = self.predict(X, sess=sess)
+            preds = self.predict(generator=generator, sess=sess)
+            y = y or np.concatenate([batch_y for _, batch_y in generator])
             loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.pred: preds, self.y: y})
         
         return loss, acc
