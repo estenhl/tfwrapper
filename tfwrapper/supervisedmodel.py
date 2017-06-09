@@ -25,7 +25,9 @@ class SupervisedModel(ABC):
     batch_size = 128
 
     # TODO: migrate constructor calls to .with_shape and remove method calls from __init__
-    def __init__(self, X_shape=None, y_size=None, layers=None, preprocessing=[], sess=None, name='SupervisedModel'):
+    def __init__(self, X_shape=None, y_size=None, layers=None, preprocessing=None, sess=None, name='SupervisedModel'):
+        if preprocessing is None:
+            preprocessing = []
         self.name = name
         if X_shape is not None and y_size is not None and layers is not None:
             self.fill_from_shape(sess, X_shape, y_size, layers, preprocessing)
@@ -37,7 +39,9 @@ class SupervisedModel(ABC):
         self.optimizer = self.optimizer_function()
 
     @classmethod
-    def from_shape(cls, X_shape, y_size, layers, preprocessing=[], sess=None, name='SupervisedModel'):
+    def from_shape(cls, X_shape, y_size, layers, preprocessing=None, sess=None, name='SupervisedModel'):
+        if preprocessing is None:
+            preprocessing = []
         model = cls(X_shape=None, y_size=None, name=name)
         model.fill_from_shape(sess=sess, X_shape=X_shape, y_size=y_size, layers=layers, preprocessing=preprocessing)
         model.post_init()
@@ -50,7 +54,9 @@ class SupervisedModel(ABC):
         model.post_init()
         return model
 
-    def fill_from_shape(self, sess, X_shape, y_size, layers, preprocessing=[]):
+    def fill_from_shape(self, sess, X_shape, y_size, layers, preprocessing=None):
+        if preprocessing is None:
+            preprocessing = []
         with TFSession(sess) as sess:
             self.X_shape = X_shape
             self.input_size = np.prod(X_shape)
@@ -239,7 +245,14 @@ class SupervisedModel(ABC):
             epochs = 1
 
         if val_X is not None and val_y is not None:
-            val_generator = DatasetGenerator(Dataset(X=val_X, y=val_y), self.batch_size, shuffle=False)
+            if generator.normalize:
+                # Generator is doing batch normalization. Val expects a normalized value, but we need to avoid batching
+                val_generator = DatasetGenerator(Dataset(X=val_X, y=val_y), 1, shuffle=False, normalize=True)
+            else:
+                # Don't know whether the provided validation data is pre-normalized.
+                # Normalize==False won't change its state, hence it's safe to do validation in batches either way
+                val_generator = DatasetGenerator(Dataset(X=val_X, y=val_y), self.batch_size, shuffle=False, normalize=False)
+
         elif validate is not False and val_generator is None:
             if type(validate) is float:
                 test_split = validate
@@ -266,7 +279,7 @@ class SupervisedModel(ABC):
 
     def predict(self, X=None, generator=None, feed_dict=None, sess=None, **kwargs):
         if X is not None:
-            generator = DatasetGenerator(Dataset(X=X, y=np.full(len(X), -1)), self.batch_size, shuffle=False)
+            generator = DatasetGenerator(Dataset(X=X, y=np.full(len(X), -1)), self.batch_size, shuffle=False, normalize=False)
         elif generator is None:
             errormsg = 'Either X and y or a generator must be supplied'
             logger.error(errormsg)
@@ -274,6 +287,9 @@ class SupervisedModel(ABC):
         if generator.shuffle:
             logger.warning('Disabling validation generator\'s shuffle')
             generator.shuffle = False
+        if generator.normalize and generator.batch_size > 1:
+            logger.warning('Reducing validation generator batch size due to its batch normalization.')
+            generator.batch_size = 1
 
         feed_dict = self.parse_feed_dict(feed_dict, **kwargs)
         with TFSession(sess, self.graph, variables=self.variables) as sess:

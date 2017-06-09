@@ -135,7 +135,8 @@ class NeuralNet(SupervisedModel):
 
     def validate(self, X=None, y=None, generator=None, feed_dict=None, sess=None, **kwargs):
         if X is not None and y is not None:
-            generator = DatasetGenerator(Dataset(X=X, y=y), self.batch_size, shuffle=False)
+            # X and y may or may not be pre-normalized. As long as we don't alter them it's safe to proceed in batches.
+            generator = DatasetGenerator(Dataset(X=X, y=y), self.batch_size, shuffle=False, normalize=False)
         elif generator is None:
             errormsg = 'Either X and y or a generator must be supplied'
             logger.error(errormsg)
@@ -143,6 +144,9 @@ class NeuralNet(SupervisedModel):
         if generator.shuffle:
             logger.info('Disabling validation generator\'s shuffle')
             generator.shuffle = False
+        if generator.normalize and generator.batch_size > 1:
+            logger.warning('Reducing validation generator batch size due to its batch normalization.')
+            generator.batch_size = 1
 
         feed_dict = self.parse_feed_dict(feed_dict, **kwargs)  # TODO (09.06.17) This isn't used. Why?
         with TFSession(sess, self.graph, variables=self.variables) as sess:
