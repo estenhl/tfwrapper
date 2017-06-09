@@ -16,19 +16,18 @@ def parse_features_str(s, delimiter='|'):
         return np.fromstring(s, sep=delimiter)
 
 
-def parse_features(src, filename_col=0, label_col=1, features_col=2, delimiter='|'):
+def parse_features(src, filename_col=0, label_col=1, features_col=2, delimiter='|', chunk_size=10000):
     if os.path.isfile(src):
-        features = pd.read_csv(src,
-                               sep=delimiter,
-                               header=0,
-                               names=['filename', 'label', 'features_as_str'],
-                               usecols=[filename_col, label_col, features_col])
-
-        features['features'] = features['features_as_str'].apply(lambda x: parse_features_str(x, delimiter=delimiter))
-
+        reader = pd.read_csv(src, sep=delimiter, header=0, names=['filename', 'label', 'features_as_str'],
+                             usecols=[filename_col, label_col, features_col], iterator=True, chunksize=chunk_size)
+        features = []
+        for chunk in reader:
+            chunk['features'] = chunk['features_as_str'].apply(lambda x: parse_features_str(x, delimiter=delimiter))
+            features.append(chunk)
+        features = pd.concat(features, ignore_index=True)
         return features[['filename', 'label', 'features']]
     else:
-        return pd.DataFrame(columns = ['filename', 'label', 'features'])
+        return pd.DataFrame(columns=['filename', 'label', 'features'])
 
 
 def is_list_of_dicts(obj):
