@@ -10,3 +10,4 @@ tfwrapper/nets/pretrained/models/
 .path
 
 data/
+!tfwrapper/utils/data/**/*

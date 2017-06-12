@@ -14,7 +14,6 @@ from tfwrapper.dataset.dataset_generator import DatasetGeneratorBase
 from tfwrapper.dataset.dataset_generator import GeneratorWrapper
 from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.exceptions import InvalidArgumentException
-from tfwrapper.utils.data import get_subclass_with_name
 
 from tfwrapper import logger
 from tfwrapper import TFSession
