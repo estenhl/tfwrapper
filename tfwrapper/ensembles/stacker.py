@@ -121,3 +121,6 @@ class Stacker():
         variables = self.decision_model.variables
         with TFSession(sess, self.decision_model.graph, variables=variables) as sess:
             return self.decision_model.validate(preds, dataset.y, sess=sess)
+
+    def predict(self, dataset, preprocessor=None, sess=None):
+        return self._compute_predictions(dataset, preprocessor=preprocessor, sess=sess)
