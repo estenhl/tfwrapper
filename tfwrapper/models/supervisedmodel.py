@@ -62,6 +62,10 @@ class SupervisedModel(ABC):
     def optimizer_function(self):
         raise NotImplementedError('SupervisedModel is a generic class')
 
+    def reset(self):
+        with TFSession(None, self.graph) as sess:
+            sess.run(tf.global_variables_initializer())
+
     def run_op(self, target, *, source=None, data, feed_dict=None, sess=None):
         if type(target) in [str, int]:
             target = self.get_tensor(target)

@@ -23,7 +23,7 @@ if not os.path.isdir(datafolder):
 features_file = os.path.join(datafolder, 'catsdogs_inceptionv4.csv')
 
 with tf.Session() as sess:
-    inception = FrozenInceptionV4()
+    inception = FrozenInceptionV4(sess=sess)
 
     train_prep = ImagePreprocessor()
     train_prep.resize_to = (299, 299)

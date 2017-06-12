@@ -13,7 +13,7 @@ class TestInceptionV3():
     @classmethod
     def setup_class(cls):
         cls.sess = tf.Session()
-        cls.inception = FrozenInceptionV3()
+        cls.inception = FrozenInceptionV3(sess=cls.sess)
 
     @classmethod
     def teardown_class(cls):

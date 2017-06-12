@@ -49,3 +49,6 @@ class TransferLearningModel():
         variables = self.prediction_model.variables
         with TFSession(sess, self.prediction_model.graph, variables=variables) as sess2:
             return self.prediction_model.predict(X, sess=sess2)
+
+    def reset(self):
+        self.prediction_model.reset()
