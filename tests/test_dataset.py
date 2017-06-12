@@ -287,3 +287,18 @@ def test_invalid_arg_throws_exception():
         exception = True
 
     assert exception
+
+
+def test_onehot_strings():
+    X = np.asarray([1, 2, 3])
+    y = np.asarray(['one', 'two', 'three'])
+    dataset = Dataset(X=X, y=y)
+
+    exception = False
+    try:
+        dataset = dataset.onehot_encoded()
+    except Exception as e:
+        print(e)
+        exception = True
+
+    assert not exception

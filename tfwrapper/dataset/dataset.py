@@ -4,6 +4,8 @@ from collections import Counter
 
 from tfwrapper import logger
 from tfwrapper.utils.files import parse_features
+from tfwrapper.utils.decorators import deprecated
+
 from .dataset_generator import DatasetGenerator
 
 
@@ -218,26 +220,58 @@ class Dataset():
         end = start + batch_size
         return self[start:end], end
 
+    @deprecated('normalized')
     def normalize(self):
         return self.__class__(X=normalize_array(self._X), y=self._y, **self.kwargs())
 
+    def normalized(self):
+        return self.__class__(X=normalize_array(self._X), y=self._y, **self.kwargs())
+
+    @deprecated('shuffled')
     def shuffle(self, seed=None):
         X, y = shuffle_dataset(self._X, self._y, seed=seed)
 
         return self.__class__(X=X, y=y, **self.kwargs())
 
+    def shuffled(self, seed=None):
+        X, y = shuffle_dataset(self._X, self._y, seed=seed)
+
+        return self.__class__(X=X, y=y, **self.kwargs())
+
+    @deprecated('balanced')
     def balance(self, max=0):
         X, y = balance_dataset(self._X, self._y, max_val=max)
 
         return self.__class__(X=X, y=y, **self.kwargs())
 
+    def balanced(self, max=0):
+        X, y = balance_dataset(self._X, self._y, max_val=max)
+
+        return self.__class__(X=X, y=y, **self.kwargs())
+
+    @deprecated('translated_labels')
     def translate_labels(self):
         y, labels = labels_to_indexes(self._y)
 
         return self.__class__(X=self._X, y=y, **self.kwargs(labels=labels))
 
+    def translated_labels(self):
+        y, labels = labels_to_indexes(self._y)
+
+        return self.__class__(X=self._X, y=y, **self.kwargs(labels=labels))
+
+    @deprecated('onehot_encoded')
     def onehot(self):
         return self.__class__(X=self._X, y=onehot_array(self._y), **self.kwargs())
+
+    def onehot_encoded(self):
+        y = self._y
+
+        invalid_types = ['<U5', np.object, np.str, str]
+        if y.dtype in invalid_types:
+            y, self.labels = labels_to_indexes(y)
+
+        return self.__class__(X=self._X, y=onehot_array(y), **self.kwargs())
 
     def split(self, ratio=0.8):
         X, y, test_X, test_y = split_dataset(self._X, self._y, ratio=ratio)
