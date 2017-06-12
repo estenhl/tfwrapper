@@ -12,25 +12,25 @@ def _compute_means(x):
     raise NotImplementedError(errormsg)
 
 
-def channel_means(means=None, name='channel_means'): 
-    def create_layer(x):
-        # TODO (28.05.17): Rewrite when pythons stops being stupid with variable name scopes
-        if means is None:
-            channel_means = _compute_channel_means(x)
-        else:
-            channel_means = np.asarray(means)
+def channel_means(X=None, means=None, name='channel_means'): 
+    if X is None:
+        return lambda x: channel_means(X=x, means=means, name=name)
 
-        # TODO (28.05.17): Rewrite in tensorflow (Although tf.tile is weird AF)
-        num_repetitions = np.prod(x.get_shape().as_list()[1:-1])
-        repeated_means = np.tile(channel_means, num_repetitions)
-        original_shape = x.get_shape().as_list()[1:]
-        repeated_means = np.reshape(repeated_means, original_shape)
+    # TODO (28.05.17): Rewrite when python stops being stupid with variable name scopes
+    if means is None:
+        means = _compute_channel_means(X)
+    else:
+        means = np.asarray(means)
 
-        values = tf.Variable(repeated_means, trainable=False, dtype=tf.float32, name=name + '/values')
+    # TODO (28.05.17): Rewrite in tensorflow (Although tf.tile is weird AF)
+    num_repetitions = np.prod(X.get_shape().as_list()[1:-1])
+    repeated_means = np.tile(means, num_repetitions)
+    original_shape = X.get_shape().as_list()[1:]
+    repeated_means = np.reshape(repeated_means, original_shape)
 
-        return tf.map_fn(lambda img: tf.subtract(img, values), x, name=name)
+    values = tf.Variable(repeated_means, trainable=False, dtype=tf.float32, name=name + '/values')
 
-    return create_layer
+    return tf.map_fn(lambda img: tf.subtract(img, values), X, name=name)
 
 
 CROP_PADDING_CONSTANT = 'CONSTANT'
@@ -39,7 +39,7 @@ CROP_PADDING_SYMMETRIC = 'SYMMETRIC'
 _VALID_CROP_PADDINGS = [CROP_PADDING_CONSTANT, CROP_PADDING_REFLECT, CROP_PADDING_SYMMETRIC]
 
 
-def random_crop(*, X=None, padding=(3, 3), ratio=(0.9, 0.9), method=CROP_PADDING_CONSTANT, seed=None, name='random_crop'):
+def random_crop(X=None, padding=(3, 3), ratio=(0.9, 0.9), method=CROP_PADDING_CONSTANT, seed=None, name='random_crop'):
     if type(padding) is int:
         padding = (padding, padding)
     elif type(padding) is tuple and len(padding) == 2:
@@ -59,7 +59,7 @@ def random_crop(*, X=None, padding=(3, 3), ratio=(0.9, 0.9), method=CROP_PADDING
         raise InvalidArgumentException(errormsg)
 
     if not method in _VALID_CROP_PADDINGS:
-        errormsg = 'Invalid method %s for random_crop. (Must be in %s)' % (str(method), str(_VALID_PADDINGS))
+        errormsg = 'Invalid method %s for random_crop. (Valid is %s)' % (str(method), str(_VALID_PADDINGS))
 
     if X is None:
         return lambda x: random_crop(X=x, padding=padding, ratio=ratio, method=method, seed=seed, name=name)
@@ -94,8 +94,11 @@ def resize(X=None, *, img_size, method=tf.image.ResizeMethod.BILINEAR, name='res
     return tf.image.resize_images(X, img_size, method=method)
 
 
-def normalize_image(name='image_normalization'):
-    return lambda x: tf.map_fn(lambda img: tf.image.per_image_standardization(img), x, name=name)
+def normalize_image(X=None, name='image_normalization'):
+    if X is None:
+        return lambda x: normalize_image(X=x, name=name)
+
+    return tf.map_fn(lambda img: tf.image.per_image_standardization(img), X, name=name)
 
 
 def flip_up_down(seed=None, name='random_flip_ud'):

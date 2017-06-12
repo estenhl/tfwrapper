@@ -2,19 +2,16 @@ import os
 import numpy as np
 
 from tfwrapper import ImageDataset
-from tfwrapper.nets.pretrained import InceptionV3
+from tfwrapper.models.frozen import FrozenInceptionV3
 from tfwrapper.visualization import visualize_activation
+from tfwrapper.datasets import cats_and_dogs
 
-from utils import curr_path
-
-data_path = os.path.join(curr_path, '..', 'data', 'datasets', 'catsdogs', 'images')
-dataset = ImageDataset(root_folder=data_path)
+dataset = cats_and_dogs()
 
 img = dataset[0].X[0]
 
-inception = InceptionV3()
-features = inception.extract_features(img, layer='mixed_10/join:0')
+inception = FrozenInceptionV3()
+features = inception.extract_features(img, dest='mixed_10/join:0')
 features = np.reshape(features, (8, 8, 2048))
-print('Features shape: %s' % str(features.shape))
 
 visualize_activation(features, img)

@@ -16,7 +16,7 @@ VGG_CHANNEL_MEANS = [103.939, 116.779, 123.68]
 
 
 def inception_preprocessing(name=None):
-    logger.warning('Using Inception preprocessing for EVALUATION (as opposed to TRAINING)')
+    logger.info('Using Inception preprocessing for EVALUATION (as opposed to TRAINING)')
     return inception_eval_preprocessing(name=name)
 
 
@@ -32,13 +32,13 @@ def inception_eval_preprocessing(name=None):
     ]
 
 
-def vgg_preprocessing(means=VGG_CHANNEL_MEANS, name=None):
+def vgg_preprocessing(*, means=VGG_CHANNEL_MEANS, name=None):
     logger.warning('Using VGG preprocessing for EVALUATION (as opposed to TRAINING)')
     return vgg_eval_preprocessing(means=means, name=name)
 
 
 # https://github.com/tensorflow/models/blob/master/slim/preprocessing/vgg_preprocessing.py
-def vgg_eval_preprocessing(means=VGG_CHANNEL_MEANS, name=None):
+def vgg_eval_preprocessing(*, means=VGG_CHANNEL_MEANS, name=None):
     if name is None:
         logger.warning('Preprocessing layers should be given a name!')
         name = 'VGGPreprocessing'
@@ -47,7 +47,7 @@ def vgg_eval_preprocessing(means=VGG_CHANNEL_MEANS, name=None):
     return [channel_means(means=means, name=name + '/channel_means')]
 
 
-def randomized_preprocessing(normalize=True, seed=None, name=None):
+def randomized_preprocessing(*, normalize=True, seed=None, name=None):
     if name is None:
         logger.warning('Preprocessing layers should be given a name!')
         name = 'RandomizedPreprocessing'

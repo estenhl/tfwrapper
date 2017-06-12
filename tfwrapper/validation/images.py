@@ -3,6 +3,7 @@ import os
 from tfwrapper import ImageLoader
 from tfwrapper import ImageDataset
 from tfwrapper import ImagePreprocessor
+
 from tfwrapper.nets import CNN
 
 from .validation import Validator

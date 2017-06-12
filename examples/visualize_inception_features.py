@@ -5,7 +5,7 @@ import tensorflow as tf
 from tfwrapper import Dataset
 from tfwrapper import FeatureLoader
 from tfwrapper.datasets import flowers
-from tfwrapper.nets.pretrained import InceptionV3
+from tfwrapper.models.frozen import FrozenInceptionV3
 from tfwrapper.visualization import plot_clusters
 from tfwrapper.dimensionality_reduction import PCA
 
@@ -14,7 +14,7 @@ from utils import curr_path
 dataset = flowers(size=500)
 features_file = os.path.join(curr_path, 'data', 'flowers_inceptionv3.csv')
 
-inception = InceptionV3()
+inception = FrozenInceptionV3()
 loader = FeatureLoader(inception, cache=features_file)
 dataset.loader = loader
 

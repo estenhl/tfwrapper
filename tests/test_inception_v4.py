@@ -2,7 +2,7 @@ import os
 import cv2
 import tensorflow as tf
 
-from tfwrapper.frozen import FrozenInceptionV4
+from tfwrapper.models.frozen import FrozenInceptionV4
 
 from utils import curr_path
 
@@ -13,7 +13,7 @@ class TestInceptionV4():
     @classmethod
     def setup_class(cls):
         cls.sess = tf.Session()
-        cls.inception = FrozenInceptionV4()
+        cls.inception = FrozenInceptionV4(sess=cls.sess)
 
     @classmethod
     def teardown_class(cls):

@@ -41,7 +41,7 @@ class SqueezeNet(CNN):
                 dropout(keep_prob=keep_prob, name=name + '/drop9'),
                 conv2d(filter=[1, 1], depth=y_size, strides=1, padding='VALID', init='xavier_normal', name=name + '/conv10'),
                 flatten(name=name + 'avgpool10'),
-                reshape([-1, y_size], name=name + '/pred')
+                reshape(shape=[-1, classes], name=name + '/pred')
             ]
         elif version == '1.0':
             layers = [
@@ -60,7 +60,7 @@ class SqueezeNet(CNN):
                 dropout(keep_prob=keep_prob, name=name + '/drop9'),
                 conv2d(filter=[1, 1], depth=y_size, strides=1, padding='VALID', init='xavier_normal', name=name + '/conv10'),
                 flatten(name=name + 'avgpool10'),
-                reshape([-1, y_size], name=name + '/pred')
+                reshape(shape=[-1, classes], name=name + '/pred')
             ]
         else:
             raise NotImplementedError(

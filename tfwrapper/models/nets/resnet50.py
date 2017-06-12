@@ -1,5 +1,7 @@
+import h5py
 import tensorflow as tf
 
+from tfwrapper import logger
 from tfwrapper import TFSession
 from tfwrapper.layers import vgg_preprocessing
 from tfwrapper.layers import random_crop 
@@ -216,5 +218,7 @@ class ResNet50(CNN):
     def from_h5(path=RESNET50_H5_PATH, *, X_shape, classes=1000, name='PretrainedResNet50', sess=None):
         path = ensure_resnet50_h5(path)
         with TFSession(sess) as sess:
-            model = ResNet50(X_shape, classes, preprocessing=vgg_preprocessing(), name=name, sess=sess)
+            model = ResNet50(X_shape, classes, preprocessing=vgg_preprocessing(name=name), name=name, sess=sess)
             model.load_from_h5(path, sess)
+
+        return model

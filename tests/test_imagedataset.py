@@ -7,7 +7,7 @@ from tfwrapper.dataset import ImageDataset
 from tfwrapper.dataset import ImageLoader
 from tfwrapper.dataset import FeatureLoader
 from tfwrapper.dataset import ImagePreprocessor
-from tfwrapper.frozen import FrozenInceptionV3
+from tfwrapper.models.frozen import FrozenInceptionV3
 
 from utils import curr_path
 from utils import remove_dir

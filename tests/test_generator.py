@@ -47,7 +47,6 @@ def test_generator_shuffling():
     np.random.seed(5)
     for X, y in generator:
         for i in np.arange(5):
-            assert i in X
             assert X[i] == y[i]
         assert X[0] != 0
         break

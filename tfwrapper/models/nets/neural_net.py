@@ -9,11 +9,14 @@ from time import process_time
 
 from tfwrapper import logger
 from tfwrapper import TFSession
-from tfwrapper import SupervisedModel
-from tfwrapper.layers import fullyconnected, out, recurring
+from tfwrapper.models import SupervisedModel
 from tfwrapper import Dataset
 from tfwrapper.dataset import DatasetGenerator
 from tfwrapper.utils.exceptions import InvalidArgumentException
+from tfwrapper.utils.exceptions import raise_exception
+from tfwrapper.layers import fullyconnected
+from tfwrapper.layers import out
+from tfwrapper.layers import recurring
 
 class NeuralNet(SupervisedModel):
     def __init__(self, X_shape=None, y_size=None, layers=None, sess=None, name='NeuralNet', **kwargs):
@@ -124,23 +127,20 @@ class NeuralNet(SupervisedModel):
             epoch_acc_avg /= batch_count
 
             # TODO (11.05.17): Use logger
-            if True:
-                epoch_summary = '\nEpoch: \033[1m\033[32m{}\033[0m\033[0m | avg batch loss: \033[1m\033[32m{:.5}\033[0m\033[0m' \
-                                ' - avg acc: {:.5}'.format(epoch_nr + 1, epoch_loss_avg, epoch_acc_avg)
-                
-                if val_generator is not None and len(val_generator) > 0:
-                    loss_val, acc_val = self.validate(generator=val_generator, sess=sess)
-                    epoch_summary += ' | val_loss: \033[1m\033[32m{:.5}\033[0m\033[0m - val_acc: {:.5}'.format(loss_val, acc_val)
-                print(epoch_summary, '\n')
+            epoch_summary = '\nEpoch: \033[1m\033[32m{}\033[0m\033[0m | avg batch loss: \033[1m\033[32m{:.5}\033[0m\033[0m' \
+                            ' - avg acc: {:.5}'.format(epoch_nr + 1, epoch_loss_avg, epoch_acc_avg)
+            
+            if val_generator is not None and len(val_generator) > 0:
+                loss_val, acc_val = self.validate(generator=val_generator, sess=sess)
+                epoch_summary += ' | val_loss: \033[1m\033[32m{:.5}\033[0m\033[0m - val_acc: {:.5}'.format(loss_val, acc_val)
+            print(epoch_summary, '\n')
 
     def validate(self, X=None, y=None, generator=None, feed_dict=None, sess=None, **kwargs):
         if X is not None and y is not None:
             # X and y may or may not be pre-normalized. As long as we don't alter them it's safe to proceed in batches.
             generator = DatasetGenerator(Dataset(X=X, y=y), self.batch_size, shuffle=False, normalize=False)
         elif generator is None:
-            errormsg = 'Either X and y or a generator must be supplied'
-            logger.error(errormsg)
-            raise InvalidArgumentException(errormsg)
+            raise_exception('Either X and y or a generator must be supplied', InvalidArgumentException)
         if generator.shuffle:
             logger.info('Disabling validation generator\'s shuffle')
             generator.shuffle = False
@@ -151,7 +151,7 @@ class NeuralNet(SupervisedModel):
         feed_dict = self.parse_feed_dict(feed_dict, **kwargs)  # TODO (09.06.17) This isn't used. Why?
         with TFSession(sess, self.graph, variables=self.variables) as sess:
             preds = self.predict(generator=generator, sess=sess)
-            y = y or np.concatenate([batch_y for _, batch_y in generator])
+            y = y if y is not None else np.concatenate([batch_y for _, batch_y in generator])
             loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.pred: preds, self.y: y})
         
         return loss, acc
@@ -163,9 +163,7 @@ class NeuralNet(SupervisedModel):
         y_size = other.y_size
 
         if not self.y_size == other.X_shape:
-            errormsg = 'Unable to join neural nets with last layer shape %s and first layer shape %s' % (str(X_shape), str(y_size))
-            logger.error(errormsg)
-            raise InvalidArgumentException(errormsg)
+            raise_exception('Unable to join neural nets with last layer shape %s and first layer shape %s' % (str(X_shape), str(y_size)), InvalidArgumentException)
 
         net = NeuralNet.from_shape(X_shape, y_size, layers, name=name)
 

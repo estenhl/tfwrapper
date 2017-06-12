@@ -4,8 +4,8 @@ import tensorflow as tf
 from tfwrapper import ImageDataset
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
-from tfwrapper.nets import NeuralNet
-from tfwrapper.frozen import FrozenInceptionV4
+from tfwrapper.models.nets import SingleLayerNeuralNet
+from tfwrapper.models.frozen import FrozenInceptionV4
 from tfwrapper.datasets import cats_and_dogs
 
 from utils import curr_path
@@ -23,7 +23,7 @@ if not os.path.isdir(datafolder):
 features_file = os.path.join(datafolder, 'catsdogs_inceptionv4.csv')
 
 with tf.Session() as sess:
-    inception = FrozenInceptionV4()
+    inception = FrozenInceptionV4(sess=sess)
 
     train_prep = ImagePreprocessor()
     train_prep.resize_to = (299, 299)
@@ -41,7 +41,7 @@ with tf.Session() as sess:
     test_X, test_y = test.X, test.y
     
 with tf.Session() as sess:
-    nn = NeuralNet.single_layer([1536], 2, 1024, sess=sess, name='InceptionV4Test')
+    nn = SingleLayerNeuralNet([1536], 2, 1024, sess=sess, name='InceptionV4Test')
     nn.train(X, y, epochs=10, sess=sess)
     _, acc = nn.validate(test_X, test_y, sess=sess)
     print('Acc: %d%%' % (acc * 100))

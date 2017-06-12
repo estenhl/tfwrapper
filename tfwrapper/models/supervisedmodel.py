@@ -5,21 +5,29 @@ import numpy as np
 import tensorflow as tf
 from abc import ABC, abstractmethod
 
-from .logger import logger
-from .tfsession import TFSession
-from tfwrapper.dataset.dataset import batch_data, Dataset
+from tfwrapper import logger
+from tfwrapper import TFSession
+from tfwrapper.dataset import Dataset
+from tfwrapper.dataset.dataset import batch_data
 from tfwrapper.dataset.dataset_generator import DatasetGenerator
+from tfwrapper.dataset.dataset_generator import DatasetGeneratorBase
+from tfwrapper.dataset.dataset_generator import GeneratorWrapper
 from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.exceptions import InvalidArgumentException
+
+from tfwrapper import logger
+from tfwrapper import TFSession
+from tfwrapper.dataset.dataset import batch_data
+from tfwrapper.utils import get_variable_by_name
+from tfwrapper.utils.exceptions import InvalidArgumentException
+
 
 META_GRAPH_SUFFIX = 'meta'
 METADATA_SUFFIX = 'tw'
 
+
 class SupervisedModel(ABC):
     DEFAULT_BOTTLENECK_LAYER = -2
-
-    graph = None
-    variables = {}
 
     learning_rate = 0.1
     batch_size = 128
@@ -80,6 +88,8 @@ class SupervisedModel(ABC):
             self.pred = prev
 
             self.graph = sess.graph
+
+        self.variables = {}
         self.init_vars_when_training = True
         self.feed_dict = {}
 
@@ -109,6 +119,10 @@ class SupervisedModel(ABC):
     @abstractmethod
     def optimizer_function(self):
         raise NotImplementedError('SupervisedModel is a generic class')
+
+    def reset(self):
+        with TFSession(None, self.graph) as sess:
+            sess.run(tf.global_variables_initializer())
 
     def run_op(self, target, *, source=None, data, feed_dict=None, sess=None):
         if type(target) in [str, int]:
@@ -154,10 +168,10 @@ class SupervisedModel(ABC):
             return features
 
     def checkpoint_variables(self, sess):
-        for variable in tf.global_variables():
-            self.variables[variable.name] = sess.run(variable)
+        for variable in tf.trainable_variables():
+            self.variables[variable.name] = {'tensor': variable, 'value': sess.run(variable)}
 
-    def create_batches(self, X, y, prefix=''):
+    def validate_batches(self, X, y, prefix=''):
         if not len(X) == len(y):
             errormsg = '%sX and %sy must be same length, not %d and %d' % (prefix, prefix, len(X), len(y))
             logger.error(errormsg)
@@ -183,15 +197,6 @@ class SupervisedModel(ABC):
         else:
             y = np.reshape(y, [-1, self.y_size])
 
-        num_batches = int(len(X) / self.batch_size) + 1
-        batches = []
-        for i in range(num_batches):
-            start = i * self.batch_size
-            end = min((i + 1) * self.batch_size, len(X))
-            batches.append((X[start:end], y[start:end]))
-
-        return batches
-
     def parse_feed_dict(self, feed_dict, log=False, **kwargs):
         if feed_dict is None:
             feed_dict = {}
@@ -203,7 +208,7 @@ class SupervisedModel(ABC):
             if key in kwargs:
                 value = kwargs[key]
             elif log:
-                logger.warning('Using default value %s for key %s. Set this value by passing a named parameter (e.g. net.train(..., %s=%s))' % (str(key), str(value), str(key), str(value)))
+                logger.warning('Using default value %s for key %s. Set this value by passing a named parameter (e.g. net.train(..., %s=%s))' % (repr(value), repr(key), str(key), repr(value)))
 
             feed_dict[placeholder] = value
 
@@ -228,11 +233,14 @@ class SupervisedModel(ABC):
         feed_dict = self.parse_feed_dict(feed_dict, log=True, **kwargs)
 
         if X is not None and y is not None:
-            logger.info('Training ' + self.name + ' with ' + str(len(X)) + ' cases')
+            logger.info('Training %s with %d cases' % (self.name, len(X)))
             # Create a basic sample generator for the provided data
+            self.validate_batches(X, y)
             generator = DatasetGenerator(Dataset(X=X, y=y), self.batch_size, shuffle=shuffle)
         elif generator is not None:
-            logger.info('Training ' + self.name + ' with generator')
+            if not issubclass(generator, DatasetGeneratorBase):
+                generator = GeneratorWrapper(generator)
+            logger.info('Training %s with generator' % self.name)
             if not generator.shuffle and shuffle:
                 logger.warning('Your specified generator is not set to shuffle, yet shuffle was specified for training')
         else:

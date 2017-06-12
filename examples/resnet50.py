@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from tfwrapper.nets import ResNet50
+from tfwrapper.models.nets import ResNet50
 from tfwrapper.datasets import cifar10
 from tfwrapper.hyperparameters import adjust_at_epochs
 

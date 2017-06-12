@@ -1,8 +1,9 @@
 from tfwrapper import TFSession
+from tfwrapper.models import FrozenModel
 
-from .frozenmodel import FrozenModel
 from .utils import VGG16_PB_PATH
 from .utils import ensure_vgg16_pb
+
 
 class FrozenVGG16(FrozenModel):
     input_tensor = 'vgg_16/Input:0'

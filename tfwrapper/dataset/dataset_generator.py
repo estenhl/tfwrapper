@@ -1,7 +1,9 @@
 import numpy as np
 from abc import ABC, abstractmethod
 from collections import Counter
+
 from tfwrapper import logger
+from tfwrapper.utils.exceptions import raise_exception
 
 
 class DatasetGeneratorBase(ABC):
@@ -147,3 +149,35 @@ class DatasetSamplingGenerator(DatasetGeneratorBase):
         # in supposedly independent folds.
         return self.__class__(self.dataset[val], self.batch_size, normalize=self.normalize, shuffle=self.shuffle,
                               infinite=self.infinite, upsampling_factor=self.upsampling_factor)
+
+
+class GeneratorWrapper(DatasetGeneratorBase):
+    def __init__(self, dataset, batch_size=1, normalize=False, shuffle=True, infinite=False):
+        self.generator = dataset
+
+        self.normalize = normalize
+        self.shuffle = shuffle
+        self.infinite = infinite
+
+        if self.normalize:
+            logger.warning('Unable to normalize when wrapping a built-in python generator')
+        if self.shuffle:
+            logger.warning('Unable to shuffle when wrapping a built-in python generator')
+        if self.infinite:
+            logger.warning('Unable to set infinite when wrapping a built-in python generator')
+
+    def get_base_length(self):
+        raise_exception('Unable to get length when wrapping a built-in python generator', TypeError)
+
+    def _next_batch(self):
+        raise_exception('Unable to get next batch when wrapping a built-in python generator', TypeError)
+
+    def __iter__(self):
+        return self.generator
+
+    def __len__(self):
+        raise_exception('Unable to get length when wrapping a built-in python generator', TypeError)
+
+
+    def __getitem__(self, val):
+        raise_exception('Unable to get item when wrapping a built-in python generator', TypeError)

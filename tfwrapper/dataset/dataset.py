@@ -23,7 +23,10 @@ def normalize_array(arr):
     return (arr - arr.mean()) / arr.std()
 
 
-def shuffle_dataset(X, y):
+def shuffle_dataset(X, y, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+
     idx = np.arange(len(X))
     np.random.shuffle(idx)
 
@@ -218,8 +221,8 @@ class Dataset():
     def normalize(self):
         return self.__class__(X=normalize_array(self._X), y=self._y, **self.kwargs())
 
-    def shuffle(self):
-        X, y = shuffle_dataset(self._X, self._y)
+    def shuffle(self, seed=None):
+        X, y = shuffle_dataset(self._X, self._y, seed=seed)
 
         return self.__class__(X=X, y=y, **self.kwargs())
 
