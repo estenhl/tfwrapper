@@ -1,8 +1,15 @@
+import json
+import datetime
+
 from tfwrapper import TFSession
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
+from tfwrapper import METADATA_SUFFIX
+from tfwrapper.utils.data import get_subclass_with_name
 
-import time
+from .supervisedmodel import SupervisedModel
+from .frozenmodel import FrozenModel
+
 
 class TransferLearningModel():
     def __init__(self, feature_model, prediction_model, features_layer=None, features_cache=None, name='TransferLearningModel'):
@@ -52,3 +59,40 @@ class TransferLearningModel():
 
     def reset(self):
         self.prediction_model.reset()
+
+    def save(self, path, sess=None, **kwargs):
+        prediction_model_path = path + '_prediction'
+        metadata = kwargs
+        metadata['name'] = self.name
+        metadata['time'] = str(datetime.datetime.now())
+        metadata['feature_model_type'] = self.feature_model.__class__.__name__
+        metadata['prediction_model_type'] = self.prediction_model.__class__.__name__
+        metadata['prediction_model_path'] = prediction_model_path
+        metadata['features_layer'] = self.features_layer
+        metadata['features_cache'] = self.features_cache
+
+        metadata_filename = '%s.%s' % (path, METADATA_SUFFIX)
+        with open(metadata_filename, 'w') as f:
+            f.write(json.dumps(metadata, indent=2))
+
+        self.prediction_model.save(prediction_model_path, sess=sess)
+
+    @staticmethod
+    def from_tw(path, sess=None, **kwargs):
+        metadata_filename = '%s.%s' % (path, METADATA_SUFFIX)
+        with open(metadata_filename, 'r') as f:
+            metadata = json.load(f)
+
+        name = metadata['name']
+        feature_model_type = metadata['feature_model_type']
+        prediction_model_type = metadata['prediction_model_type']
+        prediction_model_path = metadata['prediction_model_path']
+        features_layer = metadata['features_layer']
+        features_cache = metadata['features_cache']
+
+        feature_model = FrozenModel.from_type(feature_model_type)
+        subclass = get_subclass_with_name(SupervisedModel, prediction_model_type)
+        prediction_model = subclass.from_tw(prediction_model_path, sess=sess)
+
+        return TransferLearningModel(feature_model, prediction_model, features_layer=features_layer, features_cache=features_cache, name=name)
+

@@ -1,6 +1,7 @@
 import os
 import tensorflow as tf
 
+from tfwrapper import logger
 from tfwrapper import ImagePreprocessor
 from tfwrapper.models import TransferLearningModel
 from tfwrapper.models.nets import SingleLayerNeuralNet
@@ -8,6 +9,8 @@ from tfwrapper.models.frozen import FrozenInceptionV3
 from tfwrapper.datasets import cats_and_dogs
 
 from utils import curr_path
+
+logger.setLevel(logger.INFO)
 
 dataset = cats_and_dogs(size=500)
 dataset = dataset.balance(max=150)
@@ -23,7 +26,7 @@ features_file = os.path.join(datafolder, 'catsdogs_inceptionv3.csv')
 
 inception = FrozenInceptionV3()
 nn = SingleLayerNeuralNet([2048], 2, 1024, name='InceptionV3Test')
-model = TransferLearningModel(inception, nn, features_cache=features_file)
+model = TransferLearningModel(inception, nn, features_cache=features_file, name='InceptionV3TL')
 
 preprocessor = ImagePreprocessor()
 preprocessor.flip_lr = True
@@ -33,4 +36,12 @@ print('Predicting')
 preds = model.predict(test)
 print('Validating')
 _, acc = model.validate(test)
-print('Acc: %d%%' % (acc * 100))
+print('Acc before save: %.2f%%' % (acc * 100))
+
+path = os.path.join(datafolder, 'inception_v3_tl')
+print('Saving model')
+model.save(path)
+
+loaded_model = TransferLearningModel.from_tw(path)
+_, acc = loaded_model.validate(test)
+print('Acc after load: %.2f%%' % (acc * 100))

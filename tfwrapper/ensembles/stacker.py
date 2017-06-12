@@ -1,11 +1,15 @@
+import json
 import functools
 import numpy as np
 
 from tfwrapper import logger
 from tfwrapper import TFSession
+from tfwrapper import METADATA_SUFFIX
 from tfwrapper.dataset import Dataset
 from tfwrapper.utils.exceptions import raise_exception
 from tfwrapper.utils.exceptions import InvalidArgumentException
+from tfwrapper.models import TransferLearningModel
+from tfwrapper.models.nets import SingleLayerNeuralNet
 
 import time
 
@@ -128,3 +132,40 @@ class Stacker():
         variables = self.decision_model.variables
         with TFSession(sess, self.decision_model.graph, variables=variables) as sess:
             return self.decision_model.predict(preds, dataset.y, sess=sess)
+
+    def save(self, path, sess=None, **kwargs):
+        metadata = kwargs
+        metadata['name'] = self.name
+        metadata['policy'] = self._policy
+
+        prediction_model_paths = []
+        for i in range(len(self.prediction_models)):
+            model = self.prediction_models[i]
+            model_path = '%s_prediction_%d' % (path, i)
+            model.save(model_path)
+            prediction_model_paths.append(model_path)
+
+        metadata['prediction_model_paths'] = prediction_model_paths
+        decision_model_path = '%s_decision' % path
+        self.decision_model.save(decision_model_path)
+        metadata['decision_model_path'] = decision_model_path
+
+        metadata_filename = '%s.%s' % (path, METADATA_SUFFIX)
+        with open(metadata_filename, 'w') as f:
+            f.write(json.dumps(metadata, indent=2))
+
+    @staticmethod
+    def from_tw(path, sess=None, **kwargs):
+        metadata_filename = '%s.%s' % (path, METADATA_SUFFIX)
+        with open(metadata_filename, 'r') as f:
+            metadata = json.load(f)
+
+        name = metadata['name']
+        policy = metadata['policy']
+        prediction_models = []
+        for path in metadata['prediction_model_paths']:
+            prediction_models.append(TransferLearningModel.from_tw(path))
+
+        decision_model = SingleLayerNeuralNet.from_tw(metadata['decision_model_path'])
+
+        return Stacker(prediction_models, decision_model, policy=policy, name=name)

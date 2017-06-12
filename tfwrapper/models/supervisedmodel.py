@@ -14,16 +14,17 @@ from tfwrapper.dataset.dataset_generator import DatasetGeneratorBase
 from tfwrapper.dataset.dataset_generator import GeneratorWrapper
 from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.exceptions import InvalidArgumentException
+from tfwrapper.utils.data import get_subclass_with_name
 
 from tfwrapper import logger
 from tfwrapper import TFSession
+from tfwrapper import METADATA_SUFFIX
 from tfwrapper.dataset.dataset import batch_data
 from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 
 META_GRAPH_SUFFIX = 'meta'
-METADATA_SUFFIX = 'tw'
 
 
 class SupervisedModel(ABC):
@@ -208,7 +209,7 @@ class SupervisedModel(ABC):
             if key in kwargs:
                 value = kwargs[key]
             elif log:
-                logger.warning('Using default value %s for key %s. Set this value by passing a named parameter (e.g. net.train(..., %s=%s))' % (repr(value), repr(key), str(key), repr(value)))
+                logger.warning('Using default value %s for key %s. Set this value by passing a keyword parameter (e.g. net.train(..., %s=%s))' % (repr(value), repr(key), str(key), repr(value)))
 
             feed_dict[placeholder] = value
 
@@ -319,7 +320,7 @@ class SupervisedModel(ABC):
 
     def save(self, filename, sess=None, **kwargs):
         with TFSession(sess, self.graph, variables=self.variables) as sess:
-            saver = tf.train.Saver()
+            saver = tf.train.Saver(tf.trainable_variables())
             saver.save(sess, filename, meta_graph_suffix=META_GRAPH_SUFFIX)
 
             metadata = kwargs
@@ -328,15 +329,16 @@ class SupervisedModel(ABC):
             metadata['y_size'] = self.y_size
             metadata['batch_size'] = self.batch_size
             metadata['time'] = str(datetime.datetime.now())
+            metadata['type'] = self.__class__.__name__
 
             metadata_filename = '%s.%s' % (filename, METADATA_SUFFIX)
             with open(metadata_filename, 'w') as f:
                 f.write(json.dumps(metadata, indent=2))
 
     def load(self, filename, sess=None):
-        with TFSession(sess, sess.graph) as sess:
+        with TFSession(sess, self.graph) as sess:
             graph_path = filename + '.meta'
-            saver = tf.train.Saver()
+            saver = tf.train.Saver(tf.trainable_variables())
             saver.restore(sess, filename)
 
             self.graph = sess.graph

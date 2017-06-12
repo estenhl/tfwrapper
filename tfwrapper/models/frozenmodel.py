@@ -6,12 +6,22 @@ from abc import ABC
 
 from tfwrapper import logger
 from tfwrapper import TFSession
+from tfwrapper.utils.exceptions import InvalidArgumentException
+from tfwrapper.utils.exceptions import raise_exception
+from tfwrapper.utils.data import get_subclass_with_name
+
 
 
 class FrozenModel(ABC):
+    @classmethod
+    def from_type(cls, classname, path=None, name='FrozenModel', sess=None):
+        with TFSession(sess) as sess:
+            subclass = get_subclass_with_name(cls, classname)
+            return subclass(name=name, sess=sess)
+
     def __init__(self, path, name='FrozenModel', sess=None):
         if not os.path.isfile(path):
-            raise Exception('Invalid path to inception v3 pb file')
+            raise_exception('Invalid path to inception v3 pb file', InvalidArgumentException)
 
         self.graph_file = path
 
