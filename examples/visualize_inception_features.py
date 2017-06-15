@@ -11,7 +11,7 @@ from tfwrapper.dimensionality_reduction import PCA
 
 from utils import curr_path
 
-dataset = flowers(size=500)
+dataset = flowers()
 features_file = os.path.join(curr_path, 'data', 'flowers_inceptionv3.csv')
 
 inception = FrozenInceptionV3()
@@ -28,4 +28,5 @@ model = TSNE(n_components=2, perplexity=30.0, early_exaggeration=4.0, learning_r
 X = model.fit_transform(X)
 dataset = Dataset(X=X, y=dataset.y)
 clusters, labels = dataset.get_clusters(get_labels=True)
+print('Labels: ' + str(dataset.y))
 plot_clusters(clusters, names=labels)

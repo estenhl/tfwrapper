@@ -8,6 +8,7 @@ from tfwrapper import METADATA_SUFFIX
 from tfwrapper.dataset import Dataset
 from tfwrapper.utils.exceptions import raise_exception
 from tfwrapper.utils.exceptions import InvalidArgumentException
+from tfwrapper.models import SupervisedModel
 from tfwrapper.models import TransferLearningModel
 from tfwrapper.models.nets import SingleLayerNeuralNet
 
@@ -96,7 +97,7 @@ class Stacker():
             self.decision_model.train(preds, dataset.y, epochs=epochs[1], sess=sess)
 
     def _train_on_shuffled_folds(self, dataset, *, epochs, preprocessor=None, sess=None):
-        print('Training on shuffled folds')
+        raise NotImplementedError('Training with shuffled folds is not implemented')
 
     def train(self, dataset, *, epochs, preprocessor=None, sess=None):
         if type(epochs) is int:
@@ -166,6 +167,6 @@ class Stacker():
         for path in metadata['prediction_model_paths']:
             prediction_models.append(TransferLearningModel.from_tw(path))
 
-        decision_model = SingleLayerNeuralNet.from_tw(metadata['decision_model_path'])
+        decision_model = SupervisedModel.from_tw(metadata['decision_model_path'])
 
         return Stacker(prediction_models, decision_model, policy=policy, name=name)

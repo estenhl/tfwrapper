@@ -48,18 +48,6 @@ nn.learning_rate = adjust_at_epochs([10, 20], [0.01, 0.001, 0.0001])
 model = TransferLearningModel(inception_v4, nn, features_cache=incv4_features_file, name='InceptionV4TL')
 models.append(model)
 
-resnet50 = FrozenResNet50()
-nn = SingleLayerNeuralNet([2048], 17, 1024, name='ResNet50')
-nn.learning_rate = adjust_at_epochs([10, 20], [0.01, 0.001, 0.0001])
-model = TransferLearningModel(resnet50, nn, features_cache=resnet50_features_file, name='ResNet50TL')
-models.append(model)
-
-vgg16 = FrozenVGG16()
-nn = SingleLayerNeuralNet([4096], 17, 1024, name='VGG16')
-nn.learning_rate = adjust_at_epochs([10, 20], [0.01, 0.001, 0.0001])
-model = TransferLearningModel(vgg16, nn, features_cache=vgg16_features_file, name='VGG16TL')
-models.append(model)
-
 resnet152 = FrozenResNet152()
 nn = SingleLayerNeuralNet([2048], 17, 1024, name='ResNet152')
 nn.learning_rate = adjust_at_epochs([10, 20], [0.01, 0.001, 0.0001])
@@ -75,6 +63,7 @@ print('Ensemble acc before save: %.2f%%' % (acc * 100))
 
 path = os.path.join(datafolder, 'flowers_stacker')
 stacker.save(path)
+
 loaded_stacker = Stacker.from_tw(path)
 _, acc = loaded_stacker.validate(test)
 print('Ensemble acc after load: %.2f%%' % (acc * 100))

@@ -5,7 +5,7 @@ from tfwrapper import TFSession
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
 from tfwrapper import METADATA_SUFFIX
-from tfwrapper.utils.data import get_subclass_with_name
+from tfwrapper.utils.data import get_subclass_by_name
 
 from .supervisedmodel import SupervisedModel
 from .frozenmodel import FrozenModel
@@ -67,7 +67,7 @@ class TransferLearningModel():
         metadata['time'] = str(datetime.datetime.now())
         metadata['feature_model_type'] = self.feature_model.__class__.__name__
         metadata['prediction_model_type'] = self.prediction_model.__class__.__name__
-        metadata['prediction_model_path'] = prediction_model_path
+        metadata['prediction_model_path'] = '%s.%s' % (prediction_model_path, 'tw')
         metadata['features_layer'] = self.features_layer
         metadata['features_cache'] = self.features_cache
 
@@ -91,8 +91,7 @@ class TransferLearningModel():
         features_cache = metadata['features_cache']
 
         feature_model = FrozenModel.from_type(feature_model_type)
-        subclass = get_subclass_with_name(SupervisedModel, prediction_model_type)
-        prediction_model = subclass.from_tw(prediction_model_path, sess=sess)
+        prediction_model = SupervisedModel.from_tw(prediction_model_path, sess=sess)
 
         return TransferLearningModel(feature_model, prediction_model, features_layer=features_layer, features_cache=features_cache, name=name)
 
