@@ -11,19 +11,13 @@ from tfwrapper.utils.exceptions import raise_exception
 from tfwrapper.utils.data import get_subclass_by_name
 
 
-
 class FrozenModel(ABC):
-    @classmethod
-    def from_type(cls, classname, path=None, name='FrozenModel', sess=None):
-        with TFSession(sess) as sess:
-            subclass = get_subclass_by_name(cls, classname)
-            return subclass(name=name, sess=sess)
-
     def __init__(self, path, name='FrozenModel', sess=None):
         if not os.path.isfile(path):
-            raise_exception('Invalid path to inception v3 pb file', InvalidArgumentException)
+            raise_exception('Invalid path %s to pb file' % path, InvalidArgumentException)
 
         self.graph_file = path
+        self.name = name
 
         with TFSession(sess) as sess:
             with tf.gfile.FastGFile(path,'rb') as f:
@@ -32,6 +26,12 @@ class FrozenModel(ABC):
                 _ = tf.import_graph_def(graph_def,name='')
                 
                 self.graph = sess.graph
+
+    @classmethod
+    def from_type(cls, classname, path=None, name='FrozenModel', sess=None):
+        with TFSession(sess) as sess:
+            subclass = get_subclass_by_name(cls, classname)
+            return subclass(name=name, sess=sess)
 
     def run_op(self, X, *, src, dest, sess=None):
         with TFSession(sess, self.graph) as sess:

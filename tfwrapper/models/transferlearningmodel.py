@@ -7,8 +7,8 @@ from tfwrapper import ImagePreprocessor
 from tfwrapper import METADATA_SUFFIX
 from tfwrapper.utils.data import get_subclass_by_name
 
-from .supervisedmodel import SupervisedModel
 from .frozenmodel import FrozenModel
+from .supervisedmodel import SupervisedModel
 
 
 class TransferLearningModel():

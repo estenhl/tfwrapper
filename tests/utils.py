@@ -44,4 +44,7 @@ def create_tmp_dir(root=os.path.join(curr_path, 'tmp'), size=10, img_shape=(10, 
             cv2.imwrite(path, img)
 
     return root
+
+def is_better_than_tensorflow_errormsg(errormsg):
+    return errormsg is not None
     
