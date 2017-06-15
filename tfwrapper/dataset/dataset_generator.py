@@ -33,7 +33,7 @@ class DatasetGeneratorBase(ABC):
     def _start(self):
         self.cursor = 0
         if self.shuffle:
-            self.dataset = self.dataset.shuffle()
+            self.dataset = self.dataset.shuffled()
 
     def __iter__(self):
         self._start()

@@ -39,12 +39,13 @@ def test_generator_normalization():
         assert X[0] == -X[2]
 
 def test_generator_shuffling():
+    np.random.seed(5)
+    
     X = np.arange(10)
     y = np.arange(10)
     dataset = Dataset(X=X, y=y)
     generator = dataset.batch_generator(5, shuffle=True)
 
-    np.random.seed(5)
     for X, y in generator:
         for i in np.arange(5):
             assert X[i] == y[i]

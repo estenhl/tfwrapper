@@ -27,6 +27,8 @@ class TestInceptionV3():
     @classmethod
     def setup_class(cls):
         cls.sess = tf.Session()
+        if os.path.isfile(INCEPTIONV3_PB_PATH):
+            cls.model = FrozenInceptionV3(sess=cls.sess)
 
     @classmethod
     def teardown_class(cls):
@@ -101,3 +103,24 @@ class TestInceptionV3():
             exception = True
 
         assert exception, 'Able to call FrozenModel.from_type with invalid type'
+
+    def test_run_op(self):
+        if os.path.isfile(INCEPTIONV3_PB_PATH):
+            features = self.model.run_op(cat_img, src='Cast:0', dest='pool_3:0', sess=self.sess)
+
+            assert features is not None
+            assert (1, 1, 1, 2048) == features.shape
+
+    def test_extract_features(self):
+        if os.path.isfile(INCEPTIONV3_PB_PATH):
+            features = self.model.extract_features(cat_img, dest='pool_3:0', sess=self.sess)
+
+            assert features is not None
+            assert (1, 1, 1, 2048) == features.shape
+
+    def test_predict(self):
+        if os.path.isfile(INCEPTIONV3_PB_PATH):
+            predictions = self.model.predict(cat_img, sess=self.sess)
+
+            assert predictions is not None
+            assert (1, 1008) == predictions.shape

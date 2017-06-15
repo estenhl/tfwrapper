@@ -4,13 +4,8 @@ import tensorflow as tf
 from tfwrapper import ImageDataset
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
-<<<<<<< HEAD
-from tfwrapper.nets import NeuralNet
-from tfwrapper.nets.pretrained import InceptionV3
-=======
 from tfwrapper.models.nets import SingleLayerNeuralNet
 from tfwrapper.models.frozen import FrozenInceptionV3
->>>>>>> transferlearning
 from tfwrapper.ensembles import Booster
 from tfwrapper.datasets import cats_and_dogs
 
@@ -43,7 +38,7 @@ test.loader = test_loader
 
 models = []
 for i in range(3):
-    models.append(NeuralNet.single_layer([2048], 2, 1024, name='InceptionV3Test'))
+    models.append(SingleLayerNeuralNet([2048], 2, 1024, name='InceptionV3Test'))
 
 
 ensemble = Booster(models)
