@@ -78,8 +78,8 @@ def download_flowers():
         os.rmdir(tmp_folder)
         os.remove(tgz_file)
 
+    labels = ['Buttercup', 'Colt\'s Foot', 'Daffodil', 'Daisy', 'Dandelion', 'Fritillary', 'Iris', 'Pansy', 'Sunflower', 'Windflower', 'Snowdrop', 'Lily Valley', 'Bluebell', 'Crocus', 'Tigerlily', 'Tulip', 'Cowslip']
     if not os.path.isfile(labels_file):
-        labels = ['flower' + str(x) for x in range(17)]
         with open(labels_file, 'w') as f:
             for i in range(0, 17):
                 for j in range(1, 80):

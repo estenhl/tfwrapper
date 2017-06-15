@@ -75,6 +75,7 @@ print('Ensemble acc before save: %.2f%%' % (acc * 100))
 
 path = os.path.join(datafolder, 'flowers_stacker')
 stacker.save(path)
+
 loaded_stacker = Stacker.from_tw(path)
 _, acc = loaded_stacker.validate(test)
 print('Ensemble acc after load: %.2f%%' % (acc * 100))
