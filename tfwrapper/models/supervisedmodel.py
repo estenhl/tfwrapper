@@ -14,6 +14,7 @@ from tfwrapper.dataset.dataset_generator import DatasetGeneratorBase
 from tfwrapper.dataset.dataset_generator import GeneratorWrapper
 from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.exceptions import InvalidArgumentException
+from tfwrapper.utils.data import get_subclass_by_name
 
 from tfwrapper import logger
 from tfwrapper import TFSession
@@ -61,6 +62,42 @@ class SupervisedModel(ABC):
         model.load_from_meta_graph(filename)
         model.post_init()
         return model
+
+    @classmethod
+    def from_tw(cls, filename, sess=None, **kwargs):
+        if filename.endswith('.tw'):
+            metadata_filename = filename
+            weights_filename = filename[:-3]
+        else:
+            metadata_filename = '%s.%s' % (filename, 'tw')
+            weights_filename = filename
+
+        with open(metadata_filename, 'r') as f:
+            metadata = json.load(f)
+
+        name = metadata['name']
+        X_shape = metadata['X_shape']
+        y_size = metadata['y_size']
+        batch_size = metadata['batch_size']
+        classname = metadata['type']
+
+        from .nets import SingleLayerNeuralNet
+        subclass = get_subclass_by_name(cls, classname)
+
+        for key in subclass.init_args:
+            value = subclass.init_args[key]
+
+            if value in metadata:
+                kwargs[key] = metadata[value]
+            else:
+                logger.warning('Trying to fetch non-existing pair (%s, %s) from tw file %s' % (key, value, filename))
+
+        with TFSession(sess) as sess:
+            net = subclass(X_shape, y_size, name=name, sess=sess, **kwargs)
+            net.load(weights_filename, sess=sess)
+            net.batch_size = batch_size
+
+            return net
 
     def fill_from_shape(self, sess, X_shape, y_size, layers, preprocessing=None):
         if preprocessing is None:

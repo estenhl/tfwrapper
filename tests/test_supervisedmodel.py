@@ -3,12 +3,14 @@ import json
 import numpy as np
 import tensorflow as tf
 
+from tfwrapper.models import SupervisedModel
 from tfwrapper.models.nets import SingleLayerNeuralNet
 from tfwrapper.models.supervisedmodel import METADATA_SUFFIX
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 from utils import curr_path
 from utils import remove_dir
+
 
 def test_mismatching_lengths():
     model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
@@ -23,6 +25,7 @@ def test_mismatching_lengths():
 
     assert exception
 
+
 def test_invalid_X_shape():
     model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
     X = np.zeros([100, 28, 28, 2])
@@ -35,6 +38,7 @@ def test_invalid_X_shape():
         exception = True
 
     assert exception
+
 
 def test_y_without_onehot():
     model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
@@ -49,6 +53,7 @@ def test_y_without_onehot():
 
     assert exception
 
+
 def test_invalid_classes():
     model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
     X = np.zeros([100, 28, 28, 1])
@@ -61,6 +66,7 @@ def test_invalid_classes():
         exception = True
 
     assert exception
+
 
 def test_save_metadata():
     name = 'Name'
@@ -92,6 +98,7 @@ def test_save_metadata():
     finally:
         remove_dir(folder)
 
+
 def test_save_labels():
     labels = ['a', 'b', 'c']
 
@@ -115,6 +122,7 @@ def test_save_labels():
     finally:
         remove_dir(folder)
 
+
 def test_train_X_y():
     model = SingleLayerNeuralNet([1], 1, 5)
     X = np.reshape(np.arange(10), [10, 1])
@@ -129,12 +137,14 @@ def test_train_X_y():
 
     assert not exception
 
+
 def data_generator(size=10, batch_size=5):
     X = np.reshape(np.arange(size), [size, 1])
     y = np.reshape(np.arange(size), [size, 1])
 
     for i in range(0, size, batch_size):
         yield X[i * batch_size:(i + 1) * batch_size], y[i * batch_size:(i + 1) * batch_size]
+
 
 def test_train_generator():
     model = SingleLayerNeuralNet([1], 1, 5)
@@ -149,6 +159,7 @@ def test_train_generator():
 
     assert not exception
 
+
 def test_no_data():
     model = SingleLayerNeuralNet([10], 3, 5)
 
@@ -159,3 +170,27 @@ def test_no_data():
         exception = True
 
     assert exception
+
+
+def test_load_from_tw():
+    model = SingleLayerNeuralNet([10], 3, 5)
+
+    folder = os.path.join(curr_path, 'test')
+    try:
+        os.mkdir(folder)
+        filename = os.path.join(folder, 'test')
+
+        with tf.Session() as sess:
+            model = SingleLayerNeuralNet([10], 3, 5, sess=sess)
+            sess.run(tf.global_variables_initializer())
+            model.save(filename, sess=sess)
+
+
+        loaded_model = SupervisedModel.from_tw(filename)
+
+        with tf.Session() as sess:
+            loaded_model = SupervisedModel.from_tw(filename, sess=sess)
+
+    finally:
+        remove_dir(folder)
+

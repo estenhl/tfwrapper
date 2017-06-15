@@ -14,9 +14,10 @@ class DatasetGeneratorBase(ABC):
         self.shuffle = shuffle
         self.infinite = infinite
         self.cursor = 0
+        
         if self.shuffle:
             # Pre-shuffle the dataset (makes splitting an unused generator more healthy)
-            self.dataset = self.dataset.shuffle()
+            self.dataset = self.dataset.shuffled()
 
     def get_base_length(self):
         """
