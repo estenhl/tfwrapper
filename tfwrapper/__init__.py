@@ -1,4 +1,4 @@
-__version__ = '0.1.0-rc2'
+__version__ = '0.1.0-rc3'
 
 from .logger import logger
 from .config import config
