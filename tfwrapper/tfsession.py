@@ -34,5 +34,5 @@ class TFSession():
 
     def __exit__(self, type, value, traceback):
         if self.is_local_session:
-            self.session.close()
+            self.session.__exit__(type, value, traceback)
             self.context_mgr.__exit__(type, value, traceback)
