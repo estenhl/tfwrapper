@@ -180,7 +180,7 @@ def test_load_from_tw():
         filename = os.path.join(folder, 'test')
 
         with tf.Session() as sess:
-            model = SingleLayerNeuralNet([10], 3, 5, sess=sess)
+            model = SingleLayerNeuralNet([10], 3, 5, name='FromTw', sess=sess)
             sess.run(tf.global_variables_initializer())
             preds = model.predict(data, sess=sess)
             model.save(filename, sess=sess)
@@ -188,7 +188,7 @@ def test_load_from_tw():
         tf.reset_default_graph()
         loaded_model = SupervisedModel.from_tw(filename)
 
-        assert preds == loaded_model.predict(data)
+        assert np.array_equal(preds, loaded_model.predict(data))
 
     finally:
         remove_dir(folder)
