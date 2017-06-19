@@ -48,43 +48,43 @@ class TestInceptionV3():
 
     def test_vgg16(self):
         if os.path.isfile(VGG16_PB_PATH):
-            model = FrozenVGG16(sess=self.sess)
-            features = model.extract_bottleneck_features(cat_img, sess=self.sess)
+            model = FrozenVGG16()
+            features = model.extract_bottleneck_features(cat_img)
 
             assert (4096, ) == features.shape, 'FrozenVGG16 yields unexpected shape %s' % str(features.shape)
 
     def test_inception_v3(self):
         if os.path.isfile(INCEPTIONV3_PB_PATH):
-            model = FrozenInceptionV3(sess=self.sess)
-            features = model.extract_bottleneck_features(cat_img, sess=self.sess)
+            model = FrozenInceptionV3()
+            features = model.extract_bottleneck_features(cat_img)
 
             assert (2048, ) == features.shape, 'FrozenInceptionV3 yields unexpected shape %s' % str(features.shape)
 
     def test_inception_v4(self):
         if os.path.isfile(INCEPTIONV4_PB_PATH):
-            model = FrozenInceptionV4(sess=self.sess)
-            features = model.extract_bottleneck_features(cat_img, sess=self.sess)
+            model = FrozenInceptionV4()
+            features = model.extract_bottleneck_features(cat_img)
 
             assert (1536, ) == features.shape, 'FrozenInceptionV4 yields unexpected shape %s' % str(features.shape)
 
     def test_resnet50(self):
         if os.path.isfile(RESNET50_PB_PATH):
-            model = FrozenResNet50(sess=self.sess)
-            features = model.extract_bottleneck_features(cat_img, sess=self.sess)
+            model = FrozenResNet50()
+            features = model.extract_bottleneck_features(cat_img)
 
             assert (2048, ) == features.shape, 'FrozenResNet50 yields unexpected shape %s' % str(features.shape)
 
     def test_resnet152(self):
         if os.path.isfile(RESNET152_PB_PATH):
-            model = FrozenResNet152(sess=self.sess)
-            features = model.extract_bottleneck_features(cat_img, sess=self.sess)
+            model = FrozenResNet152()
+            features = model.extract_bottleneck_features(cat_img)
 
             assert (2048, ) == features.shape, 'FrozenResNet152 yields unexpected shape %s' % str(features.shape)
 
     def test_name(self):
         if os.path.isfile(INCEPTIONV3_PB_PATH):
             name = 'test'
-            model = FrozenModel(path=INCEPTIONV3_PB_PATH, name=name, sess=self.sess)
+            model = FrozenModel(path=INCEPTIONV3_PB_PATH, name=name)
 
             assert name == model.name, 'FrozenModel does not get given name'
 

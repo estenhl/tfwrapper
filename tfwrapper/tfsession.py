@@ -18,18 +18,23 @@ class TFSession():
             self.context_mgr = self.graph.as_default()
             self.session = tf.Session(graph=self.graph)
 
-            if init:
-                self.session.run(tf.global_variables_initializer())
-            if len(variables) > 0:
-                for name in variables:
-                    tensor = variables[name]['tensor']
-                    value = variables[name]['value']
-                    self.session.run(tensor.assign(value))
+        self.init = init
+        self.variables = variables
 
     def __enter__(self):
         if self.is_local_session:
             self.context_mgr.__enter__()
             self.session.__enter__()
+
+            if self.init:
+                self.session.run(tf.global_variables_initializer())
+
+            if len(self.variables) > 0:
+                for name in self.variables:
+                    tensor = self.variables[name]['tensor']
+                    value = self.variables[name]['value']
+                    self.session.run(tensor.assign(value))
+
         return self.session
 
     def __exit__(self, type, value, traceback):

@@ -37,10 +37,13 @@ class SupervisedModel(ABC):
     def __init__(self, X_shape=None, y_size=None, layers=None, preprocessing=None, sess=None, name='SupervisedModel'):
         if preprocessing is None:
             preprocessing = []
+            
         self.name = name
+
         if X_shape is not None and y_size is not None and layers is not None:
-            self.fill_from_shape(sess, X_shape, y_size, layers, preprocessing)
-            self.post_init()
+            with TFSession(sess) as sess:
+                self.fill_from_shape(X_shape, y_size, layers, preprocessing, sess=sess)
+                self.post_init()
 
     def post_init(self):
         self.input_size = np.prod(self.X_shape)
@@ -51,16 +54,21 @@ class SupervisedModel(ABC):
     def from_shape(cls, X_shape, y_size, layers, preprocessing=None, sess=None, name='SupervisedModel'):
         if preprocessing is None:
             preprocessing = []
-        model = cls(X_shape=None, y_size=None, name=name)
-        model.fill_from_shape(sess=sess, X_shape=X_shape, y_size=y_size, layers=layers, preprocessing=preprocessing)
-        model.post_init()
+
+        with TFSession(sess) as sess:
+            model = cls(X_shape=None, y_size=None, name=name, sess=sess)
+            model.fill_from_shape(sess=sess, X_shape=X_shape, y_size=y_size, layers=layers, preprocessing=preprocessing)
+            model.post_init()
+
         return model
 
     @classmethod
     def from_meta_graph(cls, filename, name):
-        model = cls(X_shape=None, y_size=None, name=name)
-        model.load_from_meta_graph(filename)
-        model.post_init()
+        with TFSession() as sess:
+            model = cls(X_shape=None, y_size=None, name=name, sess=sess)
+            model.load_from_meta_graph(filename)
+            model.post_init()
+
         return model
 
     @classmethod
@@ -99,9 +107,10 @@ class SupervisedModel(ABC):
 
             return net
 
-    def fill_from_shape(self, sess, X_shape, y_size, layers, preprocessing=None):
+    def fill_from_shape(self, X_shape, y_size, layers, preprocessing=None, sess=None):
         if preprocessing is None:
             preprocessing = []
+
         with TFSession(sess) as sess:
             self.X_shape = X_shape
             self.input_size = np.prod(X_shape)
@@ -130,8 +139,8 @@ class SupervisedModel(ABC):
         self.init_vars_when_training = True
         self.feed_dict = {}
 
-    def load_from_meta_graph(self, filename):
-        with TFSession() as sess:
+    def load_from_meta_graph(self, filename, sess=None):
+        with TFSession(sess) as sess:
             metagraph_filename = '%s.%s' % (filename, META_GRAPH_SUFFIX)
             new_saver = tf.train.import_meta_graph(metagraph_filename, clear_devices=True)
             new_saver.restore(sess, metagraph_filename)

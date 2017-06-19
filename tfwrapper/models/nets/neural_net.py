@@ -23,7 +23,7 @@ class NeuralNet(SupervisedModel):
         super().__init__(name=name)
         if X_shape is not None and y_size is not None and layers is not None:
             with TFSession(sess) as sess:
-                self.fill_from_shape(sess, X_shape, y_size, layers, **kwargs)
+                self.fill_from_shape(X_shape, y_size, layers, sess=sess, **kwargs)
                 self.post_init()
 
     def post_init(self):
