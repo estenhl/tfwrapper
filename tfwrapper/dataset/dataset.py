@@ -5,6 +5,8 @@ from collections import Counter
 from tfwrapper import logger
 from tfwrapper.utils.files import parse_features
 from tfwrapper.utils.decorators import deprecated
+from tfwrapper.utils.exceptions import raise_exception
+from tfwrapper.utils.exceptions import InvalidArgumentException
 
 from .dataset_generator import DatasetGenerator
 
@@ -351,15 +353,23 @@ class Dataset():
 
         return self.__class__(X=X, y=y, **self.kwargs(labels=labels))
 
-    def __getitem__(self, val):
-        if type(val) not in [slice, int]:
-            raise NotImplementedError('Dataset only handles slices and ints')
+    def _get_ndarray_slice(self, arr):
+        return self._X[arr], self._y[arr]
 
-        X = self._X[val]
-        y = self._y[val]
-        labels = np.asarray([])
-        if len(self.labels) > 0:
-            labels = self.labels[val]
+    def __getitem__(self, val):
+        valid_types = [int, slice, np.ndarray, list]
+        if type(val) not in valid_types:
+            raise_exception('Invalid slice datatype %s. (Valid is %s)' % (str(type(val)), str(valid_types)), NotImplementedError)
+
+        if type(val) is np.ndarray:
+            X, y = self._get_ndarray_slice(val)
+        elif type(list) is list:
+            X, y = self._get_ndarray_slice(np.asarray(list))
+        else:
+            X = self._X[val]
+            y = self._y[val]
+
+        labels = self.labels
 
         if type(val) is int:
             X = np.asarray([X])

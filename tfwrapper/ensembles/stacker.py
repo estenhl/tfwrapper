@@ -1,4 +1,5 @@
 import json
+import math
 import functools
 import numpy as np
 
@@ -11,8 +12,6 @@ from tfwrapper.utils.exceptions import InvalidArgumentException
 from tfwrapper.models import SupervisedModel
 from tfwrapper.models import TransferLearningModel
 from tfwrapper.models.nets import SingleLayerNeuralNet
-
-import time
 
 
 class Stacker():
@@ -65,12 +64,11 @@ class Stacker():
     def _train_on_folds(self, dataset, *, epochs, preprocessor=None, sess=None):
         num_models = len(self.prediction_models)
         folds = dataset.folds(num_models)
-        num_folds = num_models
 
         # Create training and validation sets
         training_sets = []
         prediction_sets = []
-        for i in range(num_folds):
+        for i in range(len(folds)):
             training_sets.append(functools.reduce(lambda x, y: x + y, folds[:i] + folds[i + 1:],))
             prediction_sets.append(folds[i])
 
@@ -78,13 +76,15 @@ class Stacker():
         preds = []
         for i in range(num_models):
             model = self.prediction_models[i]
-            for j in range(num_folds):
+            for j in range(len(folds)):
                 model.train(training_sets[j], epochs=epochs[0], preprocessor=preprocessor, sess=sess)
+                model_preds = model.predict(prediction_sets[j], preprocessor=preprocessor, sess=sess)
                 if j == 0:
-                    preds.append(model.predict(prediction_sets[j], preprocessor=preprocessor, sess=sess))
+                    preds.append(model_preds)
                 else:
-                    preds[i] = np.concatenate([preds[i], model.predict(prediction_sets[j], preprocessor=preprocessor, sess=sess)], axis=0)
+                    preds[i] = np.concatenate([preds[i], model_preds], axis=0)
                 model.reset()
+
         preds = np.asarray(preds)
         preds = self._reorder_predictions(preds)
 
@@ -97,7 +97,47 @@ class Stacker():
             self.decision_model.train(preds, dataset.y, epochs=epochs[1], sess=sess)
 
     def _train_on_shuffled_folds(self, dataset, *, epochs, preprocessor=None, sess=None):
-        raise NotImplementedError('Training with shuffled folds is not implemented')
+        num_models = len(self.prediction_models)
+
+        datasets = []
+        idxs = []
+        X = dataset.X
+        y = dataset.y
+        for i in range(num_models):
+            idx = np.random.permutation(len(dataset))
+            datasets.append(dataset[idx])
+            idxs.append(idx)
+
+        preds = []
+        for i in range(num_models):
+            model = self.prediction_models[i]
+            folds = datasets[i].folds(num_models)
+            points_per_fold = math.ceil(len(dataset) / num_models)
+            model_preds = []
+
+            for j in range(len(folds)):
+                training_set = functools.reduce(lambda x, y: x + y, folds[:i] + folds[i + 1:],)
+                prediction_set = folds[i]
+                model.train(training_set, epochs=epochs[0], preprocessor=preprocessor, sess=sess)
+
+                model_preds = model.predict(prediction_set, preprocessor=preprocessor, sess=sess)
+                if j == 0:
+                    preds.append(model_preds)
+                else:
+                    preds[i] = np.concatenate([preds[i], model_preds], axis=0)
+                model.reset()
+
+            preds[i] = preds[i][idxs[i]]
+
+        preds = np.asarray(preds)
+        preds = self._reorder_predictions(preds)
+
+        for model in self.prediction_models:
+            model.train(dataset, epochs=epochs[0], preprocessor=preprocessor, sess=sess)
+
+        with TFSession(sess, self.decision_model.graph) as sess:
+            self.decision_model.train(preds, dataset.y, epochs=epochs[1], sess=sess)
+
 
     def train(self, dataset, *, epochs, preprocessor=None, sess=None):
         if type(epochs) is int:

@@ -8,41 +8,52 @@ from .image_loader import ImageLoader
 
 
 class ImageDataset(Dataset):
-    loaded_X = None
-    loaded_y = None
+    _loaded_X = None
+    _loaded_y = None
 
     @property
     def X(self):
-        if self.loaded_X is not None:
-            return self.loaded_X
+        if self._loaded_X is not None:
+            return self._loaded_X
 
         dataset, _ = self.next_batch(0, float('inf'))
 
-        self.loaded_X = dataset.X
-        self.loaded_y = dataset.y
+        self._loaded_X = dataset.X
+        self._loaded_y = dataset.y
         self.paths = dataset.paths
 
         return dataset.X
 
     @property
     def y(self):
-        if self.loaded_y is not None:
-            return self.loaded_y
+        if self._loaded_y is not None:
+            return self._loaded_y
 
         dataset, _ = self.next_batch(0, float('inf'))
 
-        self.loaded_X = dataset.X
-        self.loaded_y = dataset.y
+        self._loaded_X = dataset.X
+        self._loaded_y = dataset.y
         self.paths = dataset.paths
 
         return dataset.y
 
     @property
     def shape(self):
-        if self.loaded_X is not None:
-            return self.loaded_X.shape
+        if self._loaded_X is not None:
+            return self._loaded_X.shape
         else:
             return [len(self)] + self.loader.shape[1:]
+
+    @property
+    def preprocessor(self):
+        return self.loader.preprocessor
+
+    @preprocessor.setter
+    def preprocessor(self, value):
+        self._loaded_X = None
+        self._loaded_y = None
+
+        self.loader.preprocessor = value
 
     @property
     def loader(self):
@@ -50,8 +61,9 @@ class ImageDataset(Dataset):
 
     @loader.setter
     def loader(self, value):
-        self.loaded_X = None
-        self.loaded_y = None
+        self._loaded_X = None
+        self._loaded_y = None
+
         self._loader = value
 
     def __init__(self, X=np.asarray([]), y=np.asarray([]), paths=None, root_folder=None, labels_file=None, **kwargs):

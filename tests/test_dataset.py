@@ -61,7 +61,7 @@ def test_normalize():
     X = np.asarray([5, 4, 3])
     y = np.asarray([1, 1, 1])
     dataset = Dataset(X=X, y=y)
-    dataset = dataset.normalize()
+    dataset = dataset.normalized()
 
     assert 0 < dataset.X[0]
     assert 0 == dataset.X[1]
@@ -74,7 +74,7 @@ def test_balance():
     X = np.zeros(100)
     y = np.concatenate([np.zeros(10), np.ones(90)])
     dataset = Dataset(X=X, y=y)
-    dataset = dataset.balance()
+    dataset = dataset.balanced()
 
     assert 20 == len(dataset.X)
     assert 20 == len(dataset.y)
@@ -82,19 +82,19 @@ def test_balance():
 
 
 def test_balance_with_max():
-    X = np.concatenate([np.zeros(5), np.ones(10)])
-    y = np.concatenate([np.zeros(5), np.ones(10)])
+    X = y = np.concatenate([np.zeros(5), np.ones(10)])
+
     dataset = Dataset(X=X, y=y)
-    dataset = dataset.balance(max=8)
+    dataset = dataset.balanced(max=8)
 
     assert 5 + 8 == len(dataset)
 
 
 def test_balance_with_low_max():
-    X = np.concatenate([np.zeros(3), np.ones(3)])
-    y = np.concatenate([np.zeros(3), np.ones(3)])
+    X = y = np.concatenate([np.zeros(3), np.ones(3)])
+
     dataset = Dataset(X=X, y=y)
-    dataset = dataset.balance(max=2)
+    dataset = dataset.balanced(max=2)
 
     assert 4 == len(dataset)
 
@@ -103,7 +103,7 @@ def test_translate_labels():
     X = np.asarray([0, 1, 2])
     y = np.asarray(['Zero', 'One', 'Two'])
     dataset = Dataset(X=X, y=y)
-    dataset = dataset.translate_labels()
+    dataset = dataset.translated_labels()
     labels = dataset.labels
 
     assert 3 == len(dataset.labels)
@@ -113,10 +113,10 @@ def test_translate_labels():
 
 
 def test_shuffle():
-    X = np.concatenate([np.zeros(100), np.ones(100)])
-    y = np.concatenate([np.zeros(100), np.ones(100)])
+    X = y = np.concatenate([np.zeros(100), np.ones(100)])
+
     dataset = Dataset(X=X, y=y)
-    dataset = dataset.shuffle()
+    dataset = dataset.shuffled()
 
     assert not np.array_equal(X, dataset.X)
     assert np.array_equal(dataset.X, dataset.y)
@@ -126,7 +126,7 @@ def test_onehot():
     X = np.zeros(10)
     y = np.arange(10)
     dataset = Dataset(X=X, y=y)
-    dataset = dataset.onehot()
+    dataset = dataset.onehot_encoded()
 
     assert (10, 10) == dataset.y.shape
     for i in range(10):
@@ -136,8 +136,8 @@ def test_onehot():
 
 
 def test_split():
-    X = np.concatenate([np.zeros(80), np.ones(20)])
-    y = np.concatenate([np.zeros(80), np.ones(20)])
+    X = y = np.concatenate([np.zeros(80), np.ones(20)])
+
     dataset = Dataset(X=X, y=y)
     train_dataset, test_dataset = dataset.split(ratio=0.8)
 
@@ -148,16 +148,16 @@ def test_split():
 
 
 def test_length():
-    X = np.zeros(100)
-    y = np.zeros(100)
+    X = y = np.zeros(100)
+
     dataset = Dataset(X=X, y=y)
 
     assert len(X) == len(dataset)
 
 
 def test_drop_classes():
-    X = np.asarray([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
-    y = np.asarray([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+    X = y = np.asarray([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+
     dataset = Dataset(X=X, y=y)
     dataset = dataset.drop_classes(drop=[2, 3])
 
@@ -166,8 +166,8 @@ def test_drop_classes():
 
 
 def test_keep_classes():
-    X = np.asarray([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
-    y = np.asarray([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+    X = y = np.asarray([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+
     dataset = Dataset(X=X, y=y)
     dataset = dataset.drop_classes(keep=[1, 2, 3])
 
@@ -176,10 +176,8 @@ def test_keep_classes():
 
 
 def test_add_datasets():
-    X1 = np.arange(10)
-    y1 = np.arange(10)
-    X2 = np.arange(10) + 10
-    y2 = np.arange(10) + 10
+    X1 = y1 = np.arange(10)
+    X2 = y2 = np.arange(10) + 10
 
     dataset1 = Dataset(X=X1, y=y1)
     dataset2 = Dataset(X=X2, y=y2)
@@ -192,8 +190,8 @@ def test_add_datasets():
 
 
 def test_slice_datasets():
-    X = np.arange(10)
-    y = np.arange(10)
+    X = y = np.arange(10)
+
     dataset = Dataset(X=X, y=y)
     dataset = dataset[:5]
 
@@ -204,8 +202,8 @@ def test_slice_datasets():
 
 
 def test_index_datasets():
-    X = np.arange(10)
-    y = np.arange(10)
+    X = y = np.arange(10)
+
     dataset = Dataset(X=X, y=y)
     dataset = dataset[5]
 
@@ -215,8 +213,8 @@ def test_index_datasets():
 
 
 def test_equal_folds():
-    X = np.arange(12)
-    y = np.arange(12)
+    X = y = np.arange(12)
+
     dataset = Dataset(X=X, y=y)
 
     k = 3
@@ -230,8 +228,8 @@ def test_equal_folds():
 
 
 def test_unequal_folds():
-    X = np.arange(7)
-    y = np.arange(7)
+    X = y = np.arange(7)
+
     dataset = Dataset(X=X, y=y)
 
     folds = dataset.folds(2)
@@ -244,10 +242,11 @@ def test_unequal_folds():
 def test_merge_classes():
     X = np.arange(10)
     y = np.arange(10)
+
     dataset = Dataset(X=X, y=y)
 
-    assert 10 == len(np.unique(dataset.y))
     assert 10 == len(np.unique(dataset.X))
+    assert 10 == len(np.unique(dataset.y))
 
     mappings = {}
     for i in range(10):
@@ -262,18 +261,17 @@ def test_merge_classes():
 
 
 def test_inherit_labels():
-    X = np.arange(10)
-    y = np.arange(10)
+    X = y = np.arange(10)
+
     labels = [str(x) for x in np.arange(10)]
     dataset = Dataset(X=X, y=y, labels=labels)
-    dataset = dataset.onehot()
+    dataset = dataset.onehot_encoded()
 
     assert np.array_equal(labels, dataset.labels)
 
 
 def test_shape():
-    X = np.reshape(np.arange(27), (3, 3, 3))
-    y = np.reshape(np.arange(27), (3, 3, 3))
+    X = y = np.reshape(np.arange(27), (3, 3, 3))
     dataset = Dataset(X=X, y=y)
 
     assert X.shape == dataset.shape
@@ -302,3 +300,34 @@ def test_onehot_strings():
         exception = True
 
     assert not exception
+
+
+def test_indexation_by_array():
+    X = y = np.arange(10)
+    dataset = Dataset(X=X, y=y)
+
+    np.random.seed(5)
+    idx = np.random.permutation(np.arange(10))
+
+    dataset = dataset[idx]
+
+    assert 10 == len(dataset)
+
+    for i in range(len(dataset)):
+        assert idx[i] == dataset.X[i] == dataset.y[i]
+
+
+def test_indexation_by_list():
+    X = y = np.arange(10)
+    dataset = Dataset(X=X, y=y)
+
+    np.random.seed(5)
+    idx = list(np.random.permutation(np.arange(10)))
+
+    dataset = dataset[idx]
+
+    assert 10 == len(dataset)
+
+    for i in range(len(dataset)):
+        assert idx[i] == dataset.X[i] == dataset.y[i]
+
