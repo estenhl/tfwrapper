@@ -55,7 +55,6 @@ class ImageDataset(Dataset):
         self._loader = value
 
     def __init__(self, X=np.asarray([]), y=np.asarray([]), paths=None, root_folder=None, labels_file=None, **kwargs):
-
         if 'loader' in kwargs:
             self._loader = kwargs['loader']
             del kwargs['loader']

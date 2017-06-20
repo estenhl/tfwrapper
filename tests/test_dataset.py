@@ -302,3 +302,17 @@ def test_onehot_strings():
         exception = True
 
     assert not exception
+
+def test_onehot_u11():
+    X = np.asarray([1, 2, 3])
+    y = np.asarray(['one', 'two', 'three'], dtype='<U11')
+    dataset = Dataset(X=X, y=y)
+
+    exception = False
+    try:
+        dataset = dataset.onehot_encoded()
+    except Exception as e:
+        print(e)
+        exception = True
+
+    assert not exception

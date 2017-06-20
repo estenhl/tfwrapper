@@ -189,8 +189,14 @@ class Dataset():
         return self._X.shape
 
     def __init__(self, X=np.asarray([]), y=np.asarray([]), paths=None, features=None, features_file=None, **kwargs):
-        self._X = X
-        self._y = y
+        try:
+            self._X = np.asarray(X)
+            self._y = np.asarray(y)
+        except Exception:
+            self._X = X
+            self._y = y
+            logger.warning('Datatypes not compatible with numpy will be deprecated from Dataset soon(ish)')
+
         self.paths = paths
         
         if 'labels' in kwargs:
@@ -267,11 +273,14 @@ class Dataset():
     def onehot_encoded(self):
         y = self._y
 
-        invalid_types = ['<U5', np.object, np.str, str]
+        invalid_types = ['<U5', '<U11', np.object, np.str, str]
         if y.dtype in invalid_types:
             y, self.labels = labels_to_indexes(y)
 
-        return self.__class__(X=self._X, y=onehot_array(y), **self.kwargs())
+        try:
+            return self.__class__(X=self._X, y=onehot_array(y), **self.kwargs())
+        except TypeError:
+            raise_exception('Invalid type for onehot_encoded %s. (Valid are all types of ints. Automatically converted are %s' % (y.dtype, str(invalid_types)))
 
     def split(self, ratio=0.8):
         X, y, test_X, test_y = split_dataset(self._X, self._y, ratio=ratio)
