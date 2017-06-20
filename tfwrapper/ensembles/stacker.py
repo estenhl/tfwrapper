@@ -97,6 +97,8 @@ class Stacker():
             self.decision_model.train(preds, dataset.y, epochs=epochs[1], sess=sess)
 
     def _train_on_shuffled_folds(self, dataset, *, epochs, preprocessor=None, sess=None):
+        raise_exception('Does not work yet', NotImplementedError)
+        # TODO (20.06.17): Should be combined with _train_on_folds
         num_models = len(self.prediction_models)
 
         datasets = []
@@ -127,7 +129,7 @@ class Stacker():
                     preds[i] = np.concatenate([preds[i], model_preds], axis=0)
                 model.reset()
 
-            preds[i] = preds[i][idxs[i]]
+            preds[i] = preds[i][np.argsort(idxs[i])]
 
         preds = np.asarray(preds)
         preds = self._reorder_predictions(preds)
@@ -137,7 +139,6 @@ class Stacker():
 
         with TFSession(sess, self.decision_model.graph) as sess:
             self.decision_model.train(preds, dataset.y, epochs=epochs[1], sess=sess)
-
 
     def train(self, dataset, *, epochs, preprocessor=None, sess=None):
         if type(epochs) is int:

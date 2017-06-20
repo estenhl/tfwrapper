@@ -54,7 +54,7 @@ models.append(model)
 
 decision_model = SingleLayerNeuralNet([len(models), 17], 17, 1024, name='DecisionModel')
 decision_model.learning_rate = adjust_at_epochs([30, 70], [0.01, 0.001, 0.0001])
-stacker = Stacker(models, decision_model, policy=Stacker.DATA_POLICY_SHUFFLED_FOLDS, name='StackingEnsemble')
+stacker = Stacker(models, decision_model, policy=Stacker.DATA_POLICY_FOLDS, name='StackingEnsemble')
 stacker.train(train, epochs=[30, 100])
 _, acc = stacker.validate(test)
 print('Ensemble acc before save: %.2f%%' % (acc * 100))
