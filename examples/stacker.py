@@ -20,7 +20,6 @@ logger.setLevel(logger.INFO)
 
 dataset = flowers()
 dataset = dataset.shuffled(12346)
-#dataset = dataset.translate_labels()
 dataset = dataset.onehot_encoded()
 train, test = dataset.split(0.8)
 
@@ -30,9 +29,7 @@ if not os.path.isdir(datafolder):
     os.mkdir(datafolder)
 incv3_features_file = os.path.join(datafolder, 'flowers_inceptionv3.csv')
 incv4_features_file = os.path.join(datafolder, 'flowers_inceptionv4.csv')
-resnet50_features_file = os.path.join(datafolder, 'flowers_resnet50.csv')
 resnet152_features_file = os.path.join(datafolder, 'flowers_resnet152.csv')
-vgg16_features_file = os.path.join(datafolder, 'flowers_vgg16.csv')
 
 models = []
 

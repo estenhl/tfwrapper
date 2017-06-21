@@ -24,9 +24,15 @@ class ImagePreprocessor():
     blur = False
     rotate = False
 
+    rotated = False
+    rotation_steps = 0
+    max_rotation_angle = 0.0
+
     augs = {}
 
     def rotate(self, rotation_steps=1, max_rotation_angle=10):
+        self.rotated = True
+        self.rotation_steps = rotation_steps
         self.augs[ROTATED] = {ROTATION_STEPS: rotation_steps, MAX_ROTATION_ANGLE: max_rotation_angle}
         self.augs[ROTATION_STEPS] = rotation_steps
         self.augs[MAX_ROTATION_ANGLE] = max_rotation_angle

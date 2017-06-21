@@ -99,3 +99,24 @@ def test_resized_imageloader_shape():
         assert [size, 64, 64, 3] == dataset.shape
     finally:
         remove_dir(root_folder)
+
+def test_set_preprocessor():
+    try:
+        size = 10
+        root_folder = create_tmp_dir(size=size)
+
+        dataset = ImageDataset(root_folder=root_folder)
+
+        preprocessor = ImagePreprocessor()
+        preprocessor.resize_to = (64, 64)
+        dataset.preprocessor = preprocessor
+
+        assert (10, 64, 64, 3) == dataset.X.shape, 'Setting preprocessor in dataset does not work'
+
+        preprocessor = ImagePreprocessor()
+        preprocessor.resize_to = (128, 128)
+        dataset.preprocessor = preprocessor
+
+        assert (10, 128, 128, 3) == dataset.X.shape, 'Setting preprocessor in dataset does not delete cached data'
+    finally:
+        remove_dir(root_folder)

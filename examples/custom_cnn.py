@@ -39,7 +39,7 @@ cnn = CNN.from_shape([h, w, c], num_classes, layers, name=name)
 cnn.learning_rate = adjust_after_epoch(3, before=0.001, after=0.0005)
 cnn.train(X, y, epochs=5, validate=False)
 _, acc = cnn.validate(test.X, test.y)
-print('Test accuracy: %d%%' % (acc*100))
+print('Test accuracy: %.2f%%' % (acc*100))
 
 
 
