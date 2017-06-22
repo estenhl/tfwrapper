@@ -3,14 +3,6 @@ import numpy as np
 
 from tfwrapper import twimage
 
-# TODO (16.05.17): This should be rewritten to match the other preprocessor params
-ROTATED = 'rotated'
-ROTATION_STEPS = 'rotation_steps'
-MAX_ROTATION_ANGLE = 'max_rotation_angle'
-BLURRED = 'blurred'
-BLUR_STEPS = 'blur_steps'
-MAX_BLUR_SIGMA = 'max_blur_sigma'
-
 
 def create_name(name, suffixes):
     return "_".join([name] + suffixes)
@@ -24,21 +16,23 @@ class ImagePreprocessor():
     blur = False
     rotate = False
 
-    rotated = False
+    rotate = False
     rotation_steps = 0
     max_rotation_angle = 0.0
 
-    augs = {}
+    blur = False
+    blur_steps = 0
+    max_blur_sigma = 0.0
 
     def rotate(self, rotation_steps=1, max_rotation_angle=10):
-        self.rotated = True
+        self.rotate = True
         self.rotation_steps = rotation_steps
-        self.augs[ROTATED] = {ROTATION_STEPS: rotation_steps, MAX_ROTATION_ANGLE: max_rotation_angle}
-        self.augs[ROTATION_STEPS] = rotation_steps
-        self.augs[MAX_ROTATION_ANGLE] = max_rotation_angle
+        self.max_rotation_angle = max_rotation_angle
 
     def blur(self, blur_steps=1, max_blur_sigma=1):
-        self.augs[BLURRED] = {BLUR_STEPS: blur_steps, MAX_BLUR_SIGMA: max_blur_sigma}
+        self.blur = True
+        self.blur_steps = blur_steps
+        self.max_blur_sigma = max_blur_sigma
 
     def get_names(self, path, name):
         if name is None:
@@ -65,13 +59,11 @@ class ImagePreprocessor():
             names.append(create_name(name, org_suffixes))
             org_suffixes.remove('flipud')
 
-        if ROTATED in self.augs:
-            rotation_steps = self.augs[ROTATED][ROTATION_STEPS]
-            max_rotation_angle = self.augs[ROTATED][MAX_ROTATION_ANGLE]
-            for i in range(rotation_steps):
-                angle = max_rotation_angle * (i + 1) / rotation_steps
+        if self.rotate:
+            for i in range(self.rotation_steps):
+                angle = self.max_rotation_angle * (i + 1) / self.rotation_steps
 
-                org_suffixes.append(ROTATED)
+                org_suffixes.append('rotated')
 
                 org_suffixes.append(str(angle))
                 names.append(create_name(name, org_suffixes))
@@ -81,18 +73,16 @@ class ImagePreprocessor():
                 names.append(create_name(name, org_suffixes))
                 org_suffixes.remove(str(-angle))
 
-                org_suffixes.remove(ROTATED)
+                org_suffixes.remove('rotated')
 
-        if BLURRED in self.augs:
-            blur_steps = self.augs[BLURRED][BLUR_STEPS]
-            max_blur_sigma = self.augs[BLURRED][MAX_BLUR_SIGMA]
-            for i in range(blur_steps):
-                sigma = max_blur_sigma * (i + 1) / blur_steps
-                org_suffixes.append(BLURRED)
+        if self.blur:
+            for i in range(self.blur_steps):
+                sigma = self.max_blur_sigma * (i + 1) / self.blur_steps
+                org_suffixes.append('blurred')
                 org_suffixes.append(str(sigma))
                 names.append(create_name(name, org_suffixes))
                 org_suffixes.remove(str(sigma))
-                org_suffixes.remove(BLURRED)
+                org_suffixes.remove('blurred')
 
         # TODO: generate combinations of flip, rotation and blur
 
@@ -131,13 +121,11 @@ class ImagePreprocessor():
             names.append(create_name(name, org_suffixes))
             org_suffixes.remove('flipud')
 
-        if ROTATED in self.augs:
-            rotation_steps = self.augs[ROTATED][ROTATION_STEPS]
-            max_rotation_angle = self.augs[ROTATED][MAX_ROTATION_ANGLE]
-            for i in range(rotation_steps):
-                angle = max_rotation_angle * (i + 1) / rotation_steps
+        if self.rotate:
+            for i in range(self.rotation_steps):
+                angle = self.max_rotation_angle * (i + 1) / self.rotation_steps
                 imgs.append(twimage.rotate(img, angle))
-                org_suffixes.append(ROTATED)
+                org_suffixes.append('rotated')
                 org_suffixes.append(str(angle))
                 names.append(create_name(name, org_suffixes))
                 org_suffixes.remove(str(angle))
@@ -146,20 +134,18 @@ class ImagePreprocessor():
                 org_suffixes.append(str(-angle))
                 names.append(create_name(name, org_suffixes))
                 org_suffixes.remove(str(-angle))
-                org_suffixes.remove(ROTATED)
+                org_suffixes.remove('rotated')
 
-        if BLURRED in self.augs:
-            blur_steps = self.augs[BLURRED][BLUR_STEPS]
-            max_blur_sigma = self.augs[BLURRED][MAX_BLUR_SIGMA]
-            for i in range(blur_steps):
-                sigma = max_blur_sigma * (i + 1) / blur_steps
+        if self.blur:
+            for i in range(self.blur_steps):
+                sigma = self.max_blur_sigma * (i + 1) / self.blur_steps
                 imgs.append(twimage.blur(img, sigma))
-                org_suffixes.append(BLURRED)
+                org_suffixes.append('blurred')
                 org_suffixes.append(str(sigma))
                 names.append(create_name(name, org_suffixes))
                 org_suffixes.remove(str(sigma))
-                org_suffixes.remove(BLURRED)
+                org_suffixes.remove('blurred')
 
-        # TODO: generate combinations of flip, rotation and blur
+        # TODO (22.06.17): generate combinations of flip, rotation and blur
 
         return imgs, names
