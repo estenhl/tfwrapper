@@ -37,7 +37,7 @@ class FeatureLoader(ImageLoader):
 
         with TFSession(self.sess, self.model.graph) as sess:
             for i in range(len(names)):
-                if names[i] in self.features['filename'].values:
+                if self.cache is not None and names[i] in self.features['filename'].values:
                     logger.debug('Skipping %s' % names[i])
                     vector = self.features[self.features['filename'] == names[i]]['features']
                     vector = np.asarray(vector)[0]
@@ -58,7 +58,9 @@ class FeatureLoader(ImageLoader):
                         record['label'] = label
 
                     records.append(record)
-                    self.features = self.features.append(record, ignore_index=True)
+                    
+                    if self.cache is not None:
+                        self.features = self.features.append(record, ignore_index=True)
 
             if self.cache and len(records) > 0:
                 write_features(self.cache, records, append=os.path.isfile(self.cache))
