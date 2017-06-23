@@ -9,23 +9,23 @@ from tfwrapper.utils.data import get_subclass_by_name
 
 from .frozenmodel import FrozenModel
 from .supervisedmodel import SupervisedModel
+from .metamodel import MetaModel
 
 
-class TransferLearningModel():
+class TransferLearningModel(MetaModel):
     def __init__(self, feature_model, prediction_model, features_layer=None, features_cache=None, name='TransferLearningModel'):
+        super().__init__(name)
+
         self.feature_model = feature_model
         self.prediction_model = prediction_model
         self.features_layer = features_layer
+        self.features_cache = features_cache
+
         if self.features_layer is None:
             self.features_layer = feature_model.bottleneck_tensor
-        self.features_cache = features_cache
-        self.name = name
 
     def train(self, dataset, *, epochs, preprocessor=None, sess=None):
         with TFSession(sess, self.feature_model.graph) as sess1:
-            if preprocessor is None:
-                preprocessor = ImagePreprocessor()
-
             dataset.loader = FeatureLoader(self.feature_model, cache=self.features_cache, preprocessor=preprocessor, sess=sess1)
             X, y = dataset.X, dataset.y
 
@@ -34,9 +34,6 @@ class TransferLearningModel():
 
     def validate(self, dataset, *, preprocessor=None, sess=None):
         with TFSession(sess, self.feature_model.graph) as sess1:
-            if preprocessor is None:
-                preprocessor = ImagePreprocessor()
-
             dataset.loader = FeatureLoader(self.feature_model, cache=self.features_cache, preprocessor=preprocessor, sess=sess1)
             X, y = dataset.X, dataset.y
 
@@ -47,9 +44,6 @@ class TransferLearningModel():
 
     def predict(self, dataset, *, preprocessor=None, sess=None):
         with TFSession(sess, self.feature_model.graph) as sess1:
-            if preprocessor is None:
-                preprocessor = ImagePreprocessor()
-
             dataset.loader = FeatureLoader(self.feature_model, cache=self.features_cache, preprocessor=preprocessor, sess=sess1)
             X = dataset.X
 

@@ -13,7 +13,10 @@ from tfwrapper.utils.files import write_features
 class FeatureLoader(ImageLoader):
     sess = None
 
-    def __init__(self, model, layer=None, cache=None, preprocessor=ImagePreprocessor(), sess=None):
+    def __init__(self, model, layer=None, cache=None, preprocessor=None, sess=None):
+        if preprocessor is None:
+            preprocessor = ImagePreprocessor()
+        
         super().__init__(preprocessor=preprocessor)
         self.model = model
         self.layer = layer
