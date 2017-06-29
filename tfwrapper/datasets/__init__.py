@@ -24,6 +24,8 @@ from .mnist import parse_mnist
 from .cifar import parse_cifar10
 from .cifar import parse_cifar10_test
 from .cifar import parse_cifar100
+from .boston import parse_boston
+from .boston import headers as boston_headers
 from .catsdogs import download_cats_and_dogs
 from .imagenet import parse_imagenet_labels
 
@@ -145,8 +147,8 @@ def cifar10(size=50000, test=False, include_test=False):
 
 def cifar100(size=50000):
     X, y = parse_cifar100(size=size)
-    dataset = Dataset(X=X, y=y)
-    return dataset
+
+    return Dataset(X=X, y=y)
 
 def wine(y=None, include_headers=False, size=178):
     X, y = download_wine(y_index=y, size=size)
@@ -154,13 +156,22 @@ def wine(y=None, include_headers=False, size=178):
 
     if include_headers:
         return dataset, wine_headers
-    else:
-        return dataset
+    
+    return dataset
 
 def imagenet(include_labels=False):
     logger.error('Download of imagenet is not implemented')
 
     if include_labels:
         return None, parse_imagenet_labels()
-    else:
-        return None
+
+    return None
+
+def boston(include_headers=False, y_index=13):
+    X, y = parse_boston(y_index=y_index)
+    dataset = Dataset(X=X, y=y)
+
+    if include_headers:
+        return dataset, boston_headers
+
+    return dataset

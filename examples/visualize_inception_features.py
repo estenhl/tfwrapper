@@ -28,5 +28,5 @@ model = TSNE(n_components=2, perplexity=30.0, early_exaggeration=4.0, learning_r
 X = model.fit_transform(X)
 dataset = Dataset(X=X, y=dataset.y)
 clusters, labels = dataset.get_clusters(get_labels=True)
-print('Labels: ' + str(dataset.y))
+
 plot_clusters(clusters, names=labels)
