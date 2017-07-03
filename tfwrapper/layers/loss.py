@@ -16,45 +16,47 @@ def mse(y, preds, name='mse'):
 MULTICLASS_HINGE_CRAMMER_SINGER = 'crammer_singer'
 
 
-def multiclass_hinge(y, preds, name, method=MULTICLASS_HINGE_CRAMMER_SINGER):
-    batch_size, length = preds.get_shape()
-    shape = (length,)
+def multiclass_hinge(y, preds, method=MULTICLASS_HINGE_CRAMMER_SINGER, delta=10e-8, name='hinge'):
+    ones = tf.ones(tf.shape(y))
+    reverse_onehot = tf.subtract(ones, y, name=name + '/reverse_onehot')
 
-    onehot = tf.one_hot(y, length, name=name + '/onehot')
-    reverse_onehot = tf.subtract(tf.ones((batch_size, length)), onehot, name=name + '/reverse_onehot')
-
-    w_y = tf.multiply(onehot, preds, name=name + '/w_y/multiply')
+    w_y = tf.multiply(y, preds, name=name + '/w_y/multiply')
     w_y = tf.map_fn(lambda x: tf.reduce_sum(x), w_y, name=name + '/w_y/reduce')
     
     w_t = tf.multiply(reverse_onehot, preds, name=name + '/w_y/multiply')
     w_t = tf.map_fn(lambda x: tf.reduce_max(x), w_t, name=name + '/w_y/reduce')
 
-    diff = tf.subtract(w_t, w_y, name=name + '/individual_losses/diff')
-    add = tf.add(tf.ones(shape), diff, name=name + '/add')
-    floored = tf.maximum(tf.zeros(shape), add, name=name + '/floored')
+    diff = tf.subtract(w_t + delta, w_y, name=name + '/individual_losses/diff')
+    flat_ones = tf.ones(tf.shape(diff), name=name + '/flat_ones')
+    add = tf.add(flat_ones, diff, name=name + '/add')
+    flat_zeros = tf.zeros(tf.shape(add), name=name + '/flat_zeros')
+    floored = tf.maximum(flat_zeros, add, name=name + '/floored')
 
     return tf.reduce_mean(floored, name=name)
 
 
-def hinge(y, preds, num_classes=None, name='hinge', **kwargs):
-    if num_classes is not 2:
-        return multiclass_hinge(y, preds, name, **kwargs)
+def squared_multiclass_hinge(y, preds, method=MULTICLASS_HINGE_CRAMMER_SINGER, delta=10e-8, name='hinge'):
+    return tf.square(multiclass_hinge(y, preds, method=method, delta=delta, name=name + '/provisional'), name=name)
 
-    length = y.get_shape()[0]
-    shape = (length,)
 
-    if length != preds.get_shape()[0]:
-        raise_exception('Hinge loss requires y and predictions to be of the same length', InvalidArgumentException)
+def binary_hinge(y, preds, name='hinge'):
+    # Transform [0, 1] y matrix to [-1, 1]
+    # TODO (03.07.17): Should check that values are actually in [0, 1]
+    scaled = tf.multiply(y, 2.0, name=name + '/scaled')
+    shifted = tf.subtract(scaled, 1.0, name=name + '/shifted')
 
-    multiplied = tf.multiply(y, preds, name=name + '/multiply')
-    subtracted = tf.subtract(tf.ones(shape), multiplied, name=name + '/subtracted')
-    floored = tf.maximum(tf.zeros(shape), subtracted, name=name + '/floored')
+    # Calculate binary hinge loss
+    multiplied = tf.multiply(shifted, preds, name=name + '/multiply')
+    ones = tf.map_fn(lambda x: 1.0, y, name=name + '/ones')
+    zeros = tf.subtract(ones, 1.0, name=name + '/zeros')
+    subtracted = tf.subtract(ones, multiplied, name=name + '/subtracted')
+    floored = tf.maximum(zeros, subtracted, name=name + '/floored')
 
     return tf.reduce_mean(floored, name=name)
 
 
-def squared_hinge(y, preds, num_classes=None, name='squared_hinge'):
-    return tf.square(hinge(y, preds, num_classes=num_classes, name=name + '/provisional'), name=name)
+def squared_binary_hinge(y, preds, num_classes=None, name='squared_hinge'):
+    return tf.square(binary_hinge(y, preds, name=name + '/provisional'), name=name)
 
 
 

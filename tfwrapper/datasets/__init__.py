@@ -15,6 +15,7 @@ from tfwrapper import Dataset
 from tfwrapper import ImageDataset
 from tfwrapper.utils.files import download_file
 
+from .iris import parse_iris
 from .wine import headers as wine_headers
 from .wine import download_wine
 from .utils import setup_structure
@@ -175,3 +176,8 @@ def boston(include_headers=False, y_index=13):
         return dataset, boston_headers
 
     return dataset
+
+def iris():
+    X, y = parse_iris()
+
+    return Dataset(X=X, y=y)

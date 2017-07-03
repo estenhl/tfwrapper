@@ -27,6 +27,15 @@ def normalize_array(arr):
     return (arr - arr.mean()) / arr.std()
 
 
+def normalize_array_columnwise(arr):
+    normalized = np.zeros(arr.shape)
+    for col in range(arr.shape[1]):
+        scaled =normalize_array(arr[:,col])
+        normalized[:,col] = scaled
+
+    return normalized
+
+
 def shuffle_dataset(X, y, seed=None):
     if seed is not None:
         np.random.seed(seed)
@@ -232,8 +241,13 @@ class Dataset():
     def normalize(self):
         return self.__class__(X=normalize_array(self._X), y=self._y, **self.kwargs())
 
-    def normalized(self):
-        return self.__class__(X=normalize_array(self._X), y=self._y, **self.kwargs())
+    def normalized(self, columnwise=False):
+        if columnwise:
+            X = normalize_array_columnwise(self._X)
+        else:
+            X = normalize_array(self._X)
+
+        return self.__class__(X=X, y=self._y, **self.kwargs())
 
     @deprecated('shuffled')
     def shuffle(self, seed=None):
@@ -275,14 +289,14 @@ class Dataset():
     def onehot_encoded(self):
         y = self._y
 
-        invalid_types = ['<U5', '<U11', np.object, np.str, str]
+        invalid_types = ['<U5', '<U11', '<U15', np.object, np.str, str]
         if y.dtype in invalid_types:
             y, self.labels = labels_to_indexes(y)
 
         try:
             return self.__class__(X=self._X, y=onehot_array(y), **self.kwargs())
         except TypeError:
-            raise_exception('Invalid type for onehot_encoded %s. (Valid are all types of ints. Automatically converted are %s' % (y.dtype, str(invalid_types)))
+            raise_exception('Invalid type for onehot_encoded %s. (Valid are all types of ints. Automatically converted are %s' % (y.dtype, str(invalid_types)), InvalidArgumentException)
 
     def split(self, ratio=0.8):
         X, y, test_X, test_y = split_dataset(self._X, self._y, ratio=ratio)
