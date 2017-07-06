@@ -27,7 +27,7 @@ from .cifar import parse_cifar10_test
 from .cifar import parse_cifar100
 from .boston import parse_boston
 from .boston import headers as boston_headers
-from .catsdogs import download_cats_and_dogs
+from .catsdogs import parse_cats_and_dogs
 from .imagenet import parse_imagenet_labels
 
 curr_path = config.DATASETS
@@ -94,10 +94,8 @@ def download_flowers():
     return data_folder, labels_file
 
 def cats_and_dogs(size=25000):
-    if size is not 25000:
-        logger.warning('Size not implemented for cats and dogs dataset')
-    data_path = download_cats_and_dogs()
-    dataset = ImageDataset(root_folder=data_path)
+    data_path = parse_cats_and_dogs(size=size)
+    dataset = ImageDataset.from_root_folder(root_folder=data_path)
 
     return dataset
 

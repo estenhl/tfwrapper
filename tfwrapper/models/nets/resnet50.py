@@ -26,7 +26,7 @@ from .utils import ensure_resnet50_h5
 class ResNet50(CNN):
     DEFAULT_BOTTLENECK_LAYER = -3
     
-    def __init__(self, X_shape, classes, name='ResNet50', sess=None, **kwargs):
+    def __init__(self, X_shape, y_size, name='ResNet50', sess=None, **kwargs):
         residual_filters = [[1, 1], [3, 3], [1, 1]]
         
         depths = [
@@ -65,12 +65,12 @@ class ResNet50(CNN):
             residual_block(filters=residual_filters, depths=depths[3], activation='relu', name=name + '/residual16'),
             
             flatten(method='avgpool', name=name + '/flatten'),
-            fullyconnected(inputs=2048, outputs=classes, name=name + '/fc'),
+            fullyconnected(inputs=2048, outputs=y_size, name=name + '/fc'),
             softmax(name=name + '/pred')
         ]
 
         with TFSession(sess) as sess:
-            super().from_shape(X_shape, classes, layers, sess=sess, name=name, **kwargs)
+            super().__init__(X_shape, y_size, layers, sess=sess, name=name, **kwargs)
 
     def load_from_h5(self, path, sess=None):
         with h5py.File(path, 'r') as f:

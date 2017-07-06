@@ -5,11 +5,11 @@ from tfwrapper.models.nets import SqueezeNet
 from tfwrapper.datasets import cifar10
 
 dataset = cifar10()
-dataset = dataset.normalize()
-dataset = dataset.balance()
-dataset = dataset.shuffle()
-dataset = dataset.translate_labels()
-dataset = dataset.onehot()
+dataset = dataset.normalized()
+dataset = dataset.balanced()
+dataset = dataset.shuffled()
+dataset = dataset.translated_labels()
+dataset = dataset.onehot_encoded()
 train, test = dataset.split(0.8)
 generator = train.batch_generator(128, normalize=True, shuffle=True)
 

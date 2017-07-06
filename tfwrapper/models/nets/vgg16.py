@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 
 from tfwrapper import logger
 from tfwrapper import TFSession
@@ -17,13 +18,16 @@ from .utils import ensure_vgg16_npy
 class VGG16(CNN):
     DEFAULT_BOTTLENECK_LAYER = -5
 
-    def __init__(self, X_shape, classes=1000, sess=None, name='VGG16'):
+    def __init__(self, X_shape, y_size=1000, sess=None, name='VGG16'):
         height, width, channels = X_shape
         
         if not ((height % 2 ** 5) == 0 and (width % 2 ** 5) == 0):
             raise ValueError('Height and width must be divisible by %d' % 2 ** 5)
         
         fc_input_size = int(height / (2**5)) * int(width / (2**5)) * 512
+
+        keep_prob1 = tf.placeholder(tf.float32, name=name + '/dropout_placeholder1')
+        keep_prob2 = tf.placeholder(tf.float32, name=name + '/dropout_placeholder2')
 
         layers = [
             conv2d(filter=[3, 3], depth=64, name=name + '/conv1_1'),
@@ -46,17 +50,19 @@ class VGG16(CNN):
             maxpool2d(k=2, name=name + '/pool5'),
             fullyconnected(inputs=fc_input_size, outputs=4096, name=name + '/fc6'),
             relu(name=name + '/relu1'),
-            # TODO (06.06.17: Should be replaced with a real keep_prob value
-            dropout(keep_prob=1.0, name=name + '/dropout1'),
+            dropout(keep_prob=keep_prob1, name=name + '/dropout1'),
             fullyconnected(inputs=4096, outputs=4096, name=name + '/fc7'),
             relu(name=name + '/relu2'),
-            # TODO (06.06.17: Should be replaced with a real keep_prob value
-            dropout(keep_prob=1.0, name=name + '/dropout2'),
-            fullyconnected(inputs=4096, outputs=classes, name=name + '/fc8'),
+            dropout(keep_prob=keep_prob2, name=name + '/dropout2'),
+            fullyconnected(inputs=4096, outputs=y_size, name=name + '/fc8'),
             softmax(name=name + '/pred')
         ]
 
-        super().from_shape(X_shape, classes, layers, sess=sess, name=name)
+        with TFSession(sess) as sess:
+            super().__init__(X_shape, y_size, layers, sess=sess, name=name)
+
+        self.feed_dict['keep_prob1'] = {'placeholder': keep_prob1, 'default': 1.}
+        self.feed_dict['keep_prob2'] = {'placeholder': keep_prob2, 'default': 1.}
 
     def load_from_npy(self, path, sess=None):
         with TFSession(sess, self.graph) as sess:

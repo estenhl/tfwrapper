@@ -11,11 +11,11 @@ w = 28
 c = 1
 
 dataset = mnist(size=10000)
-dataset = dataset.normalize()
-dataset = dataset.balance()
-dataset = dataset.shuffle()
-dataset = dataset.translate_labels()
-dataset = dataset.onehot()
+dataset = dataset.normalized()
+dataset = dataset.balanced()
+dataset = dataset.shuffled()
+dataset = dataset.translated_labels()
+dataset = dataset.onehot_encoded()
 train, test = dataset.split(0.8)
 
 X = train.X
@@ -33,7 +33,7 @@ layers = [
 	conv2d(filter=[5, 5], depth=64, name=name + '/conv2'),
 	maxpool2d(k=2, name=name + '/pool2'),
 	fullyconnected(inputs=twice_reduce(h)*twice_reduce(w)*64, outputs=512, name=name + '/fc'),
-	out(inputs=512, outputs=num_classes, name=name + '/pred')
+	fullyconnected(inputs=512, outputs=num_classes, activation=None, name=name + '/pred')
 ]
 cnn = CNN.from_shape([h, w, c], num_classes, layers, name=name)
 cnn.learning_rate = adjust_after_epoch(3, before=0.001, after=0.0005)

@@ -374,3 +374,11 @@ def test_columnwise_normalization():
     for col in range(dataset.X.shape[1]):
         assert np.mean(dataset.X[:,col]) < 10e10
         assert np.std(dataset.X[:,col]) - 1 < 10e10
+
+def test_squeeze():
+    X = np.asarray([[1], [2], [3]])
+    y = np.asarray([1, 2, 3])
+    dataset = Dataset(X=X, y=y)
+    dataset = dataset.squeezed()
+
+    assert (3,) == dataset.X.shape
