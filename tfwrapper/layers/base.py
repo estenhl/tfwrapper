@@ -124,3 +124,12 @@ def softmax(X=None, name='softmax'):
         return lambda x: softmax(X=x, name=name)
 
     return tf.nn.softmax(X, name=name)
+
+def concatenate(X=None, axis=None, name='concatenate'):
+    if X is None:
+        return lambda x: concatenate(X=x, name=name)
+
+    if axis is None:
+        axis = len(X[0].get_shape()) - 1
+
+    return tf.concat(X, axis=axis, name=name)

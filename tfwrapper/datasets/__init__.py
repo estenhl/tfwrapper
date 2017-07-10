@@ -13,6 +13,7 @@ from tfwrapper import config
 from tfwrapper import logger
 from tfwrapper import Dataset
 from tfwrapper import ImageDataset
+from tfwrapper.dataset import SegmentationDataset
 from tfwrapper.utils.files import download_file
 
 from .iris import parse_iris
@@ -27,10 +28,13 @@ from .cifar import parse_cifar10_test
 from .cifar import parse_cifar100
 from .boston import parse_boston
 from .boston import headers as boston_headers
+from .voc2012 import parse_voc2012
 from .catsdogs import parse_cats_and_dogs
 from .imagenet import parse_imagenet_labels
 
+
 curr_path = config.DATASETS
+
 
 def download_ptb():
     url = 'http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz'
@@ -53,6 +57,7 @@ def download_ptb():
             recursive_delete(os.path.join(root_path, folder), skip=[data_file])
 
     return data_file
+
 
 def download_flowers():
     url = 'http://www.robots.ox.ac.uk/~vgg/data/flowers/17/17flowers.tgz'
@@ -93,16 +98,19 @@ def download_flowers():
 
     return data_folder, labels_file
 
+
 def cats_and_dogs(size=25000):
     data_path = parse_cats_and_dogs(size=size)
     dataset = ImageDataset.from_root_folder(root_folder=data_path)
 
     return dataset
 
+
 def mnist(size=None, imagesize=[28, 28]):
     X, y = parse_mnist(size=size, imagesize=imagesize)
     dataset = Dataset(X=X, y=np.asarray(y).flatten())
     return dataset
+
 
 def flowers(size=1360):
     data_path, labels_file = download_flowers()
@@ -132,6 +140,7 @@ def flowers(size=1360):
     
     return dataset
 
+
 def cifar10(size=50000, test=False, include_test=False):
     if include_test:
         X, y = parse_cifar10(size=size)
@@ -149,6 +158,7 @@ def cifar100(size=50000):
 
     return Dataset(X=X, y=y)
 
+
 def wine(y=None, include_headers=False, size=178):
     X, y = download_wine(y_index=y, size=size)
     dataset = Dataset(X=np.asarray(X), y=np.reshape(np.asarray(y), (len(y), 1)))
@@ -158,6 +168,7 @@ def wine(y=None, include_headers=False, size=178):
     
     return dataset
 
+
 def imagenet(include_labels=False):
     logger.error('Download of imagenet is not implemented')
 
@@ -165,6 +176,7 @@ def imagenet(include_labels=False):
         return None, parse_imagenet_labels()
 
     return None
+
 
 def boston(include_headers=False, y_index=13):
     X, y = parse_boston(y_index=y_index)
@@ -175,7 +187,14 @@ def boston(include_headers=False, y_index=13):
 
     return dataset
 
+
 def iris():
     X, y = parse_iris()
 
     return Dataset(X=X, y=y)
+
+
+def VOC2012(subset='train', size=None):
+    root_folder = parse_voc2012()
+
+    return SegmentationDataset.from_root_folder(root_folder, size=size)
