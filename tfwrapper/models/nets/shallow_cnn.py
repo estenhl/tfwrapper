@@ -23,7 +23,7 @@ class ShallowCNN(CNN):
         fc_input_size = twice_reduce(height)*twice_reduce(width)*64
 
         with TFSession(sess) as sess:
-            keep_prob = tf.placeholder(tf.float32, name=name + '/dropout_placeholder')
+            keep_prob = tf.placeholder_with_default(1.0, shape=(), name=name + '/dropout_placeholder')
 
             layers = [
                 conv2d(filter=[3, 3], depth=32, name=name + '/conv1'),
