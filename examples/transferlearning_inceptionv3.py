@@ -13,10 +13,10 @@ from utils import curr_path
 logger.setLevel(logger.INFO)
 
 dataset = cats_and_dogs(size=500)
-dataset = dataset.balance(max=150)
-dataset = dataset.shuffle()
-dataset = dataset.translate_labels()
-dataset = dataset.onehot()
+dataset = dataset.balanced(max=150)
+dataset = dataset.shuffled()
+dataset = dataset.translated_labels()
+dataset = dataset.onehot_encoded()
 train, test = dataset.split(0.8)
 
 datafolder = os.path.join(curr_path, 'data')

@@ -53,7 +53,7 @@ class LinearRegression():
         with TFSession(sess, self.graph, init=True) as sess:
             for epoch in range(epochs):
                 for i in range(num_batches):
-                    _, train_loss = sess.run([self.optimizer, self.loss], feed_dict={self.X: X_batches[i], self.y: y_batches[i], self.num_samples: num_samples, self.lr: self.learning_rate})
+                    _, train_loss = sess.run([self.optimizer, self.loss], feed_dict={self.X: X_batches[i], self.y: y_batches[i], self.lr: self.learning_rate})
                 summary = 'Epoch %d: train loss %f' % (epoch, train_loss)
                 
                 if validate:

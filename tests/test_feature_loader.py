@@ -21,7 +21,7 @@ def test_featureloader_with_cache():
         cat_features = loader.load(cat_img, name='test', label='cat')
         dog_features = loader.load(dog_img, name='test', label='dog')
 
-        assert np.array_equal(cat_features, dog_features), 'Features are not cached on name when cache is set'
+        assert np.array_equal(cat_features[0], dog_features[0]), 'Features are not cached on name when cache is set'
     finally:
         os.remove(feature_file)
 

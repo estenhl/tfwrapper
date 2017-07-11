@@ -1,19 +1,13 @@
 import json
-import math
 import datetime
 import numpy as np
 import tensorflow as tf
 from abc import ABC, abstractmethod
 
-from tfwrapper import logger
-from tfwrapper import TFSession
 from tfwrapper.dataset import Dataset
-from tfwrapper.dataset.dataset import batch_data
 from tfwrapper.dataset.dataset_generator import DatasetGenerator
 from tfwrapper.dataset.dataset_generator import DatasetGeneratorBase
 from tfwrapper.dataset.dataset_generator import GeneratorWrapper
-from tfwrapper.utils import get_variable_by_name
-from tfwrapper.utils.exceptions import InvalidArgumentException
 from tfwrapper.utils.data import get_subclass_by_name
 
 from tfwrapper import logger
@@ -22,7 +16,7 @@ from tfwrapper import METADATA_SUFFIX
 from tfwrapper.dataset.dataset import batch_data
 from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.exceptions import InvalidArgumentException
-
+from tfwrapper.models.utils import save_serving as save
 
 META_GRAPH_SUFFIX = 'meta'
 
@@ -362,6 +356,9 @@ class SupervisedModel(ABC):
     @abstractmethod
     def validate(self, X=None, y=None, generator=None, feed_dict=None, sess=None, **kwargs):
         raise NotImplementedError('SupervisedModel is a generic class')
+
+    def save_serving(self, export_path, sess, over_write=False):
+        save(export_path, self.X, self.pred, sess, over_write=over_write)
 
     def save(self, filename, sess=None, **kwargs):
         with TFSession(sess, self.graph, variables=self.variables) as sess:

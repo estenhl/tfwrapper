@@ -9,9 +9,9 @@ from tfwrapper.datasets import mnist
 from utils import curr_path
 
 dataset = mnist(size=5000)
-dataset = dataset.normalize()
-dataset = dataset.shuffle()
-dataset = dataset.onehot()
+dataset = dataset.normalized()
+dataset = dataset.shuffled()
+dataset = dataset.onehot_encoded()
 train, test = dataset.split(0.8)
 
 X = train.X
@@ -22,7 +22,7 @@ rnn_test_X = np.reshape(test_X, [-1, 28, 28])
 
 with tf.Session() as sess:
 	cnn = ShallowCNN([28, 28, 1], 10, sess=sess, name='ParallellCNN')
-	cnn.train(X, train.y, epochs=3, sess=sess)
+	cnn.train(X, train.y, keep_prob=0.5, epochs=3, sess=sess)
 	_, acc = cnn.validate(test_X, test.y, sess=sess)
 	print('CNN Acc before save: %d%%' % (acc * 100))
 

@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from tfwrapper import logger
+from tfwrapper.utils.decorators import deprecated
 
 
 def bias(size, init='zeros', trainable=True, name='bias'):
@@ -98,6 +99,7 @@ def reshape(X=None, shape=None, name='reshape'):
     return tf.reshape(X, shape=shape, name=name)
 
 
+@deprecated
 def out(X=None, *, inputs, outputs, init='truncated', trainable=True, name='pred'):
     if X is None:
         return lambda x: out(X=x, inputs=inputs, outputs=outputs, init=init, trainable=trainable, name=name)

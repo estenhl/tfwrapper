@@ -16,14 +16,16 @@ def fullyconnected(X=None, *, inputs, outputs, trainable=True, activation='relu'
     b = bias(outputs, name=bias_name, trainable=trainable)
 
     fc = tf.reshape(X, [-1, inputs], name=name + '/reshape')
-    fc = tf.add(tf.matmul(fc, W), b, name=name + '/add')
+    fc = tf.add(tf.matmul(fc, W, name='matmul'), b, name=name + '/add')
     
-    if activation == 'relu':
+    if activation is None:
+        return tf.identity(fc, name=name)
+    elif activation == 'relu':
         return tf.nn.relu(fc, name=name)
     elif activation == 'softmax':
         return tf.nn.softmax(fc, name=name)
 
-    raise NotImplementedError('%s activation is not implemented (Valid: [\'relu\', \'softmax\'])' % activation)
+    raise NotImplementedError('%s activation is not implemented (Valid: [None, \'relu\', \'softmax\'])' % activation)
 
 def dropout(X=None, *, keep_prob, name='dropout'):
     if X is None:

@@ -9,6 +9,7 @@ from tfwrapper import TFSession
 from tfwrapper.utils.exceptions import InvalidArgumentException
 from tfwrapper.utils.exceptions import raise_exception
 from tfwrapper.utils.data import get_subclass_by_name
+from tfwrapper.models.utils import save_serving as save
 
 
 class FrozenModel(ABC):
@@ -39,7 +40,7 @@ class FrozenModel(ABC):
 
             if type(dest) is str:
                 to_tensor = self.graph.get_tensor_by_name(dest)
-            
+
             try:
                 return sess.run(dest, {src: X})
             except Exception as e:
@@ -59,3 +60,10 @@ class FrozenModel(ABC):
 
     def predict(self, X, sess=None):
         return self.run_op(X, src=self.input_tensor, dest=self.output_tensor, sess=sess)
+
+    def save_serving(self, export_path, sess, over_write=False):
+
+        in_tensor = sess.graph.get_tensor_by_name(self.input_tensor)
+        out_tensor = sess.graph.get_tensor_by_name(self.bottleneck_tensor)
+
+        save(export_path, in_tensor, out_tensor, sess, over_write=over_write)

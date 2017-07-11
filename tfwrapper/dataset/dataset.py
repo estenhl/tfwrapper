@@ -298,6 +298,9 @@ class Dataset():
         except TypeError:
             raise_exception('Invalid type for onehot_encoded %s. (Valid are all types of ints. Automatically converted are %s' % (y.dtype, str(invalid_types)), InvalidArgumentException)
 
+    def squeezed(self):
+        return self.__class__(X=np.squeeze(self._X), y=self._y, **self.kwargs())
+
     def split(self, ratio=0.8):
         X, y, test_X, test_y = split_dataset(self._X, self._y, ratio=ratio)
         train_dataset = self.__class__(X=X, y=y, **self.kwargs())
