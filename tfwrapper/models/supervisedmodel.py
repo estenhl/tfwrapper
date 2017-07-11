@@ -13,6 +13,7 @@ from tfwrapper.dataset.dataset_generator import DatasetGenerator
 from tfwrapper.dataset.dataset_generator import DatasetGeneratorBase
 from tfwrapper.dataset.dataset_generator import GeneratorWrapper
 from tfwrapper.utils import get_variable_by_name
+from tfwrapper.utils.exceptions import raise_exception
 from tfwrapper.utils.exceptions import InvalidArgumentException
 from tfwrapper.utils.data import get_subclass_by_name
 
@@ -21,7 +22,7 @@ from tfwrapper import TFSession
 from tfwrapper import METADATA_SUFFIX
 from tfwrapper.dataset.dataset import batch_data
 from tfwrapper.utils import get_variable_by_name
-from tfwrapper.utils.exceptions import InvalidArgumentException
+from tfwrapper.layers import Layer
 
 
 META_GRAPH_SUFFIX = 'meta'
@@ -129,6 +130,16 @@ class SupervisedModel(ABC):
             self.tensors = []
             prev = self.X
             for layer in layers:
+                if type(layer) is Layer:
+                    if layer.dependencies is not None:
+                        dependencies = layer.dependencies
+
+                        if type(dependencies) is str:
+                            prev = sess.graph.get_tensor_by_name('/'.join([self.name, dependencies]) + ':0')
+                        elif type(dependencies) is list:
+                            prev = [sess.graph.get_tensor_by_name('/'.join([self.name, dependency]) + ':0') for dependency in dependencies]
+                        else:
+                            raise_exception('Invalid layer dependency type %s. (Valid is [str, list])' % type(dependencies), InvalidArgumentException)
                 prev = layer(prev)
                 self.tensors.append({'name': prev.name, 'tensor': prev})
             self.pred = prev

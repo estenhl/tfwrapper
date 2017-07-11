@@ -1,16 +1,17 @@
 import tensorflow as tf
 
 from .cnn import conv2d
+from .base import weight
 
 
 def unet_block(X=None, *, depth, name='unet_block'):
     if X is None:
         return lambda x: unet_block(X=x, depth=depth, name=name)
 
-    X = conv2d(X=X, filter=[3, 3], padding='VALID', name=name + '/conv1')
-    X = conv2d(X=X, filter=[3, 3], padding='VALID', name=name + '/conv2')
+    X = conv2d(X=X, filter=[3, 3], depth=depth, padding='VALID', name=name + '/conv1')
+    X = conv2d(X=X, filter=[3, 3], depth=depth, padding='VALID', name=name + '/conv2')
 
-    return X
+    return tf.identity(X, name=name)
 
 
 def zoom(X=None, *, size, name='zoom'):
@@ -30,8 +31,19 @@ def zoom(X=None, *, size, name='zoom'):
     return tf.slice(X, begin, size, name=name)
 
 
-def deconv2d(X=None, *, filter, depth, name='deconv2d'):
+def deconv2d(X=None, *, filter, depth, strides=[2, 2], padding='SAME', name='deconv2d'):
     if X is None:
-        return lambda x: deconv2d(X=x, size=size, name=name)
+        return lambda x: deconv2d(X=x, filter=filter, depth=depth, name=name)
 
-    return X
+    batch_size, height, width, channels = X.get_shape()
+    weight_shape = filter + [depth, int(channels)]
+    W = weight(weight_shape, name=name + '/W')
+
+    output_shape = [int(batch_size), int(height * 2), int(width * 2), depth]
+    strides_shape = [1] + strides + [1]
+
+    print('X: ' + str(X))
+    print('W: ' + str(W))
+    print('Output_shape: ' + str(output_shape))
+
+    return tf.nn.conv2d_transpose(X, W, output_shape, strides=strides_shape, padding=padding, name=name)

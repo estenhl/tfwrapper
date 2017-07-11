@@ -199,6 +199,14 @@ class Dataset():
     def shape(self):
         return self._X.shape
 
+    @property
+    def num_dependent(self):
+        return len(np.unique(self._y))
+
+    @property
+    def num_classes(self):
+        return self.num_dependent
+
     def __init__(self, X=np.asarray([]), y=np.asarray([]), paths=None, features=None, features_file=None, **kwargs):
         try:
             self._X = np.asarray(X)
@@ -343,13 +351,12 @@ class Dataset():
         return self.__class__(X=X, y=y, **self.kwargs())
 
     def merge_classes(self, mappings):
-        X = self._X
-        y = self._y
-        for i in range(len(y)):
-            if y[i] in mappings:
-                y[i] = mappings[y[i]]
+        y = self._y.copy()
 
-        return self.__class__(X=X, y=y, **self.kwargs())
+        for key in mappings:
+            y[y == key] = mappings[key]
+
+        return self.__class__(X=self._X, y=y, **self.kwargs())
 
     def folds(self, k):
         X = np.array_split(self._X, k)
