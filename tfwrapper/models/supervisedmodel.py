@@ -1,5 +1,3 @@
-import os
-import shutil
 import json
 import datetime
 import numpy as np
@@ -18,13 +16,7 @@ from tfwrapper import METADATA_SUFFIX
 from tfwrapper.dataset.dataset import batch_data
 from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.exceptions import InvalidArgumentException
-
-from tensorflow.python.saved_model import builder as saved_model_builder
-from tensorflow.python.saved_model import signature_constants
-from tensorflow.python.saved_model import signature_def_utils
-from tensorflow.python.saved_model import tag_constants
-from tensorflow.python.saved_model import utils
-
+from tfwrapper.models.utils import save_serving as save
 
 META_GRAPH_SUFFIX = 'meta'
 
@@ -365,44 +357,8 @@ class SupervisedModel(ABC):
     def validate(self, X=None, y=None, generator=None, feed_dict=None, sess=None, **kwargs):
         raise NotImplementedError('SupervisedModel is a generic class')
 
-    def save_serving(self, export_path, over_write=False, sess=None):
-
-        if os.path.isdir(export_path):
-            logger.info('Export path: ' + export_path + ' exists already.')
-            if over_write:
-                logger.info('Over write set, removing old model.')
-                shutil.rmtree(export_path)
-            else:
-                logger.info('Use kwarg over_write to overwrite model.')
-                return
-
-        logger.info('Exporting model to ' + str(export_path))
-
-        with TFSession(sess, self.graph, variables=self.variables) as sess:
-
-            builder = saved_model_builder.SavedModelBuilder(export_path)
-
-            classification_inputs = utils.build_tensor_info(self.X)
-            classification_outputs_scores = utils.build_tensor_info(self.pred)
-
-            classification_signature = signature_def_utils.build_signature_def(
-                inputs={signature_constants.CLASSIFY_INPUTS: classification_inputs},
-                outputs={
-                    signature_constants.CLASSIFY_OUTPUT_SCORES:
-                        classification_outputs_scores
-                },
-                method_name=signature_constants.CLASSIFY_METHOD_NAME)
-
-            legacy_init_op = tf.group(tf.tables_initializer(), name='legacy_init_op')
-            builder.add_meta_graph_and_variables(
-                sess, [tag_constants.SERVING],
-                signature_def_map={
-                    signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
-                        classification_signature
-                },
-                legacy_init_op=legacy_init_op)
-
-            builder.save()
+    def save_serving(self, export_path, sess, over_write=False):
+        save(export_path, self.X, self.pred, sess, over_write=over_write)
 
     def save(self, filename, sess=None, **kwargs):
         with TFSession(sess, self.graph, variables=self.variables) as sess:

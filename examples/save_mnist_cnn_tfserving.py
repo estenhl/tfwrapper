@@ -23,4 +23,4 @@ with tf.Session() as sess:
     path = os.path.join(base_path, 'mnist_cnn')
     version = '1'
 
-    cnn.save_serving(os.path.join(path, version), over_write=True, sess=sess)
+    cnn.save_serving(os.path.join(path, version), sess, over_write=True)
