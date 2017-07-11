@@ -200,12 +200,20 @@ class Dataset():
         return self._X.shape
 
     @property
-    def num_dependent(self):
-        return len(np.unique(self._y))
-
-    @property
     def num_classes(self):
-        return self.num_dependent
+        """ Returns the number of classes in the dataset.
+
+        If the y matrix has 1 (number data) or 3 (image data) dimensions, the data
+        is assumed to not be onehot encoded. Similarly, if the y matrix has 2 or 4
+        dimensions the data is assumed to be onehot encoded """
+
+        if len(self._y.shape) in [1, 3]:
+            return len(np.unique(self._y))
+        elif len(self._y.shape) in [2, 4]:
+            return self._y.shape[-1]
+        else:
+            raise_exception('Dataset does not know how to compute num_classes with len(y.shape) > 4', NotImplementedError)
+
 
     def __init__(self, X=np.asarray([]), y=np.asarray([]), paths=None, features=None, features_file=None, **kwargs):
         try:

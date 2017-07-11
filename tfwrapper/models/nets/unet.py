@@ -35,19 +35,19 @@ class UNet(CNN):
             Layer(maxpool2d(k=2, name=name+'/pool4'), dependencies='block4'),
 
             unet_block(depth=1024, name=name+'/block5'),
-            deconv2d(filter=(2, 2), depth=512, name=name+'/deconv1'),
+            deconv2d(filter=[2, 2], depth=512, name=name+'/deconv1'),
 
             Layer(concatenate(name=name+'/concat1'), dependencies=['block4_slice', 'deconv1']),
             unet_block(depth=512, name=name+'/block6'),
-            deconv2d(filter=(2, 2), depth=256, name=name+'/deconv2'),
+            deconv2d(filter=[2, 2], depth=256, name=name+'/deconv2'),
 
             Layer(concatenate(name=name+'/concat2'), dependencies=['block3_slice', 'deconv2']),
             unet_block(depth=256, name=name+'/block7'),
-            deconv2d(filter=(2, 2), depth=128, name=name+'/deconv3'),
+            deconv2d(filter=[2, 2], depth=128, name=name+'/deconv3'),
 
             Layer(concatenate(name=name+'/concat3'), dependencies=['block2_slice', 'deconv3']),
             unet_block(depth=128, name=name+'/block8'),
-            deconv2d(filter=(2, 2), depth=64, name=name+'/deconv4'),
+            deconv2d(filter=[2, 2], depth=64, name=name+'/deconv4'),
 
             Layer(concatenate(name=name+'/concat4'), dependencies=['block1_slice', 'deconv4']),
             unet_block(depth=64, name=name+'/block9'),

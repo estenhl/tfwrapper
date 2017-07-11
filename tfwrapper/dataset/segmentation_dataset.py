@@ -105,7 +105,7 @@ class SegmentationDataset(Dataset):
     def onehot_encoded(self):
         y = []
         for img in self._y:
-            y = onehot_encode_image(img)
+            y.append(onehot_encode_image(img))
 
         return self.__class__(X=self._X, y=np.asarray(y), labels=self.labels)
 
@@ -148,7 +148,12 @@ class SegmentationDataset(Dataset):
             height_ratio = height / new_height
             width_ratio = width / new_width
             ratio = max(height_ratio, width_ratio)
-            new_size = (int(width / ratio), int(height / ratio))
+            
+            # Forced numpy round to nearest integer to avoid floating point precision errors
+            new_size = np.rint([width /ratio, height / ratio])
+            new_size = new_size.astype(int)
+            new_size = tuple(new_size)
+            
             X.append(cv2.resize(self._X[i], new_size))
             y.append(cv2.resize(self._y[i], new_size, interpolation=cv2.INTER_NEAREST))
 
@@ -184,7 +189,10 @@ class SegmentationDataset(Dataset):
             X.append(cv2.copyMakeBorder(self._X[i], top, bottom, left, right, method))
             y.append(cv2.copyMakeBorder(self._y[i], top, bottom, left, right, method))
 
-        return self.__class__(X=np.asarray(X), y=np.asarray(y))
+        X = np.asarray(X)
+        y = np.asarray(y)
+
+        return self.__class__(X=X, y=y)
 
     def framed_X(self, size, method=cv2.BORDER_REFLECT):
         """ Frames the images with a padding. Labels are NOT padded equivalently, so 

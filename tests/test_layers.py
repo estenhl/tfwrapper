@@ -226,3 +226,4 @@ def test_deconv2d_name():
     tensor = deconv2d(X=X, filter=[2, 2], depth=10, name=name)
 
     assert name + ':0' == tensor.name, 'deconv2d is not given correct name (%s instead of %s)' % (tensor.name, name + ':0')
+

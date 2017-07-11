@@ -39,11 +39,13 @@ def deconv2d(X=None, *, filter, depth, strides=[2, 2], padding='SAME', name='dec
     weight_shape = filter + [depth, int(channels)]
     W = weight(weight_shape, name=name + '/W')
 
-    output_shape = [int(batch_size), int(height * 2), int(width * 2), depth]
-    strides_shape = [1] + strides + [1]
+    # Sets batch_size to -1 if shape is uncastable (typically if batch_size is already ?/-1/None)
+    try:
+        batch_size = int(batch_size)
+    except TypeError:
+        batch_size = -1
 
-    print('X: ' + str(X))
-    print('W: ' + str(W))
-    print('Output_shape: ' + str(output_shape))
+    output_shape = [batch_size, int(height * 2), int(width * 2), depth]
+    strides_shape = [1] + strides + [1]
 
     return tf.nn.conv2d_transpose(X, W, output_shape, strides=strides_shape, padding=padding, name=name)

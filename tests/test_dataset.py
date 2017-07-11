@@ -383,17 +383,19 @@ def test_squeeze():
 
     assert (3,) == dataset.X.shape
 
-def test_num_dependent():
-    X = np.asarray([[1], [2], [3]])
-    y = np.asarray([1, 2, 3])
-    dataset = Dataset(X=X, y=y)
-
-    assert 3 == dataset.num_dependent
 
 def test_num_classes():
     X = np.asarray([[1], [2], [3]])
-    y = np.asarray([1, 2, 3])
+    y = np.asarray([0, 1, 2])
     dataset = Dataset(X=X, y=y)
+
+    assert 3 == dataset.num_classes
+
+def test_num_classes_onehot():
+    X = np.asarray([[1], [2], [3]])
+    y = np.asarray([0, 1, 2])
+    dataset = Dataset(X=X, y=y)
+    dataset = dataset.onehot_encoded()
 
     assert 3 == dataset.num_classes
 

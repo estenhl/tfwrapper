@@ -242,12 +242,12 @@ class SupervisedModel(ABC):
             X = np.reshape(X, [-1] + self.X_shape)
 
         # TODO (11.05.17): This should not be in supervisedmodel (Makes regression on one variable impossible)
-        if not len(y.shape) == 2:
+        if not len(y.shape) >= 2:
             errormsg = '%sy must be a onehot array' % prefix
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
 
-        if not y.shape[1] == self.y_size:
+        if not y.shape[-1] == self.y_size:
             errormsg = '%sy with %d classes does not match given y_size %d' % (prefix, y.shape[1], self.y_size)
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)

@@ -27,6 +27,20 @@ def test_resized():
     assert np.array_equal(expected_y, dataset.y[2]), 'Segmentation dataset resize does not handle labels with shape < max_size'
 
 
+def test_resized_large():
+    X = np.ones((1, 435, 450, 3))
+    y = np.ones((1, 435, 450, 3))
+
+    dataset = SegmentationDataset(X=X, y=y)
+    dataset = dataset.resized(max_size=(392, 392))
+
+    _, _, X_width, _ = dataset.X.shape
+    _, _, y_width, _ = dataset.y.shape
+
+    assert 392 == X_width
+    assert 392 == y_width
+
+
 def test_squarepadded():
     X1 = np.zeros((9, 5, 3))
     y1 = np.zeros((9, 5), dtype=int)
@@ -120,10 +134,10 @@ def test_onehot_encoded():
     dataset = SegmentationDataset(X=X, y=y)
     dataset = dataset.onehot_encoded()
 
-    assert (5, 5, 25) == dataset.y.shape
+    assert (1, 5, 5, 25) == dataset.y.shape
     for i in range(5):
         for j in range(5):
-            assert (i * 5) + j == np.argmax(dataset.y[i][j])
+            assert (i * 5) + j == np.argmax(dataset.y[0][i][j])
 
 
 def test_translate_labels():
@@ -160,7 +174,4 @@ def test_merge_classes():
     ]]
 
     assert np.array_equal(expected_y, dataset.y)
-
-
-
 
