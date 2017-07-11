@@ -11,6 +11,7 @@ class Config():
             root = '/tmp/tfwrapper'
 
         self.DATA = os.path.join(root, 'data')
+        self.SERVING_MODELS = os.path.join(root, 'serving_models')
         self.MODELS = os.path.join(self.DATA, 'models')
         self.DATASETS = os.path.join(self.DATA, 'datasets')
 
