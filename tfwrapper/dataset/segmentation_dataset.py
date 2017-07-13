@@ -1,5 +1,7 @@
 import os
 import cv2
+import json
+import colorsys
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -29,6 +31,76 @@ def parse_images(folder, max_size=None):
             logger.warning('Skipping %s' % filename)
 
     return np.asarray(images)
+
+
+def _create_colour_map(labels):
+    """ Create a colour map of len(labels) + 1 visually distinct colours.
+    The +1 is added to reserve [0, 0, 0] for background """
+
+    colour_map = {}
+    increment = 1 / (len(labels) + 1)
+
+    i = 1
+    for label in labels:
+        val = i * increment
+        rgb = colorsys.hsv_to_rgb(val, val, val)
+        rgb = np.asarray(rgb) * 255
+        rgb = rgb.astype(np.uint8, casting='unsafe')
+        colour_map[label] = rgb
+        i += 1
+
+    return colour_map
+
+
+def parse_vgg_json(img_folder, json_file, drop_empty=True):
+    with open(json_file, 'r') as f:
+        data = json.load(f)
+
+    X = []
+    polygons = []
+    labels = set()
+
+    for key in data:
+        filename = data[key]['filename']
+        path = os.path.join(img_folder, filename)
+        regions = data[key]['regions']
+
+        if not drop_empty or len(regions) > 0:
+            img = cv2.imread(path)
+            X.append(img)
+            polygons.append([])
+
+        for index in regions:
+            region = regions[index]
+            shape_attrs = region['shape_attributes']
+
+            all_points_x = shape_attrs['all_points_x']
+            all_points_y = shape_attrs['all_points_y']
+            polygon = np.asarray(list(zip(all_points_x, all_points_y)))
+
+            label = region['region_attributes']['label']
+            labels.add(label)
+
+            polygons[-1].append({'polygon': polygon, 'label': label})
+
+    colours = _create_colour_map(labels)
+    y = []
+
+    for i in range(len(polygons)):
+        entry = polygons[i]
+        labels_img = np.zeros(X[i].shape)
+        for polygon in entry:
+            label = polygon['label']
+            shape = polygon['polygon'].astype(np.int32)
+
+            # Thanks, python
+            colour = colours[label]
+            colour = (int(colour[0]), int(colour[1]), int(colour[2]))
+
+            cv2.fillPoly(labels_img, [shape], colour)
+        y.append(labels_img)
+
+    return np.asarray(X), np.asarray(y)
 
 
 def onehot_encode_image(img):
@@ -97,7 +169,15 @@ class SegmentationDataset(Dataset):
         X = parse_images(os.path.join(root_folder, img_folder_name), max_size=size)
         y = parse_images(os.path.join(root_folder, labels_folder_name), max_size=size)
 
-        return SegmentationDataset(X=X, y=y)
+        return cls(X=X, y=y)
+
+    @classmethod
+    def from_vgg_json(cls, *, img_folder, json_file):
+        """ Parses a json annotation file from the VGG annotation tool (http://www.robots.ox.ac.uk/~vgg/software/via/) """
+
+        X, y = parse_vgg_json(img_folder, json_file)
+
+        return cls(X=X, y=y)
 
     def normalized(self, columnwise=False):
         raise_exception('Unable to perform straight normalization of a Segmentation Dataset (Imagewise normalization not implemented)', NotImplementedError)
