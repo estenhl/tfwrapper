@@ -50,6 +50,7 @@ def compute_fan_in_out(weight_shape):
         fan_out = math.sqrt(np.prod(weight_shape))
     return fan_in, fan_out
 
+
 def batch_normalization(X=None, mean=None, variance=None, offset=0, scale=1, name='batch_normalization'):
     if X is None:
         return lambda x: batch_normalization(X=x, mean=mean, variance=variance, offset=offset, scale=scale, name=name)
@@ -112,6 +113,7 @@ def out(X=None, *, inputs, outputs, init='truncated', trainable=True, name='pred
 
     return tf.add(tf.matmul(X, W), b, name=name)
 
+
 def relu(X=None, name='relu'):
     if X is None:
         return lambda x: relu(X=x, name=name)
@@ -124,3 +126,11 @@ def softmax(X=None, name='softmax'):
         return lambda x: softmax(X=x, name=name)
 
     return tf.nn.softmax(X, name=name)
+
+
+def initializer(tensors, name='init'):
+    normalized_tensors = []
+    for tensor in tensors:
+        normalized_tensors.append(tf.reduce_sum(tensor))
+
+    return tf.stack(normalized_tensors, name=name)

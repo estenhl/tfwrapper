@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 class TFSession():
-    def __init__(self, session=None, graph=None, init=False, variables={}):
+    def __init__(self, session=None, graph=None, init=False, variables=None):
         self.is_local_session = session is None
         self.session = session
         
@@ -29,7 +29,7 @@ class TFSession():
             if self.init:
                 self.session.run(tf.global_variables_initializer())
 
-            if len(self.variables) > 0:
+            if self.variables is not None:
                 for name in self.variables:
                     tensor = self.variables[name]['tensor']
                     value = self.variables[name]['value']
