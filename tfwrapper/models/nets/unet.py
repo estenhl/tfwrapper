@@ -57,7 +57,7 @@ class UNet(CNN):
         ]
 
         with TFSession(sess) as sess:
-            super().__init__([572, 572, 3], [392, 392, classes], layers, sess=sess, name=name)
+            super().__init__([572, 572, 3], [388, 388, classes], layers, sess=sess, name=name)
 
     def loss_function(self):
         return pixelwise_softmax_cross_entropy(self.y, self.pred, name=self.name + '/loss')
