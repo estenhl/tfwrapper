@@ -1,7 +1,7 @@
 from tfwrapper.datasets import VOC2012
 from tfwrapper.models.nets import UNet
 
-dataset = VOC2012(size=5)
+dataset = VOC2012(size=2000)
 dataset = dataset.resized(max_size=(392, 392))
 dataset = dataset.squarepadded()
 dataset = dataset.framed_X((180, 180))

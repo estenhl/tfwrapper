@@ -247,13 +247,14 @@ class SupervisedModel(ABC):
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
 
+        """
         if not y.shape[-1] == self.y_size:
-            errormsg = '%sy with %d classes does not match given y_size %d' % (prefix, y.shape[1], self.y_size)
+            errormsg = '%sy with %d classes does not match given y_size %s' % (prefix, y.shape[-1], str(self.y_size))
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
         else:
             y = np.reshape(y, [-1, self.y_size])
-
+        """
     def parse_feed_dict(self, feed_dict, log=False, **kwargs):
         if feed_dict is None:
             feed_dict = {}

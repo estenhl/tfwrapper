@@ -8,6 +8,7 @@ from tfwrapper.layers import maxpool2d
 from tfwrapper.layers import deconv2d
 from tfwrapper.layers import concatenate
 from tfwrapper.layers import conv2d
+from tfwrapper.layers.loss import pixelwise_softmax_cross_entropy
 
 from .cnn import CNN
 
@@ -56,4 +57,15 @@ class UNet(CNN):
         ]
 
         with TFSession(sess) as sess:
-            super().__init__([572, 572, 3], classes, layers, sess=sess, name=name)
+            super().__init__([572, 572, 3], [392, 392, classes], layers, sess=sess, name=name)
+
+    def loss_function(self):
+        return pixelwise_softmax_cross_entropy(self.y, self.pred, name=self.name + '/loss')
+
+    def accuracy_function(self):
+        num_classes = tf.shape(self.y)[-1]
+        reshaped_y = tf.reshape(self.y, [-1, num_classes], name=self.name + '/acc/reshaped_y')
+        reshaped_preds = tf.reshape(self.pred, [-1, num_classes], name=self.name + '/acc/reshaped_preds')
+        correct_pred = tf.equal(tf.argmax(reshaped_y, 1), tf.argmax(reshaped_preds, 1))
+
+        return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '/accuracy')
