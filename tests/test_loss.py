@@ -1,13 +1,10 @@
 import pytest
+import numpy as np
 import tensorflow as tf
 
-from tfwrapper.layers.loss import mse
-from tfwrapper.layers.loss import binary_hinge
-from tfwrapper.layers.loss import squared_binary_hinge
-from tfwrapper.layers.loss import multiclass_hinge
-from tfwrapper.layers.loss import squared_multiclass_hinge
+from tfwrapper.layers.loss import *
 
-
+"""
 def test_mse():
     name = 'test-mse'
 
@@ -114,3 +111,47 @@ def test_squared_multiclass_hinge():
 
     assert abs(expected_loss - result) < 10e5
     assert name + ':0' == loss_tensor.name
+
+"""
+def test_pixelwise_softmax_cross_entropy():
+    name = 'test-pixelwise-softmax-cross-entropy'
+    y = np.asarray([
+            [
+                [
+                    [0., 1., 0.],
+                    [1., 0., 0.],
+                    [0., 1., 0.]
+                ],[
+                    [1., 0., 0.],
+                    [0., 1., 0.],
+                    [0., 0., 1.]
+                ]
+            ]
+        ])
+
+    preds = np.asarray([
+            [
+                [
+                    [1., 3., 1.],
+                    [1., 3., 1.],
+                    [1., 3., 1.]
+                ],[
+                    [1., 3., 1.],
+                    [1., 3., 1.],
+                    [1., 3., 1.]
+                ],
+
+            ]
+        ])
+    
+
+    with tf.Session() as sess:
+        y_placeholder = tf.placeholder(tf.float32, [None, 2, 3, 3])
+        preds_placeholder = tf.placeholder(tf.float32, [None, 2, 3, 3])
+
+        loss_tensor = pixelwise_softmax_cross_entropy(y, preds, name=name)
+        result = sess.run(loss_tensor, feed_dict={y_placeholder: y, preds_placeholder: preds})
+
+    expected_result = -(np.log(.6) + np.log(.2) + np.log(.6) + np.log(.2) + np.log(.6) + np.log(.2))/6
+
+    assert abs(expected_result - result) < 1

@@ -199,6 +199,22 @@ class Dataset():
     def shape(self):
         return self._X.shape
 
+    @property
+    def num_classes(self):
+        """ Returns the number of classes in the dataset.
+
+        If the y matrix has 1 (number data) or 3 (image data) dimensions, the data
+        is assumed to not be onehot encoded. Similarly, if the y matrix has 2 or 4
+        dimensions the data is assumed to be onehot encoded """
+
+        if len(self._y.shape) in [1, 3]:
+            return len(np.unique(self._y))
+        elif len(self._y.shape) in [2, 4]:
+            return self._y.shape[-1]
+        else:
+            raise_exception('Dataset does not know how to compute num_classes with len(y.shape) > 4', NotImplementedError)
+
+
     def __init__(self, X=np.asarray([]), y=np.asarray([]), paths=None, features=None, features_file=None, **kwargs):
         try:
             self._X = np.asarray(X)
@@ -343,13 +359,12 @@ class Dataset():
         return self.__class__(X=X, y=y, **self.kwargs())
 
     def merge_classes(self, mappings):
-        X = self._X
-        y = self._y
-        for i in range(len(y)):
-            if y[i] in mappings:
-                y[i] = mappings[y[i]]
+        y = self._y.copy()
 
-        return self.__class__(X=X, y=y, **self.kwargs())
+        for key in mappings:
+            y[y == key] = mappings[key]
+
+        return self.__class__(X=self._X, y=y, **self.kwargs())
 
     def folds(self, k):
         X = np.array_split(self._X, k)

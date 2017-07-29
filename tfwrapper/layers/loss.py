@@ -55,8 +55,17 @@ def binary_hinge(y, preds, name='hinge'):
     return tf.reduce_mean(floored, name=name)
 
 
-def squared_binary_hinge(y, preds, num_classes=None, name='squared_hinge'):
+def squared_binary_hinge(y, preds, name='squared_hinge'):
     return tf.square(binary_hinge(y, preds, name=name + '/provisional'), name=name)
+
+
+def pixelwise_softmax_cross_entropy(y, preds, name='pixelwise_softmax_cross_entropy'):
+    num_classes = tf.shape(y)[-1]
+    reshaped_y = tf.reshape(y, [-1, num_classes], name=name + '/reshaped_y')
+    reshaped_preds = tf.reshape(preds, [-1, num_classes], name=name + '/reshaped_preds')
+    individual_losses = tf.nn.softmax_cross_entropy_with_logits(labels=reshaped_y, logits=reshaped_preds, name=name + '/individual_losses')
+    
+    return tf.reduce_mean(individual_losses, name=name)
 
 
 

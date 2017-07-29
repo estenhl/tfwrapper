@@ -8,6 +8,10 @@ from tfwrapper.dataset import Dataset
 from tfwrapper.dataset.dataset_generator import DatasetGenerator
 from tfwrapper.dataset.dataset_generator import DatasetGeneratorBase
 from tfwrapper.dataset.dataset_generator import GeneratorWrapper
+
+from tfwrapper.utils import get_variable_by_name
+from tfwrapper.utils.exceptions import raise_exception
+from tfwrapper.utils.exceptions import InvalidArgumentException
 from tfwrapper.utils.data import get_subclass_by_name
 
 from tfwrapper import logger
@@ -17,6 +21,8 @@ from tfwrapper.dataset.dataset import batch_data
 from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.exceptions import InvalidArgumentException
 from tfwrapper.models.utils import save_serving as save
+from tfwrapper.layers import Layer
+
 
 META_GRAPH_SUFFIX = 'meta'
 
@@ -123,6 +129,16 @@ class SupervisedModel(ABC):
             self.tensors = []
             prev = self.X
             for layer in layers:
+                if type(layer) is Layer:
+                    if layer.dependencies is not None:
+                        dependencies = layer.dependencies
+
+                        if type(dependencies) is str:
+                            prev = sess.graph.get_tensor_by_name('/'.join([self.name, dependencies]) + ':0')
+                        elif type(dependencies) is list:
+                            prev = [sess.graph.get_tensor_by_name('/'.join([self.name, dependency]) + ':0') for dependency in dependencies]
+                        else:
+                            raise_exception('Invalid layer dependency type %s. (Valid is [str, list])' % type(dependencies), InvalidArgumentException)
                 prev = layer(prev)
                 self.tensors.append({'name': prev.name, 'tensor': prev})
             self.pred = prev
@@ -225,18 +241,19 @@ class SupervisedModel(ABC):
             X = np.reshape(X, [-1] + self.X_shape)
 
         # TODO (11.05.17): This should not be in supervisedmodel (Makes regression on one variable impossible)
-        if not len(y.shape) == 2:
+        if not len(y.shape) >= 2:
             errormsg = '%sy must be a onehot array' % prefix
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
 
-        if not y.shape[1] == self.y_size:
-            errormsg = '%sy with %d classes does not match given y_size %d' % (prefix, y.shape[1], self.y_size)
+        """
+        if not y.shape[-1] == self.y_size:
+            errormsg = '%sy with %d classes does not match given y_size %s' % (prefix, y.shape[-1], str(self.y_size))
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
         else:
             y = np.reshape(y, [-1, self.y_size])
-
+        """
     def parse_feed_dict(self, feed_dict, log=False, **kwargs):
         if feed_dict is None:
             feed_dict = {}

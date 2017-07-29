@@ -134,3 +134,14 @@ def initializer(tensors, name='init'):
         normalized_tensors.append(tf.reduce_sum(tensor))
 
     return tf.stack(normalized_tensors, name=name)
+
+
+def concatenate(X=None, axis=None, name='concatenate'):
+    if X is None:
+        return lambda x: concatenate(X=x, name=name)
+
+    if axis is None:
+        axis = len(X[0].get_shape()) - 1
+
+    return tf.concat(X, axis=axis, name=name)
+
