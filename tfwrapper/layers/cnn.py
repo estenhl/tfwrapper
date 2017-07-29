@@ -7,7 +7,7 @@ from .base import bias
 from .base import weight
 
 
-def conv2d(X=None, *, filter, depth=None, strides=1, padding='SAME', activation='relu', init='truncated', trainable=True, name='conv2d'):
+def conv2d(X=None, *, filter, depth, input_depth=None, strides=1, padding='SAME', activation='relu', init='truncated', trainable=True, name='conv2d'):
     if len(filter) != 2:
         errormsg = 'conv2d takes filters with exactly 2 dimensions (e.g. [3, 3])'
         logger.error(errormsg)
@@ -30,16 +30,15 @@ def conv2d(X=None, *, filter, depth=None, strides=1, padding='SAME', activation=
         raise InvalidArgumentException(errormsg)
 
     if X is None:
-        return lambda x: conv2d(X=x, filter=filter, depth=depth, strides=strides, padding=padding, activation=activation, init=init, trainable=trainable, name=name)
+        return lambda x: conv2d(X=x, filter=filter, depth=depth, input_depth=input_depth, strides=strides, padding=padding, activation=activation, init=init, trainable=trainable, name=name)
 
     weight_name = name + '/W'
     bias_name = name + '/b'
 
-    input_depth = int(X.get_shape()[-1])
-    if depth is None:
-        depth = input_depth
+    if input_depth is None:
+        input_depth = int(X.get_shape()[-1])
 
-    weight_shape = filter + [input_depth, depth]
+    weight_shape = tf.stack([filter[0], filter[1], input_depth, depth])
     bias_size = depth
 
     w = weight(weight_shape, name=weight_name, trainable=trainable, init=init)

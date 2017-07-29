@@ -17,7 +17,7 @@ class SingleLayerNeuralNet(NeuralNet):
         X_size = np.prod(X_shape)
         layers = [
             fullyconnected(inputs=X_size, outputs=hidden, name=name + '/hidden'),
-            out(inputs=hidden, outputs=y_size, name=name + '/pred')
+            fullyconnected(inputs=hidden, outputs=y_size, activation=None, name=name + '/pred')
         ]
         with TFSession(sess) as sess:
             super().__init__(X_shape, y_size, layers, sess=sess, name=name)

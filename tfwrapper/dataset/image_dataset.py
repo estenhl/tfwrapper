@@ -1,6 +1,8 @@
 import numpy as np
 
 from tfwrapper import logger
+from tfwrapper.utils.decorators import deprecated
+
 from .dataset import Dataset
 from .dataset import parse_folder_with_labels_file
 from .dataset import parse_datastructure
@@ -85,14 +87,26 @@ class ImageDataset(Dataset):
         super().__init__(X=X, y=y, paths=paths, **kwargs)
 
     @classmethod
+    @deprecated
     def create_dataset_from_labels_file(cls, root_folder, labels_file):
         X, y = parse_folder_with_labels_file(root_folder, labels_file)
         return ImageDataset(X, y)
 
     @staticmethod
+    @deprecated
     def create_dataset_from_folders(root_folder):
         X, y = parse_datastructure(root_folder)
         return ImageDataset(X, y)
+
+    @classmethod
+    def from_labels_file(cls, *, root_folder, labels_file):
+        X, y = parse_folder_with_labels_file(root_folder, labels_file)
+        return cls(X=X, y=y)
+
+    @classmethod
+    def from_root_folder(cls, root_folder):
+        X, y = parse_datastructure(root_folder)
+        return cls(X=X, y=y)
 
     def normalize(self):
         raise NotImplementedError('Unable to normalize an imagedataset which is read on-demand')

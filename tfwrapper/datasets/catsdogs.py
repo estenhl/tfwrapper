@@ -12,7 +12,10 @@ DOWNLOAD_DRIVE_ID = "0B1b2bIlebXOqQnJWYUxDZXRhTlE"
 FILE_PATH = os.path.join(config.DATASETS, "catsdogs")
 IMAGES = os.path.join(FILE_PATH, "images")
 
-def download_cats_and_dogs():
+def parse_cats_and_dogs(size=25000):
+    if size is not 25000:
+        logger.warning('Size parameter is not implemented for cats and dogs dataset')
+        
     if not os.path.exists(FILE_PATH):
         logger.info('Downloading cats vs dogs dataset')
 
@@ -38,6 +41,7 @@ def download_cats_and_dogs():
         tmp_images_dir = os.path.join(tmp_dir, "train")
 
         logger.info("Unzipped {} files".format(len(os.listdir(tmp_images_dir))))
+
         for image in os.listdir(tmp_images_dir):
             if image.startswith("cat"):
                 shutil.move(os.path.join(tmp_images_dir, image), os.path.join(cats, image))

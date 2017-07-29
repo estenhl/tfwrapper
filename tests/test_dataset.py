@@ -11,7 +11,6 @@ from tfwrapper.utils.files import write_features
 from utils import curr_path
 from utils import generate_features
 
-
 def test_parse_datastructure():
     root_path = os.path.join(os.path.dirname(__file__), 'data/testset')
     if not os.path.isdir(root_path):
@@ -317,6 +316,21 @@ def test_onehot_u11():
     assert not exception
 
 
+def test_onehot_u15():
+    X = np.asarray([1, 2, 3])
+    y = np.asarray(['one', 'two', 'three'], dtype='<U15')
+    dataset = Dataset(X=X, y=y)
+
+    exception = False
+    try:
+        dataset = dataset.onehot_encoded()
+    except Exception as e:
+        print(e)
+        exception = True
+
+    assert not exception
+
+
 def test_indexation_by_array():
     X = y = np.arange(10)
     dataset = Dataset(X=X, y=y)
@@ -345,4 +359,43 @@ def test_indexation_by_list():
 
     for i in range(len(dataset)):
         assert idx[i] == dataset.X[i] == dataset.y[i]
+
+
+def test_columnwise_normalization():
+    X = np.asarray([
+        [1, 0, 1, -10],
+        [2, 6, 3, 0],
+        [3, 8, 5, 30]
+    ])
+    y = np.zeros(0)
+    dataset = Dataset(X=X, y=y)
+    dataset = dataset.normalized(columnwise=True)
+
+    for col in range(dataset.X.shape[1]):
+        assert np.mean(dataset.X[:,col]) < 10e10
+        assert np.std(dataset.X[:,col]) - 1 < 10e10
+
+def test_squeeze():
+    X = np.asarray([[1], [2], [3]])
+    y = np.asarray([1, 2, 3])
+    dataset = Dataset(X=X, y=y)
+    dataset = dataset.squeezed()
+
+    assert (3,) == dataset.X.shape
+
+
+def test_num_classes():
+    X = np.asarray([[1], [2], [3]])
+    y = np.asarray([0, 1, 2])
+    dataset = Dataset(X=X, y=y)
+
+    assert 3 == dataset.num_classes
+
+def test_num_classes_onehot():
+    X = np.asarray([[1], [2], [3]])
+    y = np.asarray([0, 1, 2])
+    dataset = Dataset(X=X, y=y)
+    dataset = dataset.onehot_encoded()
+
+    assert 3 == dataset.num_classes
 

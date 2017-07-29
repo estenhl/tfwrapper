@@ -1,5 +1,6 @@
 from .cnn import CNN
 from .rnn import RNN
+from .unet import UNet
 from .vgg16 import VGG16
 from .resnet50 import ResNet50
 from .neural_net import NeuralNet

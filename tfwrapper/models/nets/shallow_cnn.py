@@ -22,20 +22,18 @@ class ShallowCNN(CNN):
         twice_reduce = lambda x: -(-x // 4)
         fc_input_size = twice_reduce(height)*twice_reduce(width)*64
 
-        with TFSession(sess) as sess:
-            keep_prob = tf.placeholder(tf.float32, name=name + '/dropout_placeholder')
+        layers = [
+            conv2d(filter=[3, 3], depth=32, name=name + '/conv1'),
+            maxpool2d(k=2, name=name + '/pool1'),
+            conv2d(filter=[3, 3], depth=64, name=name + '/conv2'),
+            conv2d(filter=[3, 3], depth=64, name=name + '/conv3'),
+            maxpool2d(k=2, name=name + '/pool2'),
+            fullyconnected(inputs=fc_input_size, outputs=512, name=name + '/fc'),
+            dropout(keep_prob=keep_prob, name=name + '/dropout'),
+            fullyconnected(inputs=512, outputs=classes, activation=None, name=name + '/pred')
+        ]
 
-            layers = [
-                conv2d(filter=[3, 3], depth=32, name=name + '/conv1'),
-                maxpool2d(k=2, name=name + '/pool1'),
-                conv2d(filter=[3, 3], depth=64, name=name + '/conv2'),
-                conv2d(filter=[3, 3], depth=64, name=name + '/conv3'),
-                maxpool2d(k=2, name=name + '/pool2'),
-                fullyconnected(inputs=fc_input_size, outputs=512, name=name + '/fc'),
-                dropout(keep_prob=keep_prob, name=name + '/dropout'),
-                out(inputs=512, outputs=classes, name=name + '/pred')
-            ]
-        
+        with TFSession(sess) as sess:
             super().__init__(X_shape, classes, layers, sess=sess, name=name)
 
             self.feed_dict['keep_prob'] = {'placeholder': keep_prob, 'default': 1.}

@@ -11,17 +11,17 @@ class SqueezeNet(CNN):
         super().__init__(name=name)
         if X_shape is not None and y_size is not None:
             with TFSession(sess) as sess:
-                self.fill_from_shape(sess, X_shape, y_size, version, **kwargs)
+                self.fill_from_shape(X_shape, y_size, version, sess=sess, **kwargs)
                 self.post_init()
 
     @classmethod
     def from_shape(cls, X_shape, y_size, sess=None, name='SqueezeNet', version='1.1', **kwargs):
-        model = cls(X_shape=None, y_size=None, name=name)
-        model.fill_from_shape(sess=sess, X_shape=X_shape, y_size=y_size, version='1.1', **kwargs)
+        model = cls(X_shape=None, y_size=None, sess=sess, name=name)
+        model.fill_from_shape(X_shape=X_shape, y_size=y_size, version='1.1', sess=sess, **kwargs)
         model.post_init()
         return model
 
-    def fill_from_shape(self, sess, X_shape, y_size, version, **kwargs):
+    def fill_from_shape(self, X_shape, y_size, version, sess=None, **kwargs):
         name = self.name
         keep_prob = tf.placeholder(tf.float32, name=name + '/dropout_placeholder')
         if version == '1.1':
@@ -68,7 +68,7 @@ class SqueezeNet(CNN):
 
         self.version = version
         with TFSession(sess) as sess:
-            super().fill_from_shape(sess, X_shape, y_size, layers, **kwargs)
+            super().fill_from_shape(X_shape, y_size, layers, sess=sess, **kwargs)
 
         self.feed_dict['keep_prob'] = {'placeholder': keep_prob, 'default': 1.}
 

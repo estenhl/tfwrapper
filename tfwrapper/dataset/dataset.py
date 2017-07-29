@@ -27,6 +27,15 @@ def normalize_array(arr):
     return (arr - arr.mean()) / arr.std()
 
 
+def normalize_array_columnwise(arr):
+    normalized = np.zeros(arr.shape)
+    for col in range(arr.shape[1]):
+        scaled =normalize_array(arr[:,col])
+        normalized[:,col] = scaled
+
+    return normalized
+
+
 def shuffle_dataset(X, y, seed=None):
     if seed is not None:
         np.random.seed(seed)
@@ -190,6 +199,22 @@ class Dataset():
     def shape(self):
         return self._X.shape
 
+    @property
+    def num_classes(self):
+        """ Returns the number of classes in the dataset.
+
+        If the y matrix has 1 (number data) or 3 (image data) dimensions, the data
+        is assumed to not be onehot encoded. Similarly, if the y matrix has 2 or 4
+        dimensions the data is assumed to be onehot encoded """
+
+        if len(self._y.shape) in [1, 3]:
+            return len(np.unique(self._y))
+        elif len(self._y.shape) in [2, 4]:
+            return self._y.shape[-1]
+        else:
+            raise_exception('Dataset does not know how to compute num_classes with len(y.shape) > 4', NotImplementedError)
+
+
     def __init__(self, X=np.asarray([]), y=np.asarray([]), paths=None, features=None, features_file=None, **kwargs):
         try:
             self._X = np.asarray(X)
@@ -232,8 +257,13 @@ class Dataset():
     def normalize(self):
         return self.__class__(X=normalize_array(self._X), y=self._y, **self.kwargs())
 
-    def normalized(self):
-        return self.__class__(X=normalize_array(self._X), y=self._y, **self.kwargs())
+    def normalized(self, columnwise=False):
+        if columnwise:
+            X = normalize_array_columnwise(self._X)
+        else:
+            X = normalize_array(self._X)
+
+        return self.__class__(X=X, y=self._y, **self.kwargs())
 
     @deprecated('shuffled')
     def shuffle(self, seed=None):
@@ -275,14 +305,17 @@ class Dataset():
     def onehot_encoded(self):
         y = self._y
 
-        invalid_types = ['<U5', '<U11', np.object, np.str, str]
+        invalid_types = ['<U5', '<U11', '<U15', np.object, np.str, str]
         if y.dtype in invalid_types:
             y, self.labels = labels_to_indexes(y)
 
         try:
             return self.__class__(X=self._X, y=onehot_array(y), **self.kwargs())
         except TypeError:
-            raise_exception('Invalid type for onehot_encoded %s. (Valid are all types of ints. Automatically converted are %s' % (y.dtype, str(invalid_types)))
+            raise_exception('Invalid type for onehot_encoded %s. (Valid are all types of ints. Automatically converted are %s' % (y.dtype, str(invalid_types)), InvalidArgumentException)
+
+    def squeezed(self):
+        return self.__class__(X=np.squeeze(self._X), y=self._y, **self.kwargs())
 
     def split(self, ratio=0.8):
         X, y, test_X, test_y = split_dataset(self._X, self._y, ratio=ratio)
@@ -326,13 +359,12 @@ class Dataset():
         return self.__class__(X=X, y=y, **self.kwargs())
 
     def merge_classes(self, mappings):
-        X = self._X
-        y = self._y
-        for i in range(len(y)):
-            if y[i] in mappings:
-                y[i] = mappings[y[i]]
+        y = self._y.copy()
 
-        return self.__class__(X=X, y=y, **self.kwargs())
+        for key in mappings:
+            y[y == key] = mappings[key]
+
+        return self.__class__(X=self._X, y=y, **self.kwargs())
 
     def folds(self, k):
         X = np.array_split(self._X, k)

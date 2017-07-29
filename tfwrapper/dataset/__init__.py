@@ -4,3 +4,4 @@ from .dataset_generator import DatasetGenerator, DatasetSamplingGenerator
 from .image_preprocessor import ImagePreprocessor
 from .image_loader import ImageLoader
 from .feature_loader import FeatureLoader
+from .segmentation_dataset import SegmentationDataset
