@@ -3,12 +3,18 @@ import cv2
 import matplotlib.pyplot as plt
 import scipy.ndimage
 
+def _read_gif(filepath):
+    return scipy.ndimage.imread(filepath)
 
-def imread(file_path):
+
+def imread(filepath):
+    if filepath.endswith('.gif'):
+        return _read_gif(filepath)
+
     rgb_image = None
     
     try:
-        image = cv2.imread(file_path)
+        image = cv2.imread(filepath)
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     except Exception as e:
         print(e)

@@ -142,7 +142,6 @@ class SupervisedModel(ABC):
                             raise_exception('Invalid layer dependency type %s. (Valid is [str, list])' % type(dependencies), InvalidArgumentException)
                 prev = layer(prev)
                 self.tensors.append({'name': prev.name, 'tensor': prev})
-                print('%s: %s' % (prev.name, str(prev)))
             self.pred = prev
 
             self.graph = sess.graph

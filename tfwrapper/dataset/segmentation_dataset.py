@@ -142,6 +142,16 @@ def translate_image_labels(imgs):
 
     return translated_imgs, labels
 
+
+def translate_image_rgb(imgs, labels):
+    batch_size, height, width = imgs.shape
+    translated_imgs = np.zeros((batch_size, height, width, 3))
+
+    for label in labels:
+        idx = np.where(imgs == label, [255, 255, 255], label)
+
+    return translated_imgs
+
 class SegmentationDataset(Dataset):
     """ 
     A class for representing datasets used by segmentation models.
@@ -179,6 +189,14 @@ class SegmentationDataset(Dataset):
 
         return cls(X=X, y=y)
 
+    @classmethod
+    def from_predictions(cls, *, X, preds):
+        """ Creates a dataset from a set of images and a set of predictions """
+
+        y = np.argmax(preds, axis=3)
+
+        return cls(X=X, y=y)
+
     def normalized(self, columnwise=False):
         raise_exception('Unable to perform straight normalization of a Segmentation Dataset (Imagewise normalization not implemented)', NotImplementedError)
 
@@ -190,12 +208,18 @@ class SegmentationDataset(Dataset):
         return self.__class__(X=self._X, y=np.asarray(y), labels=self.labels)
 
     def translated_labels(self):
-        """ Translates the (typically 3-channeled) pixel values of a dataset
-        into single class labels """
+        """ Translates the (typically 3-channeled) pixel values of y into single class labels """
 
         y, labels = translate_image_labels(self._y)
 
         return self.__class__(X=self._X, y=y, labels=labels)
+
+    def translated_rgb(self, labels):
+        """ Translates y from a set of labels to the rgb-values given in the parameter """
+
+        y = translate_image_rgb(self._y, labels)
+
+        return self.__class__(X=self._X, y=y)
 
     def visualize(self, num=None):
         """ Visualizes the first |num| images of the dataset, with the labels overlayed """
