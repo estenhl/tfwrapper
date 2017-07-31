@@ -10,6 +10,9 @@ A project containing several modules useful for developing machine learning tech
 ### [Utils]()
 <br />
 
+<canvas id="myCanvas" width="200" height="100" style="border:1px solid #000000;">
+</canvas>
+
 ## Requirements
 tensorflow (>1.0.1)<br />
 numpy (>1.12.1)<br />

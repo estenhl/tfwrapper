@@ -6,13 +6,13 @@ from abc import ABC
 
 from tfwrapper import logger
 from tfwrapper import TFSession
+from tfwrapper.models import PredictiveClassificationModel
+from tfwrapper.models.utils import save_serving as save
 from tfwrapper.utils.exceptions import InvalidArgumentException
 from tfwrapper.utils.exceptions import raise_exception
 from tfwrapper.utils.data import get_subclass_by_name
-from tfwrapper.models.utils import save_serving as save
 
-
-class FrozenModel(ABC):
+class FrozenModel(PredictiveClassificationModel):
     def __init__(self, path, name='FrozenModel', sess=None):
         if not os.path.isfile(path):
             raise_exception('Invalid path %s to pb file' % path, InvalidArgumentException)
@@ -58,11 +58,13 @@ class FrozenModel(ABC):
         features = self.extract_features(X, dest=self.bottleneck_tensor, sess=sess)
         return np.squeeze(features)
 
-    def predict(self, X, sess=None):
+    def predict(self, X, *, sess=None):
         return self.run_op(X, src=self.input_tensor, dest=self.output_tensor, sess=sess)
 
-    def save_serving(self, export_path, sess, over_write=False):
+    def validate(self, X, y, *, sess=None):
+        raise NotImplementedError('Validate is not implemented for frozen models')
 
+    def save_serving(self, export_path, sess, over_write=False):
         in_tensor = sess.graph.get_tensor_by_name(self.input_tensor)
         out_tensor = sess.graph.get_tensor_by_name(self.bottleneck_tensor)
 

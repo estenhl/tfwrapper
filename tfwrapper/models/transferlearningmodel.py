@@ -1,19 +1,23 @@
 import json
 import datetime
+import tensorflow as tf
 
 from tfwrapper import TFSession
+from tfwrapper import Dataset
 from tfwrapper import FeatureLoader
 from tfwrapper import ImagePreprocessor
 from tfwrapper import METADATA_SUFFIX
+from tfwrapper.models import Predictive
+from tfwrapper.models import PredictiveRegressionModel
+from tfwrapper.models import PredictiveClassificationModel
 from tfwrapper.utils.data import get_subclass_by_name
 
 from .frozenmodel import FrozenModel
-from .supervisedmodel import SupervisedModel
-from .metamodel import MetaModel
+from .metamodel import MetaModel, RegressionMetaModel, ClassificationMetaModel
 
 
 class TransferLearningModel(MetaModel):
-    def __init__(self, feature_model, prediction_model, features_layer=None, features_cache=None, name='TransferLearningModel'):
+    def __init__(self, feature_model: Predictive, prediction_model: Predictive, features_layer: str = None, features_cache: str = None, name: str = 'TransferLearningModel'):
         super().__init__(name)
 
         self.feature_model = feature_model
@@ -24,7 +28,7 @@ class TransferLearningModel(MetaModel):
         if self.features_layer is None:
             self.features_layer = feature_model.bottleneck_tensor
 
-    def train(self, dataset, *, epochs, preprocessor=None, sess=None):
+    def train(self, dataset: Dataset, *, epochs: int, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         with TFSession(sess, self.feature_model.graph) as sess1:
             dataset.loader = FeatureLoader(self.feature_model, cache=self.features_cache, preprocessor=preprocessor, sess=sess1)
             X, y = dataset.X, dataset.y
@@ -32,7 +36,7 @@ class TransferLearningModel(MetaModel):
         with TFSession(sess, self.prediction_model.graph) as sess2:
             self.prediction_model.train(X, y, epochs=epochs, sess=sess2)
 
-    def validate(self, dataset, *, preprocessor=None, sess=None):
+    def validate(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         with TFSession(sess, self.feature_model.graph) as sess1:
             dataset.loader = FeatureLoader(self.feature_model, cache=self.features_cache, preprocessor=preprocessor, sess=sess1)
             X, y = dataset.X, dataset.y
@@ -42,7 +46,7 @@ class TransferLearningModel(MetaModel):
             return self.prediction_model.validate(X, y, sess=sess2)
 
 
-    def predict(self, dataset, *, preprocessor=None, sess=None):
+    def predict(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         with TFSession(sess, self.feature_model.graph) as sess1:
             dataset.loader = FeatureLoader(self.feature_model, cache=self.features_cache, preprocessor=preprocessor, sess=sess1)
             X = dataset.X
@@ -54,7 +58,7 @@ class TransferLearningModel(MetaModel):
     def reset(self):
         self.prediction_model.reset()
 
-    def save(self, path, sess=None, **kwargs):
+    def save(self, path: str, *, sess: tf.Session = None, **kwargs):
         prediction_model_path = path + '_prediction'
         metadata = kwargs
         metadata['name'] = self.name
@@ -72,7 +76,7 @@ class TransferLearningModel(MetaModel):
         self.prediction_model.save(prediction_model_path, sess=sess)
 
     @staticmethod
-    def from_tw(path, sess=None, **kwargs):
+    def from_tw(path: str, sess: tf.Session = None, **kwargs):
         metadata_filename = '%s.%s' % (path, METADATA_SUFFIX)
         with open(metadata_filename, 'r') as f:
             metadata = json.load(f)
@@ -88,4 +92,13 @@ class TransferLearningModel(MetaModel):
         prediction_model = SupervisedModel.from_tw(prediction_model_path, sess=sess)
 
         return TransferLearningModel(feature_model, prediction_model, features_layer=features_layer, features_cache=features_cache, name=name)
+
+class TransferLearningClassificationModel(TransferLearningModel, ClassificationMetaModel):
+    def __init__(self, feature_model: Predictive, prediction_model: PredictiveClassificationModel, features_layer: str = None, features_cache: str = None, name: str = 'TransferLearningModel'):
+        TransferLearningModel.__init__(self, feature_model, prediction_model, features_layer, feature_cache, name)
+
+class TransferLearningRegressionModel(TransferLearningModel, RegressionMetaModel):
+    def __init__(self, feature_model: Predictive, prediction_model: PredictiveRegressionModel, features_layer: str = None, features_cache: str = None, name: str = 'TransferLearningModel'):
+        TransferLearningModel.__init__(self, feature_model, prediction_model, features_layer, feature_cache, name)
+
 
