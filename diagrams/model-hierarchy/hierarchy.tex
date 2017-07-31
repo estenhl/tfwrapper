@@ -1,0 +1,24 @@
+\documentclass{standalone}% For the example only, any class will do
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.misc, positioning, arrows}
+
+\usepackage{graphics}
+%\pgfrealjobname{hierarchy}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.5]
+    \node (basemodel) at (10, 10) [draw, rounded rectangle] {BaseModel};
+    \node (predictive) [right=1.8cm of basemodel, draw, rounded rectangle] {Predictive};
+    %\node (trainable) [below=2.5cm of predictive, draw, rounded rectangle] {Trainable};
+    \node (predclassification) [below left=2.2cm and -0.25cm of basemodel, draw, rounded rectangle] {PredictiveClassificationModel};
+    \node (predregression) [below right=2.2cm and -0.25cm of basemodel, draw, rounded rectangle] {PredictiveRegressionModel};
+    \node (trainable) [right=of predregression, draw, rounded rectangle] {Trainable};
+    \node (nn) [below=4cm of predclassification, draw, rounded rectangle]
+    \draw[->]
+    (basemodel) edge (predclassification)
+    (basemodel) edge (predregression)
+    (predictive) edge (predclassification)
+    (predictive) edge (predregression);
+\end{tikzpicture}
+\end{document}

@@ -8,3 +8,5 @@ examples/data/**/*
 .idea
 tfwrapper/nets/pretrained/models/
 .path
+diagrams/**/*.log
+diagrams/**/*.aux

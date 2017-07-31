@@ -6,12 +6,9 @@ A project containing several modules useful for developing machine learning tech
 ## Modules
 ### [Datasets](https://github.com/epigramai/tfwrapper/blob/master/tfwrapper/datasets)
 ### [Dataset](https://github.com/epigramai/tfwrapper/blob/master/tfwrapper/dataset.py)
-### [Nets](https://github.com/epigramai/tfwrapper/blob/master/tfwrapper/nets)
+### [Models](https://github.com/epigramai/tfwrapper/blob/master/tfwrapper/models)
 ### [Utils]()
 <br />
-
-<canvas id="myCanvas" width="200" height="100" style="border:1px solid #000000;">
-</canvas>
 
 ## Requirements
 tensorflow (>1.0.1)<br />
