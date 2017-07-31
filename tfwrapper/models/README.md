@@ -1,1 +1,1 @@
-![Model hierarchy](../../)
+![Model hierarchy](../../diagrams/model-hierarchy/hierarchy.png)
