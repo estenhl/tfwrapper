@@ -1,0 +1,4 @@
+cd ../diagrams/model-hierarchy/
+/Library/TeX/Root/bin/x86_64-darwin/pdflatex hierarchy.tex
+convert -density 300 -quality 100 -background white -alpha remove hierarchy.pdf hierarchy.png
+cd ../../scripts
