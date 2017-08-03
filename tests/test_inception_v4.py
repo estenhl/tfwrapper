@@ -1,5 +1,6 @@
 import os
 import cv2
+import numpy as np
 import tensorflow as tf
 
 from tfwrapper.models.frozen import FrozenInceptionV4
@@ -24,6 +25,12 @@ class TestInceptionV4():
         features = self.inception.extract_features(img, sess=self.sess)
 
         assert (1, 1536) == features.shape
+
+    def test_from_data_arr(self):
+        img = cv2.imread(cat_img)
+        features = self.inception.extract_features(np.asarray([img, img, img]), sess=self.sess)
+
+        assert (3, 1536) == features.shape
 
     def test_from_op(self):
         img = cv2.imread(cat_img)

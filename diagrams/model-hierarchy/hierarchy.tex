@@ -20,8 +20,8 @@
 \begin{tikzpicture}[scale=1.5]
     \node (basemodel) [draw, dashed, fill=lightblue, rounded rectangle] {BaseModel};
     \node (predictive) [right=1.8cm of basemodel, draw, dashed, fill=lightblue, rounded rectangle] {Predictive};
-    \node (predclassification) [below left=1.2cm and -2.25cm of basemodel, draw, dashed, fill=lightblue, rounded rectangle] {PredictiveClassificationModel};
-    \node (predregression) [below right=1.2cm and 1.75cm of basemodel, draw, dashed, fill=lightblue, rounded rectangle] {PredictiveRegressionModel};
+    \node (predclassification) [below left=1.2cm and -2.25cm of basemodel, draw, dashed, fill=lightblue, rounded rectangle] {ClassificationModel};
+    \node (predregression) [below right=1.2cm and 1.75cm of basemodel, draw, dashed, fill=lightblue, rounded rectangle] {RegressionModel};
     \node (trainable) [right=of predregression, draw, dashed, fill=lightblue, rounded rectangle] {Trainable};
     \node (derivable) [left=of predclassification, draw, dashed, fill=lightblue, rounded rectangle] {Derivable};
 
@@ -75,8 +75,6 @@
     \node (multin) [right=0.2cm of multout] {There exists one variant per superclass};
 
     \node (metamodel) [below right=11.5cm and 0cm of basemodel, draw, dashed, fill=yellow, rounded rectangle] {MetaModel};
-    \node (metapred) [right=1.2 of metamodel, draw, dashed, fill=yellow, rounded rectangle] {MetaPredictive};
-    \node (metatrainable) [left=1.2 of metamodel, draw, dashed, fill=yellow, rounded rectangle] {MetaTrainable};
     \node (metaclassification) [below left=1.2cm and -0.1cm of metamodel, draw, dashed, fill=yellow, rounded rectangle] {MetaClassificationModel};
     \node (metaregression) [below right=1.2cm and -0.1cm of metamodel, draw, dashed, fill=yellow, rounded rectangle] {MetaRegressionModel};
     \node (modelwrapper) [right=1cm of metaregression, draw, dashed, fill=blue, rounded rectangle] {ModelWrapper};
@@ -95,6 +93,11 @@
     (predclassification) edge (nn)
     (trainable) edge (nn)
     (derivable) edge (nn)
+    (frozen) edge (finc3)
+    (frozen) edge (finc4)
+    (frozen) edge (fres50)
+    (frozen) edge (fres152)
+    (frozen) edge (fvgg16)
     (nn) edge (singlenn)
     (nn) edge (dualnn)
     (nn) edge (rnn)
@@ -112,10 +115,6 @@
     (derivable) edge (frozen)
     (metamodel) edge (metaregression)
     (metamodel) edge (metaclassification)
-    (metapred) edge (metaregression)
-    (metapred) edge (metaclassification)
-    (metatrainable) edge (metaregression)
-    (metatrainable) edge (metaclassification)
     (metaclassification) edge [color=red] (ensemble)
     (metaclassification) edge [color=red] (tl)
     (metaclassification) edge [color=red] (wrapper)

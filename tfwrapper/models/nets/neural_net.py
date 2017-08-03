@@ -18,25 +18,34 @@ from tfwrapper.utils.data import get_subclass_by_name
 from tfwrapper.models.utils import save_serving as save
 from tfwrapper.layers import Layer
 
-from tfwrapper.models import TrainableModel, Predictive
+from tfwrapper.models import BaseModel, ClassificationModel, Trainable
 
 
 META_GRAPH_SUFFIX = 'meta'
 
 
-class NeuralNet(TrainableModel, Predictive):
+class NeuralNet(BaseModel, ClassificationModel, Trainable):
     DEFAULT_BOTTLENECK_LAYER = -2
 
     learning_rate = 0.1
     batch_size = 128
 
+    @property
+    def graph(self):
+        return self._graph
+
+    @property
+    def variables(self):
+        return self._variables
+
     def __init__(self, X_shape=None, y_size=None, layers=None, preprocessing=None, sess=None, name='NeuralNet', **kwargs):
+        BaseModel.__init__(self, name=name)
+
         if preprocessing is None:
             preprocessing = []
             
         self.name = name
-
-        super().__init__(name=name)
+        
         if X_shape is not None and y_size is not None and layers is not None:
             with TFSession(sess) as sess:
                 self.fill_from_shape(X_shape, y_size, layers, sess=sess, **kwargs)
@@ -74,7 +83,7 @@ class NeuralNet(TrainableModel, Predictive):
         batch_size = metadata['batch_size']
         classname = metadata['type']
 
-        from .nets import SingleLayerNeuralNet
+        from .single_layer_neural_net import SingleLayerNeuralNet
         subclass = get_subclass_by_name(cls, classname)
 
         for key in subclass.init_args:
@@ -137,9 +146,9 @@ class NeuralNet(TrainableModel, Predictive):
                 self.tensors.append({'name': prev.name, 'tensor': prev})
             self.pred = prev
 
-            self.graph = sess.graph
+            self._graph = sess.graph
 
-        self.variables = {}
+        self._variables = {}
         self.init_vars_when_training = True
         self.feed_dict = {}
 
@@ -155,8 +164,7 @@ class NeuralNet(TrainableModel, Predictive):
             new_saver = tf.train.import_meta_graph(metagraph_filename, clear_devices=True)
             new_saver.restore(sess, metagraph_filename)
 
-            graph = tf.get_default_graph()
-            self.graph = graph
+            self._graph = tf.get_default_graph()
             self.X = graph.get_tensor_by_name(self.name + '/X_placeholder:0')
             self.y = graph.get_tensor_by_name(self.name + '/y_placeholder:0')
             self.lr = graph.get_tensor_by_name(self.name + '/learning_rate_placeholder:0')
@@ -183,13 +191,6 @@ class NeuralNet(TrainableModel, Predictive):
     def reset(self):
         with TFSession(None, self.graph) as sess:
             sess.run(tf.global_variables_initializer())
-
-    def load(self, filename, sess=None):
-        with TFSession(sess, self.graph, self.variables) as sess:
-            super().load(filename, sess=sess)
-
-            self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
-            self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')
 
     def train_epoch(self, generator, epoch_nr, feed_dict=None, val_generator=None, sess=None):
         if feed_dict is None:
@@ -308,7 +309,7 @@ class NeuralNet(TrainableModel, Predictive):
 
     def checkpoint_variables(self, sess):
         for variable in tf.trainable_variables():
-            self.variables[variable.name] = {'tensor': variable, 'value': sess.run(variable)}
+            self._variables[variable.name] = {'tensor': variable, 'value': sess.run(variable)}
 
     def validate_batches(self, X, y, prefix=''):
         if not len(X) == len(y):
@@ -475,11 +476,13 @@ class NeuralNet(TrainableModel, Predictive):
             saver = tf.train.Saver(tf.trainable_variables())
             saver.restore(sess, filename)
 
-            self.graph = sess.graph
+            self._graph = sess.graph
             self.X = sess.graph.get_tensor_by_name(self.name + '/X_placeholder:0')
             self.y = sess.graph.get_tensor_by_name(self.name + '/y_placeholder:0')
             self.lr = sess.graph.get_tensor_by_name(self.name + '/learning_rate_placeholder:0')
             self.pred = sess.graph.get_tensor_by_name(self.name + '/pred:0')
+            self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
+            self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')
 
             self.checkpoint_variables(sess)
 

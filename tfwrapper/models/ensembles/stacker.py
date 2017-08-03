@@ -2,34 +2,46 @@ import json
 import math
 import functools
 import numpy as np
+import tensorflow as tf
+from typing import Union, List
 
-from tfwrapper import logger
-from tfwrapper import TFSession
-from tfwrapper import METADATA_SUFFIX
-from tfwrapper.dataset import Dataset
-from tfwrapper.utils.exceptions import raise_exception
-from tfwrapper.utils.exceptions import InvalidArgumentException
-from tfwrapper.models import SupervisedModel
-from tfwrapper.models import TransferLearningModel
-from tfwrapper.models.nets import SingleLayerNeuralNet
+from tfwrapper import logger, TFSession, METADATA_SUFFIX
+from tfwrapper.dataset import Dataset, ImagePreprocessor
+from tfwrapper.models import Predictive, RegressionModel, ClassificationModel, MetaModel, PredictiveMeta, RegressionMetaModel, ClassificationMetaModel, TransferLearningModel, ModelWrapper
+from tfwrapper.models.nets import NeuralNet, SingleLayerNeuralNet
+from tfwrapper.utils.exceptions import log_and_raise, InvalidArgumentException
 
 
-class Stacker():
+class Stacker(MetaModel, PredictiveMeta):
     DATA_POLICY_FOLDS = 'folds'
     DATA_POLICY_SHUFFLED_FOLDS = 'shuffle'
     _VALID_DATA_POLICIES = [None, DATA_POLICY_FOLDS, DATA_POLICY_SHUFFLED_FOLDS]
 
-    def __init__(self, prediction_models, decision_model, policy=None, name='Stacker'):
-        self.prediction_models = prediction_models
-        self.decision_model = decision_model
-        self.name = name
+    def __init__(self, prediction_models: List[Union[Predictive, PredictiveMeta]], decision_model: Union[Predictive, PredictiveMeta], policy: str = None, name: str = 'Stacker'):
+        super().__init__(name)
+
+        self.prediction_models = []
+        for model in prediction_models:
+            if isinstance(model, Predictive):
+                self.prediction_models.append(ModelWrapper.from_instance(model))
+            elif isinstance(model, PredictiveMeta):
+                self.prediction_models.append(model)
+            else:
+                log_and_raise(InvalidArgumentException, 'Elements of prediction_models must either be a subclass of Predictive or PredictiveMeta')
+
+        if isinstance(decision_model, Predictive):
+            self.decision_model = ModelWrapper.from_instance(decision_model)
+        elif isinstance(decision_model, PredictiveMeta):
+            self.decision_model = decision_model
+        else:
+            log_and_raise(InvalidArgumentException, 'decision_model must either be a subclass of Predictive or PredictiveMeta')
 
         if not policy in self._VALID_DATA_POLICIES:
-            raise_exception('Invalid data policy %s. (Valid is %s)' % (policy, str(self._VALID_DATA_POLICIES)), InvalidArgumentException)
+            log_and_raise(InvalidArgumentException, 'Invalid data policy %s. (Valid is %s)' % (policy, str(self._VALID_DATA_POLICIES)))
         
         self._policy = policy
 
-    def _reorder_predictions(self, predictions):
+    def _reorder_predictions(self, predictions: np.ndarray):
         n_models, n_samples, n_features = predictions.shape
         reordered = np.zeros((n_samples, n_models, n_features))
         for i in range(n_models):
@@ -38,7 +50,7 @@ class Stacker():
 
         return reordered
 
-    def _compute_predictions(self, dataset, preprocessor=None, sess=None):
+    def _compute_predictions(self, dataset: Dataset, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         preds = self.prediction_models[0].predict(dataset, preprocessor=preprocessor, sess=sess)
         combined_preds = np.expand_dims(preds, axis=0)
 
@@ -52,7 +64,7 @@ class Stacker():
 
         return reordered
 
-    def _train_on_dataset(self, dataset, *, epochs, preprocessor=None, sess=None):
+    def _train_on_dataset(self, dataset: Dataset, *, epochs: int, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         for model in self.prediction_models:
             model.train(dataset, preprocessor=preprocessor, epochs=epochs[0], sess=sess)
 
@@ -61,7 +73,7 @@ class Stacker():
         with TFSession(sess, self.decision_model.graph) as sess:
             self.decision_model.train(preds, dataset.y, epochs=epochs[1], sess=sess)
 
-    def _train_on_folds(self, dataset, *, epochs, preprocessor=None, sess=None):
+    def _train_on_folds(self, dataset: Dataset, *, epochs: int, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         num_models = len(self.prediction_models)
         folds = dataset.folds(num_models)
 
@@ -93,11 +105,12 @@ class Stacker():
             model.train(dataset, epochs=epochs[0], preprocessor=preprocessor, sess=sess)
 
         # Train the decision model
+        dataset = Dataset(X=preds, y=dataset.y)
         with TFSession(sess, self.decision_model.graph) as sess:
-            self.decision_model.train(preds, dataset.y, epochs=epochs[1], sess=sess)
+            self.decision_model.train(dataset, epochs=epochs[1], sess=sess)
 
-    def _train_on_shuffled_folds(self, dataset, *, epochs, preprocessor=None, sess=None):
-        raise_exception('Does not work yet', NotImplementedError)
+    def _train_on_shuffled_folds(self, dataset: Dataset, *, epochs: int, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
+        log_and_raise(NotImplementedError, 'Does not work yet')
         # TODO (20.06.17): Should be combined with _train_on_folds
         num_models = len(self.prediction_models)
 
@@ -137,16 +150,17 @@ class Stacker():
         for model in self.prediction_models:
             model.train(dataset, epochs=epochs[0], preprocessor=preprocessor, sess=sess)
 
+        dataset = Dataset(X=preds, y=dataset.y)
         with TFSession(sess, self.decision_model.graph) as sess:
-            self.decision_model.train(preds, dataset.y, epochs=epochs[1], sess=sess)
+            self.decision_model.train(dataset, epochs=epochs[1], sess=sess)
 
-    def train(self, dataset, *, epochs, preprocessor=None, sess=None):
+    def train(self, dataset: Dataset, *, epochs: int, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         if type(epochs) is int:
             epochs = [epochs, epochs]
         elif type(epochs) is list:
             pass
         else:
-            raise_exception('Invalid epochs type %s. (Valid is [int, list])' % repr(type(epochs)), InvalidArgumentException)
+            log_and_raise(InvalidArgumentException, 'Invalid epochs type %s. (Valid is [int, list])' % repr(type(epochs)))
 
         if self._policy is None:
             self._train_on_dataset(dataset, epochs=epochs, preprocessor=preprocessor, sess=sess)
@@ -155,27 +169,35 @@ class Stacker():
         elif self._policy is self.DATA_POLICY_SHUFFLED_FOLDS:
             self._train_on_shuffled_folds(dataset, epochs=epochs, preprocessor=preprocessor, sess=sess)
         else:
-            raise_exception('Invalid data policy %s. (Valid is %s)' % (policy, str(self._VALID_DATA_POLICIES)), InvalidArgumentException)
+            log_and_raise(InvalidArgumentException, 'Invalid data policy %s. (Valid is %s)' % (policy, str(self._VALID_DATA_POLICIES)))
         
-    def validate(self, dataset, preprocessor=None, sess=None):
+    def validate(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         preds = self._compute_predictions(dataset, preprocessor=preprocessor, sess=sess)
 
         for model in self.prediction_models:
             _, acc = model.validate(dataset, preprocessor=preprocessor, sess=sess)
-            print('%s acc: %.2f%%' % (model.name, (acc * 100)))
+            logger.info('%s acc: %.2f%%' % (model.name, (acc * 100)))
 
+        dataset = Dataset(X=preds, y=dataset.y)
         variables = self.decision_model.variables
         with TFSession(sess, self.decision_model.graph, variables=variables) as sess:
-            return self.decision_model.validate(preds, dataset.y, sess=sess)
+            return self.decision_model.validate(dataset, sess=sess)
 
-    def predict(self, dataset, preprocessor=None, sess=None):
+    def predict(self, dataset: Dataset, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         preds = self._compute_predictions(dataset, preprocessor=preprocessor, sess=sess)
 
+        dataset = Dataset(X=preds, y=dataset.y)
         variables = self.decision_model.variables
         with TFSession(sess, self.decision_model.graph, variables=variables) as sess:
-            return self.decision_model.predict(preds, dataset.y, sess=sess)
+            return self.decision_model.predict(dataset, sess=sess)
 
-    def save(self, path, sess=None, **kwargs):
+    def reset(self, **kwargs):
+        for model in self.prediction_models:
+            model.reset()
+
+        self.decision_model.reset()
+
+    def save(self, path: str, sess: tf.Session = None, **kwargs):
         metadata = kwargs
         metadata['name'] = self.name
         metadata['policy'] = self._policy
@@ -197,7 +219,7 @@ class Stacker():
             f.write(json.dumps(metadata, indent=2))
 
     @staticmethod
-    def from_tw(path, sess=None, **kwargs):
+    def from_tw(path: str, sess: tf.Session = None, **kwargs):
         metadata_filename = '%s.%s' % (path, METADATA_SUFFIX)
         with open(metadata_filename, 'r') as f:
             metadata = json.load(f)
@@ -208,6 +230,6 @@ class Stacker():
         for path in metadata['prediction_model_paths']:
             prediction_models.append(TransferLearningModel.from_tw(path))
 
-        decision_model = SupervisedModel.from_tw(metadata['decision_model_path'])
+        decision_model = NeuralNet.from_tw(metadata['decision_model_path'])
 
         return Stacker(prediction_models, decision_model, policy=policy, name=name)

@@ -3,9 +3,9 @@ import json
 import numpy as np
 import tensorflow as tf
 
-from tfwrapper.models import SupervisedModel
 from tfwrapper.models.nets import SingleLayerNeuralNet
-from tfwrapper.models.supervisedmodel import METADATA_SUFFIX
+from tfwrapper.models.nets import NeuralNet
+from tfwrapper.models.nets.neural_net import METADATA_SUFFIX
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 from utils import curr_path
@@ -188,7 +188,7 @@ def test_load_from_tw():
             model.save(filename, sess=sess)
 
         tf.reset_default_graph()
-        loaded_model = SupervisedModel.from_tw(filename)
+        loaded_model = NeuralNet.from_tw(filename)
 
         assert np.array_equal(preds, loaded_model.predict(data))
 

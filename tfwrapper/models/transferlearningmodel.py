@@ -1,27 +1,37 @@
 import json
 import datetime
+import numpy as np
 import tensorflow as tf
+from typing import Union
 
-from tfwrapper import TFSession
-from tfwrapper import Dataset
-from tfwrapper import FeatureLoader
-from tfwrapper import ImagePreprocessor
-from tfwrapper import METADATA_SUFFIX
-from tfwrapper.models import Predictive
-from tfwrapper.models import PredictiveRegressionModel
-from tfwrapper.models import PredictiveClassificationModel
+from tfwrapper import TFSession, Dataset, ImageDataset, FeatureLoader, ImagePreprocessor, METADATA_SUFFIX
+from tfwrapper.models import Predictive, RegressionModel, ClassificationModel
+from tfwrapper.models.nets import NeuralNet
 from tfwrapper.utils.data import get_subclass_by_name
+from tfwrapper.utils.exceptions import log_and_raise, InvalidArgumentException
 
+from .basemodel import Predictive, Derivable
 from .frozenmodel import FrozenModel
-from .metamodel import MetaModel, RegressionMetaModel, ClassificationMetaModel
+from .metamodel import MetaModel, PredictiveMeta, RegressionMetaModel, ClassificationMetaModel
+from .modelwrapper import ModelWrapper
 
 
-class TransferLearningModel(MetaModel):
-    def __init__(self, feature_model: Predictive, prediction_model: Predictive, features_layer: str = None, features_cache: str = None, name: str = 'TransferLearningModel'):
+class TransferLearningModel(MetaModel, PredictiveMeta):
+    def __init__(self, feature_model: Derivable, prediction_model: Union[Predictive, PredictiveMeta], features_layer: str = None, features_cache: str = None, name: str = 'TransferLearningModel'):
         super().__init__(name)
 
-        self.feature_model = feature_model
-        self.prediction_model = prediction_model
+        if isinstance(feature_model, Derivable):
+            self.feature_model = feature_model
+        else:
+            log_and_raise(InvalidArgumentException, 'feature_model must be a Derivable model')
+
+        if isinstance(prediction_model, Predictive):
+            self.prediction_model = ModelWrapper(prediction_model)
+        elif isinstance(prediction_model, PredictiveMeta):
+            self.prediction_model = prediction_model
+        else:
+            log_and_raise(InvalidArgumentException, 'prediction_model must either be a Predictive model, or a PredictiveMeta model')
+
         self.features_layer = features_layer
         self.features_cache = features_cache
 
@@ -31,29 +41,30 @@ class TransferLearningModel(MetaModel):
     def train(self, dataset: Dataset, *, epochs: int, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         with TFSession(sess, self.feature_model.graph) as sess1:
             dataset.loader = FeatureLoader(self.feature_model, cache=self.features_cache, preprocessor=preprocessor, sess=sess1)
-            X, y = dataset.X, dataset.y
 
         with TFSession(sess, self.prediction_model.graph) as sess2:
-            self.prediction_model.train(X, y, epochs=epochs, sess=sess2)
+            self.prediction_model.train(dataset, epochs=epochs, sess=sess2)
 
     def validate(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         with TFSession(sess, self.feature_model.graph) as sess1:
             dataset.loader = FeatureLoader(self.feature_model, cache=self.features_cache, preprocessor=preprocessor, sess=sess1)
-            X, y = dataset.X, dataset.y
 
         variables = self.prediction_model.variables
         with TFSession(sess, self.prediction_model.graph, variables=variables) as sess2:
-            return self.prediction_model.validate(X, y, sess=sess2)
-
+            return self.prediction_model.validate(dataset, sess=sess2)
 
     def predict(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         with TFSession(sess, self.feature_model.graph) as sess1:
-            dataset.loader = FeatureLoader(self.feature_model, cache=self.features_cache, preprocessor=preprocessor, sess=sess1)
-            X = dataset.X
+            if isinstance(dataset, ImageDataset):
+                dataset.loader = FeatureLoader(self.feature_model, cache=self.features_cache, preprocessor=preprocessor, sess=sess1)
+                X = dataset.X
+            else:
+                X = self.feature_model.extract_features(dataset.X, self.features_layer, sess=sess)
 
+        dataset = Dataset(X=X, y=np.zeros(len(X)))
         variables = self.prediction_model.variables
         with TFSession(sess, self.prediction_model.graph, variables=variables) as sess2:
-            return self.prediction_model.predict(X, sess=sess2)
+            return self.prediction_model.predict(dataset, sess=sess2)
 
     def reset(self):
         self.prediction_model.reset()
@@ -89,16 +100,22 @@ class TransferLearningModel(MetaModel):
         features_cache = metadata['features_cache']
 
         feature_model = FrozenModel.from_type(feature_model_type)
-        prediction_model = SupervisedModel.from_tw(prediction_model_path, sess=sess)
+        prediction_model = NeuralNet.from_tw(prediction_model_path, sess=sess)
 
         return TransferLearningModel(feature_model, prediction_model, features_layer=features_layer, features_cache=features_cache, name=name)
 
-class TransferLearningClassificationModel(TransferLearningModel, ClassificationMetaModel):
-    def __init__(self, feature_model: Predictive, prediction_model: PredictiveClassificationModel, features_layer: str = None, features_cache: str = None, name: str = 'TransferLearningModel'):
-        TransferLearningModel.__init__(self, feature_model, prediction_model, features_layer, feature_cache, name)
 
 class TransferLearningRegressionModel(TransferLearningModel, RegressionMetaModel):
-    def __init__(self, feature_model: Predictive, prediction_model: PredictiveRegressionModel, features_layer: str = None, features_cache: str = None, name: str = 'TransferLearningModel'):
+    def __init__(self, feature_model: Predictive, prediction_model: [RegressionModel, RegressionMetaModel], features_layer: str = None, features_cache: str = None, name: str = 'TransferLearningModel'):
         TransferLearningModel.__init__(self, feature_model, prediction_model, features_layer, feature_cache, name)
 
+    def validate(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None) -> float:
+        super().validate(dataset, preprocessor=preprocessor, sess=sess)
 
+
+class TransferLearningClassificationModel(TransferLearningModel, ClassificationMetaModel):
+    def __init__(self, feature_model: Predictive, prediction_model: Union[ClassificationModel, ClassificationMetaModel], features_layer: str = None, features_cache: str = None, name: str = 'TransferLearningModel'):
+        TransferLearningModel.__init__(self, feature_model, prediction_model, features_layer, feature_cache, name)
+
+    def validate(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None) -> (float, float):
+        super().validate(dataset, preprocessor=preprocessor, sess=sess)

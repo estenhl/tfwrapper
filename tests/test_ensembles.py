@@ -1,7 +1,7 @@
 import numpy as np
 
-from tfwrapper.ensembles.utils import accumulate_predictions
-from tfwrapper.ensembles.utils import vote_predictions
+from tfwrapper.models.ensembles.utils import accumulate_predictions
+from tfwrapper.models.ensembles.utils import vote_predictions
 
 def generate_preds():
     return np.asarray([

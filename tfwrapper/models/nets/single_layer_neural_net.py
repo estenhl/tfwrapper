@@ -21,7 +21,7 @@ class SingleLayerNeuralNet(NeuralNet):
         ]
         with TFSession(sess) as sess:
             super().__init__(X_shape, y_size, layers, sess=sess, name=name)
-            self.graph = sess.graph
+            self._graph = sess.graph
 
     def save(self, filename, sess=None, **kwargs):
         with TFSession(sess, self.graph, variables=self.variables) as sess:

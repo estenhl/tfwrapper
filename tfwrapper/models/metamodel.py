@@ -1,22 +1,17 @@
 import numpy as np
-
+import tensorflow as tf
 from abc import ABC
 from abc import abstractmethod
 
+from tfwrapper import Dataset
+from tfwrapper import ImagePreprocessor
+
 class MetaModel(ABC):
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
 
     @abstractmethod
-    def train(self, dataset, *, epochs, preprocessor=None, sess=None, **kwargs):
-        pass
-
-    @abstractmethod
-    def validate(self, dataset, *, preprocessor=None, sess=None, **kwargs):
-        pass
-
-    @abstractmethod
-    def predict(self, dataset, *, preprocessor=None, sess=None, **kwargs) -> np.ndarray:
+    def train(self, dataset: Dataset, *, epochs: int, preprocessor: ImagePreprocessor = None, sess: tf.Session = None, **kwargs):
         pass
 
     @abstractmethod
@@ -32,13 +27,24 @@ class MetaModel(ABC):
         pass
 
 
-class RegressionMetaModel(MetaModel):
+class PredictiveMeta(ABC):
     @abstractmethod
-    def validate(self, dataset, *, preprocessor=None, sess=None, **kwargs) -> float:
+    def validate(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None, **kwargs):
+        pass
+
+    @abstractmethod
+    def predict(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None, **kwargs) -> np.ndarray:
         pass
 
 
-class ClassificationMetaModel(MetaModel):
+
+class RegressionMetaModel(MetaModel, PredictiveMeta):
     @abstractmethod
-    def validate(self, dataset, *, preprocessor=None, sess=None, **kwargs) -> (float, float):
+    def validate(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None, **kwargs) -> float:
+        pass
+
+
+class ClassificationMetaModel(MetaModel, PredictiveMeta):
+    @abstractmethod
+    def validate(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None, **kwargs) -> (float, float):
         pass

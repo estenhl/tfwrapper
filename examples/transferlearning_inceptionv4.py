@@ -1,16 +1,18 @@
 import os
 import tensorflow as tf
 
-from tfwrapper import ImageDataset
-from tfwrapper import FeatureLoader
+from tfwrapper import logger
 from tfwrapper import ImagePreprocessor
+from tfwrapper.models import TransferLearningModel
 from tfwrapper.models.nets import SingleLayerNeuralNet
 from tfwrapper.models.frozen import FrozenInceptionV4
 from tfwrapper.datasets import cats_and_dogs
 
 from utils import curr_path
 
-dataset = cats_and_dogs(size=300)
+logger.setLevel(logger.INFO)
+
+dataset = cats_and_dogs(size=500)
 dataset = dataset.balanced(max=150)
 dataset = dataset.shuffled()
 dataset = dataset.translated_labels()
@@ -22,27 +24,24 @@ if not os.path.isdir(datafolder):
     os.mkdir(datafolder)
 features_file = os.path.join(datafolder, 'catsdogs_inceptionv4.csv')
 
-with tf.Session() as sess:
-    inception = FrozenInceptionV4(sess=sess)
+inception = FrozenInceptionV4()
+nn = SingleLayerNeuralNet([1536], 2, 1024, name='InceptionV4Test')
+model = TransferLearningModel(inception, nn, features_cache=features_file, name='InceptionV4TL')
 
-    train_prep = ImagePreprocessor()
-    train_prep.resize_to = (299, 299)
-    train_prep.flip_lr = True
-    train_loader = FeatureLoader(inception, cache=features_file, preprocessor=train_prep, sess=sess)
-    train.loader = train_loader
-    train.loader.sess = sess
-    X, y = train.X, train.y
+preprocessor = ImagePreprocessor()
+preprocessor.flip_lr = True
+model.train(train, epochs=10, preprocessor=preprocessor)
 
-    test_prep = ImagePreprocessor()
-    test_prep.resize_to = (299, 299)
-    test_loader = FeatureLoader(inception, cache=features_file, preprocessor=test_prep, sess=sess)
-    test.loader = test_loader
-    test.loader.sess = sess
-    test_X, test_y = test.X, test.y
-    
-with tf.Session() as sess:
-    nn = SingleLayerNeuralNet([1536], 2, 1024, sess=sess, name='InceptionV4Test')
-    nn.train(X, y, epochs=10, sess=sess)
-    _, acc = nn.validate(test_X, test_y, sess=sess)
-    print('Acc: %d%%' % (acc * 100))
+print('Predicting')
+preds = model.predict(test)
+print('Validating')
+_, acc = model.validate(test)
+print('Acc before save: %.2f%%' % (acc * 100))
 
+path = os.path.join(datafolder, 'inception_v4_tl')
+print('Saving model')
+model.save(path)
+
+loaded_model = TransferLearningModel.from_tw(path)
+_, acc = loaded_model.validate(test)
+print('Acc after load: %.2f%%' % (acc * 100))

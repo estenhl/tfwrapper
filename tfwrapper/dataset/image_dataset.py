@@ -116,6 +116,7 @@ class ImageDataset(Dataset):
         batch_y = []
         paths = []
 
+        counter = 0
         while len(batch_X) < batch_size and cursor < len(self):
 
             path_to_sample = self._X[cursor]
@@ -126,6 +127,9 @@ class ImageDataset(Dataset):
             paths += [{'path': path_to_sample, 'key': n} for n in names]
 
             cursor += 1
+            if counter % 100 == 0:
+                logger.info('Parsed %d/%s' % (counter, str(batch_size)))
+            counter += 1
 
         X = np.asarray(batch_X)
         y = np.asarray(batch_y)

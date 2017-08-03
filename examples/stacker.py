@@ -3,14 +3,10 @@ import tensorflow as tf
 
 from tfwrapper import logger
 from tfwrapper.datasets import flowers
-from tfwrapper.models.frozen import FrozenInceptionV3
-from tfwrapper.models.frozen import FrozenInceptionV4
-from tfwrapper.models.frozen import FrozenResNet50
-from tfwrapper.models.frozen import FrozenResNet152
-from tfwrapper.models.frozen import FrozenVGG16
-from tfwrapper.models.nets import SingleLayerNeuralNet
 from tfwrapper.models import TransferLearningModel
-from tfwrapper.ensembles import Stacker
+from tfwrapper.models.ensembles import Stacker
+from tfwrapper.models.frozen import FrozenInceptionV3, FrozenInceptionV4, FrozenResNet50, FrozenResNet152, FrozenVGG16
+from tfwrapper.models.nets import SingleLayerNeuralNet
 from tfwrapper.hyperparameters import adjust_at_epochs
 
 from utils import curr_path
