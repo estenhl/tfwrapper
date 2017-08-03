@@ -36,7 +36,7 @@ class ModelWrapper(ABC):
         if isinstance(dataset, ImageDataset) and preprocessor is not None:
             dataset.loader.preprocessor = preprocessor
 
-        return self.model.train(dataset.X, dataset.y, epochs=epochs, sess=sess)
+        return self.model.train(dataset.X, dataset.y, epochs=epochs, sess=sess, **kwargs)
 
     def validate(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None, **kwargs):
         if isinstance(dataset, ImageDataset) and preprocessor is not None:

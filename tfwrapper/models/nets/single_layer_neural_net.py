@@ -14,6 +14,9 @@ class SingleLayerNeuralNet(NeuralNet):
     def __init__(self, X_shape, y_size, hidden, sess=None, name='SingleLayerNeuralNet'):
         self.hidden = hidden
 
+        if type(y_size) is list:
+            y_size = int(np.prod(np.asarray(y_size)))
+
         X_size = np.prod(X_shape)
         layers = [
             fullyconnected(inputs=X_size, outputs=hidden, name=name + '/hidden'),

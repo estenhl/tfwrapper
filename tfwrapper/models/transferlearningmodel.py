@@ -4,13 +4,13 @@ import numpy as np
 import tensorflow as tf
 from typing import Union
 
+import datetime
 from tfwrapper import TFSession, Dataset, ImageDataset, FeatureLoader, ImagePreprocessor, METADATA_SUFFIX
-from tfwrapper.models import Predictive, RegressionModel, ClassificationModel
 from tfwrapper.models.nets import NeuralNet
 from tfwrapper.utils.data import get_subclass_by_name
 from tfwrapper.utils.exceptions import log_and_raise, InvalidArgumentException
 
-from .basemodel import Predictive, Derivable
+from .basemodel import Predictive, Derivable, RegressionModel, ClassificationModel
 from .frozenmodel import FrozenModel
 from .metamodel import MetaModel, PredictiveMeta, RegressionMetaModel, ClassificationMetaModel
 from .modelwrapper import ModelWrapper
@@ -38,12 +38,12 @@ class TransferLearningModel(MetaModel, PredictiveMeta):
         if self.features_layer is None:
             self.features_layer = feature_model.bottleneck_tensor
 
-    def train(self, dataset: Dataset, *, epochs: int, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
+    def train(self, dataset: Dataset, *, epochs: int, preprocessor: ImagePreprocessor = None, sess: tf.Session = None, **kwargs):
         with TFSession(sess, self.feature_model.graph) as sess1:
             dataset.loader = FeatureLoader(self.feature_model, cache=self.features_cache, preprocessor=preprocessor, sess=sess1)
 
         with TFSession(sess, self.prediction_model.graph) as sess2:
-            self.prediction_model.train(dataset, epochs=epochs, sess=sess2)
+            self.prediction_model.train(dataset, epochs=epochs, sess=sess2, **kwargs)
 
     def validate(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         with TFSession(sess, self.feature_model.graph) as sess1:

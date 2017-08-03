@@ -1,9 +1,10 @@
-A module containing ML models and meta-models (Ensembles, Transfer learning models etc)
+A module containing pure TF models and meta-models (Ensembles, Transfer learning models etc).
 
 ###An overview of the hierarchy:
 ![Model hierarchy](../../diagrams/model-hierarchy/hierarchy.png)
 
 # [BaseModel](basemodel.py)
+The abstract base class for all pure TensorFlow models. 
 ### [Predictive](basemodel.py)
 ## [ClassificationModel](basemodel.py)
 ## [RegressionModel](basemodel.py)

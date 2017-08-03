@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 
 curr_path = os.path.abspath(os.path.join(os.path.realpath(__file__), os.pardir))
 
@@ -66,5 +67,9 @@ def create_tmp_img(path=None, size=(10, 10), bw=False, suffix='jpg'):
     cv2.imwrite(path, img)
 
     return img, path
+
+
+def softmax_wrapper(name='Softmax'):
+    return lambda x: tf.nn.softmax(x, name=name)
 
     

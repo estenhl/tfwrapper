@@ -1,8 +1,8 @@
 from tfwrapper.models import BaseModel, Predictive, RegressionModel, ClassificationModel
 
 class MockBaseModel(BaseModel):
-    def __init__(self):
-        super().__init__('MockBaseModel')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def graph(self):
         return self._graph
@@ -22,6 +22,14 @@ class MockBaseModel(BaseModel):
     def from_tw(self, path: str, sess=None, **kwargs):
         pass
 
+    def loss_function(self):
+        return None
+
+    def optimizer_function(self):
+        return None
+
+    def accuracy_function(self):
+        return None
 
 class MockRegressionModel(RegressionModel):
     _graph = None

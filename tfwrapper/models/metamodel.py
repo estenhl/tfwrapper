@@ -37,7 +37,6 @@ class PredictiveMeta(ABC):
         pass
 
 
-
 class RegressionMetaModel(MetaModel, PredictiveMeta):
     @abstractmethod
     def validate(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None, **kwargs) -> float:

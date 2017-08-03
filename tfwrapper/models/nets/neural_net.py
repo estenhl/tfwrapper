@@ -38,9 +38,11 @@ class NeuralNet(BaseModel, ClassificationModel, Trainable):
     def variables(self):
         return self._variables
 
-    def __init__(self, X_shape=None, y_size=None, layers=None, preprocessing=None, sess=None, name='NeuralNet', **kwargs):
-        BaseModel.__init__(self, name=name)
+    def __init__(self, X_shape=None, num_classes=None, layers=None, preprocessing=None, sess=None, name='NeuralNet'):
+        with TFSession(sess) as sess:
+            BaseModel.__init__(self, X_shape, num_classes, layers, preprocessing, sess=sess, name=name)
 
+        """
         if preprocessing is None:
             preprocessing = []
             
@@ -50,7 +52,7 @@ class NeuralNet(BaseModel, ClassificationModel, Trainable):
             with TFSession(sess) as sess:
                 self.fill_from_shape(X_shape, y_size, layers, sess=sess, **kwargs)
                 self.post_init()
-
+        """
 
     @classmethod
     def from_shape(cls, X_shape, y_size, layers, preprocessing=None, sess=None, name='NeuralNet'):
@@ -154,9 +156,6 @@ class NeuralNet(BaseModel, ClassificationModel, Trainable):
 
     def post_init(self):
         self.input_size = np.prod(self.X_shape)
-        self.loss = self.loss_function()
-        self.optimizer = self.optimizer_function()
-        self.accuracy = self.accuracy_function()
 
     def load_from_meta_graph(self, filename):
          with TFSession(sess) as sess:
