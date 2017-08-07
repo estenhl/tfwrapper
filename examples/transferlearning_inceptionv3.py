@@ -42,6 +42,8 @@ path = os.path.join(datafolder, 'inception_v3_tl')
 print('Saving model')
 model.save(path)
 
+tf.reset_default_graph()
+
 loaded_model = TransferLearningModel.from_tw(path)
 _, acc = loaded_model.validate(test)
 print('Acc after load: %.2f%%' % (acc * 100))

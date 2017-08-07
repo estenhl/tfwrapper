@@ -6,7 +6,6 @@ import datetime
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.contrib import rnn
 from time import process_time
 
 from tfwrapper import logger, TFSession, METADATA_SUFFIX, Dataset
@@ -42,31 +41,6 @@ class NeuralNet(ClassificationModel):
         with TFSession(sess) as sess:
             ClassificationModel.__init__(self, X_shape, num_classes, layers, preprocessing=preprocessing, sess=sess, name=name)
 
-        """
-        if preprocessing is None:
-            preprocessing = []
-            
-        self.name = name
-        
-        if X_shape is not None and y_size is not None and layers is not None:
-            with TFSession(sess) as sess:
-                self.fill_from_shape(X_shape, y_size, layers, sess=sess, **kwargs)
-                self.post_init()
-        """
-
-    @classmethod
-    def from_shape(cls, X_shape, y_size, layers, preprocessing=None, sess=None, name='NeuralNet'):
-        if preprocessing is None:
-            preprocessing = []
-
-        with TFSession(sess) as sess:
-            model = cls(X_shape=None, y_size=None, name=name, sess=sess)
-            model.fill_from_shape(sess=sess, X_shape=X_shape, y_size=y_size, layers=layers, preprocessing=preprocessing)
-            model.post_init()
-
-        return model
-
-
     @classmethod
     def from_meta_graph(cls, filename, name):
         with TFSession() as sess:
@@ -75,29 +49,6 @@ class NeuralNet(ClassificationModel):
             model.post_init()
 
         return model
-
-    def post_init(self):
-        self.input_size = np.prod(self.X_shape)
-
-    def load_from_meta_graph(self, filename):
-         with TFSession(sess) as sess:
-            metagraph_filename = '%s.%s' % (filename, META_GRAPH_SUFFIX)
-            new_saver = tf.train.import_meta_graph(metagraph_filename, clear_devices=True)
-            new_saver.restore(sess, metagraph_filename)
-
-            self._graph = tf.get_default_graph()
-            self.X = graph.get_tensor_by_name(self.name + '/X_placeholder:0')
-            self.y = graph.get_tensor_by_name(self.name + '/y_placeholder:0')
-            self.lr = graph.get_tensor_by_name(self.name + '/learning_rate_placeholder:0')
-            self.preds = graph.get_tensor_by_name(self.name + '/pred:0')
-
-            self.X_shape = self.X.shape
-            self.input_size = np.prod(self.X_shape)
-            self.y_size = len(self.y)
-
-            self.checkpoint_variables(sess)
-            self.loss = self.graph.get_tensor_by_name(self.name + '/loss:0')
-            self.accuracy = self.graph.get_tensor_by_name(self.name + '/accuracy:0')
 
     def train_epoch(self, generator, epoch_nr, feed_dict=None, val_generator=None, sess=None):
         if feed_dict is None:
@@ -214,10 +165,6 @@ class NeuralNet(ClassificationModel):
 
             return features
 
-    def checkpoint_variables(self, sess):
-        for variable in tf.trainable_variables():
-            self._variables[variable.name] = {'tensor': variable, 'value': sess.run(variable)}
-
     def validate_batches(self, X, y, prefix=''):
         if not len(X) == len(y):
             errormsg = '%sX and %sy must be same length, not %d and %d' % (prefix, prefix, len(X), len(y))
@@ -327,7 +274,7 @@ class NeuralNet(ClassificationModel):
             for epoch in range(epochs):
                 self.train_epoch(generator, epoch, feed_dict=feed_dict, val_generator=val_generator, sess=sess)
 
-            self.checkpoint_variables(sess)
+            self._checkpoint_variables(sess)
 
     def predict(self, X=None, generator=None, feed_dict=None, sess=None, **kwargs):
         if X is not None:

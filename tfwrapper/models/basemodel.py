@@ -47,10 +47,12 @@ def _parse_layer_list(start: tf.Tensor, remaining: List[Union[tf.Tensor, _tensor
 class BaseModel(ABC):
     """ The base class for singular machine learning models. Mainly contains infrastructure stuff """
 
+    @property
     def graph(self) -> tf.Graph:
         """ The tf.Graph containing all tensors and variables necessary for the model """
         return self._graph
 
+    @property
     def variables(self) -> Dict[str, tf.Tensor]:
         """ A map of all the variable values stored in the tensors of the graph. Typically trained weight and bias values.
         Used for training the model in one session, then restoring the model on a separate session """
@@ -84,6 +86,8 @@ class BaseModel(ABC):
 
     @classmethod
     def from_tw(cls, filename: str, sess: tf.Session = None, **kwargs):
+        """ Loads a model from the tfwrapper-specific *.tw meta-files """
+
         if filename.endswith('.tw'):
             metadata_filename = filename
             weights_filename = filename[:-3]
@@ -100,10 +104,11 @@ class BaseModel(ABC):
         batch_size = metadata['batch_size']
         classname = metadata['type']
 
+        # TODO (07.08.17): This should be done differently
         from .nets import SingleLayerNeuralNet
         subclass = get_subclass_by_name(cls, classname)
 
-        # TODO (07.08.17): This should be done differently
+        # TODO (07.08.17): This should also be done differently
         for key in subclass.init_args:
             value = subclass.init_args[key]
 
@@ -119,6 +124,12 @@ class BaseModel(ABC):
 
             return net
 
+    def _checkpoint_variables(self, sess):
+        """ Stores values of the variables of a model (Allows for switching between sessions). """
+
+        for variable in tf.trainable_variables():
+            self._variables[variable.name] = {'tensor': variable, 'value': sess.run(variable)}
+
     def reset(self, **kwargs):
         """ Resets the value of all variables stored on the graph """
 
@@ -129,7 +140,7 @@ class BaseModel(ABC):
         """ Saves the graph to a file using tf.train.Saver. Also stores a more verbose *.tw file
         which will also write additional info given in **kwargs (e.g. accuracy or labels) """
 
-        with TFSession(sess, self.graph, variables=self.variables) as sess:
+        with TFSession(sess, graph=self._graph, variables=self._variables) as sess:
             saver = tf.train.Saver(tf.trainable_variables())
             saver.save(sess, path, meta_graph_suffix=META_GRAPH_SUFFIX)
 
@@ -145,20 +156,43 @@ class BaseModel(ABC):
                 f.write(json.dumps(metadata, indent=2))
 
     def load(self, path: str, sess: tf.Session = None, **kwargs):
-        with TFSession(sess, self.graph) as sess:
-            graph_path = path + '.meta'
+        """ Loads a model from a tensorflow *.data* file. Requires the structure of the model
+        to match the structure in the file """
+
+        with TFSession(sess, graph=self._graph) as sess:
+            sess.run(tf.variables_initializer(tf.trainable_variables()))
             saver = tf.train.Saver(tf.trainable_variables())
             saver.restore(sess, path)
 
-            self._graph = sess.graph
             self.X = sess.graph.get_tensor_by_name(self.name + '/X_placeholder:0')
             self.y = sess.graph.get_tensor_by_name(self.name + '/y_placeholder:0')
             self.lr = sess.graph.get_tensor_by_name(self.name + '/learning_rate_placeholder:0')
             self.preds = sess.graph.get_tensor_by_name(self.name + '/pred:0')
-            self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
-            self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')
 
-            self.checkpoint_variables(sess)
+            self._checkpoint_variables(sess)
+            self._graph = sess.graph
+
+    def load_from_meta_graph(self, path: str, sess: tf.Session = None):
+        """ Loads a model from a tensorflow *.meta file. Requires the structure of the model
+        to match the structure in the file """
+        with TFSession(sess) as sess:
+            if not filename.endswith(META_GRAPH_SUFFIX):
+                path = '%s.%s' % (path, META_GRAPH_SUFFIX)
+
+            new_saver = tf.train.import_meta_graph(path, clear_devices=True)
+            new_saver.restore(sess, path)
+
+            self.X = graph.get_tensor_by_name(self.name + '/X_placeholder:0')
+            self.y = graph.get_tensor_by_name(self.name + '/y_placeholder:0')
+            self.lr = graph.get_tensor_by_name(self.name + '/learning_rate_placeholder:0')
+            self.preds = graph.get_tensor_by_name(self.name + '/pred:0')
+
+            self.X_shape = self.X.shape
+            self.input_size = np.prod(self.X_shape)
+            self.y_shape = self.y.shape
+
+            self._checkpoint_variables(sess)
+            self._graph = sess.graph
 
 
 class Predictive(ABC):
@@ -182,11 +216,11 @@ class FixedClassificationModel(BaseModel, Predictive):
     DEFAULT_ACCURACY = CorrectPred
 
     @property
-    def loss(self):
+    def loss(self) -> tf.Tensor:
         return self._loss
 
     @loss.setter
-    def loss(self, value):
+    def loss(self, value: Union[tf.Tensor, Loss, ABCMeta, Callable[..., tf.Tensor]]):
         if type(value) is tf.Tensor:
             self._loss = value
         elif isinstance(value, Loss):
@@ -202,11 +236,11 @@ class FixedClassificationModel(BaseModel, Predictive):
             log_and_raise(InvalidArgumentException, 'Invalid loss type %s. (Valid is [tf.Tensor, Loss, ABCMeta, callable, str])' % str(type(value)))
 
     @property
-    def accuracy(self):
+    def accuracy(self) -> tf.Tensor:
         return self._accuracy
 
     @accuracy.setter
-    def accuracy(self, value):
+    def accuracy(self, value: Union[tf.Tensor, Accuracy, ABCMeta, Callable[..., tf.Tensor]]):
         if type(value) is tf.Tensor:
             self._accuracy = value
         elif isinstance(value, Accuracy):
@@ -224,9 +258,20 @@ class FixedClassificationModel(BaseModel, Predictive):
     def __init__(self, X_shape: List[int], y_size: Union[int, List[int]], layers: List[Union[tf.Tensor, _tensor_wrapper]], *, preprocessing: List[Union[tf.Tensor, _tensor_wrapper]] = None, sess: tf.Session = None, name: str = 'BaseModel'):
         with TFSession(sess) as sess:
             BaseModel.__init__(self, X_shape, y_size, layers, preprocessing=preprocessing, sess=sess, name=name)
-
             self.loss = self.DEFAULT_LOSS
             self.accuracy = self.DEFAULT_ACCURACY
+
+    def load(self, path: str, sess: tf.Session = None):
+        with TFSession(sess) as sess:
+            BaseModel.load(self, path, sess=sess)
+            self._loss = self.graph.get_tensor_by_name(self.name + '/loss:0')
+            self._accuracy = self.graph.get_tensor_by_name(self.name + '/accuracy:0')
+
+    def load_from_meta_graph(self, path: str, sess: tf.Session = None):
+        with TFSession(sess) as sess:
+            BaseModel.load_from_meta_graph(self, path, sess=sess)
+            self._loss = self.graph.get_tensor_by_name(self.name + '/loss:0')
+            self._accuracy = self.graph.get_tensor_by_name(self.name + '/accuracy:0')
 
     @abstractmethod
     def validate(self, X: np.ndarray, y: np.ndarray, *, sess: tf.Session = None, **kwargs) -> (float, float):
@@ -249,19 +294,19 @@ class ClassificationModel(FixedClassificationModel, Trainable):
     DEFAULT_LEARNING_RATE = 0.01
 
     @property
-    def learning_rate(self):
+    def learning_rate(self) -> Union[float, Callable[..., float]]:
         return self._learning_rate
 
     @learning_rate.setter
-    def learning_rate(self, value):
+    def learning_rate(self, value: Union[float, Callable[..., float]]):
         self._learning_rate = value
 
     @property
-    def optimizer(self):
+    def optimizer(self) -> tf.Tensor:
         return self._optimizer
 
     @optimizer.setter
-    def optimizer(self, value):
+    def optimizer(self, value: Union[tf.Tensor, Optimizer, ABCMeta, Callable[..., tf.Tensor]]):
         self._optimizer_key = value
         if type(value) is tf.Tensor:
             self._optimizer = value
@@ -278,11 +323,11 @@ class ClassificationModel(FixedClassificationModel, Trainable):
             log_and_raise(InvalidArgumentException, 'Invalid optimizer type %s. (Valid is [tf.Tensor, Optimizer, ABCMeta, callable, str])' % str(type(value)))
 
     @property
-    def loss(self):
+    def loss(self) -> tf.Tensor:
         return FixedClassificationModel.loss.fget(self)
     
     @loss.setter
-    def loss(self, value):
+    def loss(self, value: Union[tf.Tensor, Loss, ABCMeta, Callable[..., tf.Tensor]]):
         FixedClassificationModel.loss.fset(self, value)
         self.optimizer = self._optimizer_key
 
@@ -300,6 +345,6 @@ class ClassificationModel(FixedClassificationModel, Trainable):
 
 class Derivable(ABC):
     @abstractmethod
-    def extract_features(self, layer: str = None, *, sess: tf.Session = None, **kwargs):
+    def extract_features(self, layer: str = None, *, sess: tf.Session = None, **kwargs) -> np.ndarray:
         pass
 

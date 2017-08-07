@@ -4,7 +4,6 @@ import numpy as np
 import tensorflow as tf
 from typing import Union
 
-import datetime
 from tfwrapper import TFSession, Dataset, ImageDataset, FeatureLoader, ImagePreprocessor, METADATA_SUFFIX
 from tfwrapper.models.nets import NeuralNet
 from tfwrapper.utils.data import get_subclass_by_name

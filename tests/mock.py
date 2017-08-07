@@ -7,32 +7,22 @@ class MockBaseModel(BaseModel):
 
     @property
     def variables(self):
-        return super().graph
+        return super().variables
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def reset(self, *args, **kwargs):
-        print('self.graph: ' + str(self.graph))
         super().reset(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        pass
+        super().save(*args, **kwargs)
 
-    def load(self, path, **kwargs):
-        pass
+    def load(self, *args, **kwargs):
+        super().load(*args, **kwargs)
 
     def from_tw(self, *args, **kwargs):
-        pass
-
-    def loss_function(self):
-        return None
-
-    def optimizer_function(self):
-        return None
-
-    def accuracy_function(self):
-        return None
+        super().from_tw(*args, **kwargs)
 
 
 class MockRegressionModel(RegressionModel):
