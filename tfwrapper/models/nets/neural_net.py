@@ -24,7 +24,7 @@ from tfwrapper.models import BaseModel, ClassificationModel, Trainable
 META_GRAPH_SUFFIX = 'meta'
 
 
-class NeuralNet(BaseModel, ClassificationModel, Trainable):
+class NeuralNet(ClassificationModel):
     DEFAULT_BOTTLENECK_LAYER = -2
 
     learning_rate = 0.1
@@ -38,9 +38,9 @@ class NeuralNet(BaseModel, ClassificationModel, Trainable):
     def variables(self):
         return self._variables
 
-    def __init__(self, X_shape=None, num_classes=None, layers=None, preprocessing=None, sess=None, name='NeuralNet'):
+    def __init__(self, X_shape, num_classes, layers, preprocessing=None, sess=None, name='NeuralNet'):
         with TFSession(sess) as sess:
-            BaseModel.__init__(self, X_shape, num_classes, layers, preprocessing, sess=sess, name=name)
+            ClassificationModel.__init__(self, X_shape, num_classes, layers, preprocessing=preprocessing, sess=sess, name=name)
 
         """
         if preprocessing is None:
@@ -112,48 +112,6 @@ class NeuralNet(BaseModel, ClassificationModel, Trainable):
 
         return model
 
-    def fill_from_shape(self, X_shape, y_size, layers, preprocessing=None, sess=None):
-        if preprocessing is None:
-            preprocessing = []
-
-        with TFSession(sess) as sess:
-            self.X_shape = X_shape
-            self.input_size = np.prod(X_shape)
-            self.y_size = y_size
-
-            if type(y_size) is int:
-                y_size = [y_size]
-
-            self.X = tf.placeholder(tf.float32, [None] + X_shape, name=self.name + '/X_placeholder')
-            self.y = tf.placeholder(tf.float32, [None] + y_size, name=self.name + '/y_placeholder')
-            self.lr = tf.placeholder(tf.float32, [], name=self.name + '/learning_rate_placeholder')
-
-            layers = preprocessing + layers
-
-            self.layers = layers
-            self.tensors = []
-            prev = self.X
-            for layer in layers:
-                if type(layer) is Layer:
-                    if layer.dependencies is not None:
-                        dependencies = layer.dependencies
-
-                        if type(dependencies) is str:
-                            prev = sess.graph.get_tensor_by_name('/'.join([self.name, dependencies]) + ':0')
-                        elif type(dependencies) is list:
-                            prev = [sess.graph.get_tensor_by_name('/'.join([self.name, dependency]) + ':0') for dependency in dependencies]
-                        else:
-                            raise_exception('Invalid layer dependency type %s. (Valid is [str, list])' % type(dependencies), InvalidArgumentException)
-                prev = layer(prev)
-                self.tensors.append({'name': prev.name, 'tensor': prev})
-            self.pred = prev
-
-            self._graph = sess.graph
-
-        self._variables = {}
-        self.init_vars_when_training = True
-        self.feed_dict = {}
-
     def post_init(self):
         self.input_size = np.prod(self.X_shape)
 
@@ -167,7 +125,7 @@ class NeuralNet(BaseModel, ClassificationModel, Trainable):
             self.X = graph.get_tensor_by_name(self.name + '/X_placeholder:0')
             self.y = graph.get_tensor_by_name(self.name + '/y_placeholder:0')
             self.lr = graph.get_tensor_by_name(self.name + '/learning_rate_placeholder:0')
-            self.pred = graph.get_tensor_by_name(self.name + '/pred:0')
+            self.preds = graph.get_tensor_by_name(self.name + '/pred:0')
 
             self.X_shape = self.X.shape
             self.input_size = np.prod(self.X_shape)
@@ -176,16 +134,6 @@ class NeuralNet(BaseModel, ClassificationModel, Trainable):
             self.checkpoint_variables(sess)
             self.loss = self.graph.get_tensor_by_name(self.name + '/loss:0')
             self.accuracy = self.graph.get_tensor_by_name(self.name + '/accuracy:0')
-
-    def loss_function(self):
-        return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pred, labels=self.y, name=self.name + '/softmax'), name=self.name + '/loss')
-
-    def optimizer_function(self):
-        return tf.train.AdamOptimizer(learning_rate=self.lr, beta1=0.9, beta2=0.999, epsilon=1e-5, name=self.name + '/adam').minimize(self.loss, name=self.name + '/optimizer')
-
-    def accuracy_function(self):
-        correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
-        return tf.reduce_mean(tf.cast(correct_pred, tf.float32), name=self.name + '/accuracy')
 
     def reset(self):
         with TFSession(None, self.graph) as sess:
@@ -259,7 +207,7 @@ class NeuralNet(BaseModel, ClassificationModel, Trainable):
         with TFSession(sess, self.graph, variables=self.variables) as sess:
             preds = self.predict(generator=generator, sess=sess)
             y = y if y is not None else np.concatenate([batch_y for _, batch_y in generator])
-            loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.pred: preds, self.y: y})
+            loss, acc = sess.run([self.loss, self.accuracy], feed_dict={self.preds: preds, self.y: y})
         
         return loss, acc
 
@@ -441,7 +389,7 @@ class NeuralNet(BaseModel, ClassificationModel, Trainable):
 
             for batch_X, _ in generator:
                 feed_dict[self.X] = batch_X
-                batch_preds = sess.run(self.pred, feed_dict=feed_dict)
+                batch_preds = sess.run(self.preds, feed_dict=feed_dict)
                 if preds is not None:
                     preds = np.concatenate([preds, batch_preds])
                 else:
@@ -450,7 +398,7 @@ class NeuralNet(BaseModel, ClassificationModel, Trainable):
         return preds
 
     def save_serving(self, export_path, sess, over_write=False):
-        save(export_path, self.X, self.pred, sess, over_write=over_write)
+        save(export_path, self.X, self.preds, sess, over_write=over_write)
 
     def save(self, filename, sess=None, **kwargs):
         with TFSession(sess, self.graph, variables=self.variables) as sess:
@@ -479,7 +427,7 @@ class NeuralNet(BaseModel, ClassificationModel, Trainable):
             self.X = sess.graph.get_tensor_by_name(self.name + '/X_placeholder:0')
             self.y = sess.graph.get_tensor_by_name(self.name + '/y_placeholder:0')
             self.lr = sess.graph.get_tensor_by_name(self.name + '/learning_rate_placeholder:0')
-            self.pred = sess.graph.get_tensor_by_name(self.name + '/pred:0')
+            self.preds = sess.graph.get_tensor_by_name(self.name + '/pred:0')
             self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
             self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')
 

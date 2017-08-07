@@ -7,13 +7,15 @@ from mock import MockBaseModel, MockRegressionModel, MockClassificationModel
 
 
 def test_from_instance_regression():
-    wrapper = ModelWrapper.from_instance(MockRegressionModel())
+    model = MockRegressionModel()
+    wrapper = ModelWrapper.from_instance(model)
 
     assert isinstance(wrapper, RegressionModelWrapper), 'Wrapping a regression model does not yield a RegressionModelWrapper'
 
 
 def test_from_instance_classification():
-    wrapper = ModelWrapper.from_instance(MockClassificationModel())
+    model = MockClassificationModel()
+    wrapper = ModelWrapper.from_instance(model)
 
     assert isinstance(wrapper, ClassificationModelWrapper), 'Wrapping a classification model does not yield a ClassificationModelWrapper'
 

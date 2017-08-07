@@ -2,11 +2,14 @@ import datetime
 
 import numpy as np
 import tensorflow as tf
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, ABCMeta, abstractmethod, abstractproperty
 from typing import Callable, Dict, List, Union
 
 from tfwrapper import TFSession
 from tfwrapper.layers import Layer
+from tfwrapper.layers.accuracy import Accuracy, CorrectPred
+from tfwrapper.layers.loss import Loss, MeanSoftmaxCrossEntropy
+from tfwrapper.layers.optimizers import Optimizer, Adam
 from tfwrapper.utils.exceptions import log_and_raise, InvalidArgumentException
 
 
@@ -44,7 +47,7 @@ class BaseModel(ABC):
     def variables(self) -> Dict[str, tf.Tensor]:
         return self._variables
     
-    def __init__(self, X_shape: list, y_size: Union[int, list], layers: List[Union[tf.Tensor, tensor_wrapper]], preprocessing=None, sess=None, name='BaseModel'):
+    def __init__(self, X_shape: List[int], y_size: Union[int, List[int]], layers: List[Union[tf.Tensor, tensor_wrapper]], *, preprocessing: List[Union[tf.Tensor, tensor_wrapper]] = None, sess: tf.Session = None, name: str = 'BaseModel'):
         if preprocessing is None:
             preprocessing = []
 
@@ -63,10 +66,7 @@ class BaseModel(ABC):
             self.lr = tf.placeholder(tf.float32, [], name=self.name + '/learning_rate_placeholder')
 
             self.layers = preprocessing + layers
-            self.tensors, self.pred = _parse_layer_list(self.X, self.layers)
-            self.loss = self.loss_function() # THIS SHOULD NOT BE HERE
-            self.optimizer = self.optimizer_function() # THIS SHOULD NOT BE HERE
-            self.accuracy = self.accuracy_function() # THIS SHOULD NOT BE HERE
+            self.tensors, self.preds = _parse_layer_list(self.X, self.layers)
             self._graph = sess.graph
 
         self._variables = {}
@@ -89,13 +89,6 @@ class BaseModel(ABC):
     def from_tw(self, path: str, sess: tf.Session = None, **kwargs):
         pass
 
-    @abstractmethod
-    def accuracy_function(self) -> tf.Tensor:
-        pass
-
-    @abstractmethod
-    def loss_function(self) -> tf.Tensor:
-        pass
 
 class Predictive(ABC):
     @abstractmethod
@@ -107,13 +100,63 @@ class Predictive(ABC):
         pass
 
 
-class RegressionModel(Predictive):
+class FixedRegressionModel(Predictive):
     @abstractmethod
     def validate(self, X: np.ndarray, y: np.ndarray, *, sess: tf.Session = None, **kwargs) -> float:
         pass
 
 
-class ClassificationModel(Predictive):
+class FixedClassificationModel(BaseModel, Predictive):
+    DEFAULT_LOSS = MeanSoftmaxCrossEntropy
+    DEFAULT_ACCURACY = CorrectPred
+
+    @property
+    def loss(self):
+        return self._loss
+
+    @loss.setter
+    def loss(self, value):
+        if type(value) is tf.Tensor:
+            self._loss = value
+        elif isinstance(value, Loss):
+            self._loss = value(y=self.y, preds=self.preds, name=self.name + '/loss')
+        elif isinstance(value, ABCMeta):
+            self._loss = value()(y=self.y, preds=self.preds, name=self.name + '/loss')
+        elif callable(value):
+            self._loss = value(y=self.y, preds=self.preds, name=self.name + '/loss')
+        elif type(value) is str:
+            f = Loss.from_name(value)
+            self._loss = f(y=self.y, preds=self.preds, name=self.name + '/loss')
+        else:
+            log_and_raise(InvalidArgumentException, 'Invalid loss type %s. (Valid is [tf.Tensor, Loss, ABCMeta, callable, str])' % str(type(value)))
+
+    @property
+    def accuracy(self):
+        return self._accuracy
+
+    @accuracy.setter
+    def accuracy(self, value):
+        if type(value) is tf.Tensor:
+            self._accuracy = value
+        elif isinstance(value, Accuracy):
+            self._accuracy = value(y=self.y, preds=self.preds, name=self.name + '/accuracy')
+        elif isinstance(value, ABCMeta):
+            self._accuracy = value()(y=self.y, preds=self.preds, name=self.name + '/accuracy')
+        elif callable(value):
+            self._accuracy = value(y=self.y, preds=self.preds, name=self.name + '/accuracy')
+        elif type(value) is str:
+            f = get_accuracy_by_name(value)
+            self._accuracy = f(y=self.y, preds=self.preds, name=self.name + '/accuracy')
+        else:
+            log_and_raise(InvalidArgumentException, 'Invalid accuracy type %s. (Valid is [tf.Tensor, Accuracy, ABCMeta, callable, str])' % str(type(value)))
+    
+    def __init__(self, X_shape: List[int], y_size: Union[int, List[int]], layers: List[Union[tf.Tensor, tensor_wrapper]], *, preprocessing: List[Union[tf.Tensor, tensor_wrapper]] = None, sess: tf.Session = None, name: str = 'BaseModel'):
+        with TFSession(sess) as sess:
+            BaseModel.__init__(self, X_shape, y_size, layers, preprocessing=preprocessing, sess=sess, name=name)
+
+            self.loss = self.DEFAULT_LOSS
+            self.accuracy = self.DEFAULT_ACCURACY
+
     @abstractmethod
     def validate(self, X: np.ndarray, y: np.ndarray, *, sess: tf.Session = None, **kwargs) -> (float, float):
         pass
@@ -123,6 +166,62 @@ class Trainable(ABC):
     @abstractmethod
     def train(self, X: np.ndarray, y: np.ndarray, *, epochs: int, sess: tf.Session = None, **kwargs):
         pass
+
+
+class RegressionModel(FixedRegressionModel, Trainable):
+    def hei():
+        print('hå')
+
+
+class ClassificationModel(FixedClassificationModel, Trainable):
+    DEFAULT_OPTIMIZER = Adam
+    DEFAULT_LEARNING_RATE = 0.01
+
+    @property
+    def learning_rate(self):
+        return self._learning_rate
+
+    @learning_rate.setter
+    def learning_rate(self, value):
+        self._learning_rate = value
+
+    @property
+    def optimizer(self):
+        return self._optimizer
+
+    @optimizer.setter
+    def optimizer(self, value):
+        self._optimizer_key = value
+        if type(value) is tf.Tensor:
+            self._optimizer = value
+        elif isinstance(value, Optimizer):
+            self._optimizer = value(learning_rate=self.lr_placeholder, loss=self.loss, name=self.name + '/optimizer')
+        elif isinstance(value, ABCMeta):
+            self._optimizer = value()(learning_rate=self.lr_placeholder, loss=self.loss, name=self.name + '/optimizer')
+        elif callable(value):
+            self._optimizer = value(learning_rate=self.lr_placeholder, loss=self.loss, name=self.name + '/optimizer')
+        elif type(value) is str:
+            f = get_optimizer_by_name(value)
+            self._optimizer = f(learning_rate=self.lr_placeholder, loss=self.loss, name=self.name + '/optimizer')
+        else:
+            log_and_raise(InvalidArgumentException, 'Invalid optimizer type %s. (Valid is [tf.Tensor, Optimizer, ABCMeta, callable, str])' % str(type(value)))
+
+    @property
+    def loss(self):
+        return FixedClassificationModel.loss.fget(self)
+    
+    @loss.setter
+    def loss(self, value):
+        FixedClassificationModel.loss.fset(self, value)
+        self.optimizer = self._optimizer_key
+
+    def __init__(self, X_shape: List[int], y_size: Union[int, List[int]], layers: List[Union[tf.Tensor, tensor_wrapper]], *, preprocessing: List[Union[tf.Tensor, tensor_wrapper]] = None, sess: tf.Session = None, name: str = 'ClassificationModel'):
+        with TFSession(sess) as sess:
+            self._optimizer_key = self.DEFAULT_OPTIMIZER
+            self.lr_placeholder = tf.placeholder_with_default(self.DEFAULT_LEARNING_RATE, [], name=name + '/lr_placeholder')
+            self.learning_rate = self.DEFAULT_LEARNING_RATE
+
+            FixedClassificationModel.__init__(self, X_shape, y_size, layers, preprocessing=preprocessing, sess=sess, name=name)
 
 
 class Derivable(ABC):

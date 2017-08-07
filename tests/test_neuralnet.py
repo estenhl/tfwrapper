@@ -73,7 +73,7 @@ def test_invalid_classes():
 def test_save_metadata():
     name = 'Name'
     X_shape = [1, 2, 3]
-    y_size = 4
+    y_size = [4]
     batch_size = 5
 
     folder = os.path.join(curr_path, 'test')

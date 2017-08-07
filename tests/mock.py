@@ -2,7 +2,7 @@ from tfwrapper.models import BaseModel, Predictive, RegressionModel, Classificat
 
 class MockBaseModel(BaseModel):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        pass
 
     def graph(self):
         return self._graph
@@ -10,16 +10,16 @@ class MockBaseModel(BaseModel):
     def variables(self):
         return self._variables
 
-    def reset(self, **kwargs):
+    def reset(self, *args, **kwargs):
         pass
 
-    def save(self, path, *, sess=None, **kwargs):
+    def save(self, *args, **kwargs):
         pass
 
     def load(self, path, **kwargs):
         pass
 
-    def from_tw(self, path: str, sess=None, **kwargs):
+    def from_tw(self, *args, **kwargs):
         pass
 
     def loss_function(self):
@@ -30,6 +30,7 @@ class MockBaseModel(BaseModel):
 
     def accuracy_function(self):
         return None
+
 
 class MockRegressionModel(RegressionModel):
     _graph = None
@@ -43,16 +44,63 @@ class MockRegressionModel(RegressionModel):
     def variables(self):
         return self._variables
 
-    def validate(self, X, y, *, sess=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         pass
 
-    def predict(self, X, *, sess=None, **kwargs):
+    def validate(self, *args, **kwargs):
+        pass
+
+    def predict(self, *args, **kwargs):
+        pass
+
+    def train(self, *args, **kwargs):
+        pass
+
+    def from_tw(self, *args, **kwargs):
+        pass
+
+    def load(self, *args, **kwargs):
+        pass
+
+    def reset(self, *args, **kwargs):
+        pass
+
+    def save(self, *args, **kwargs):
         pass
 
 
 class MockClassificationModel(ClassificationModel):
-    def validate(self, X, y, *, sess=None, **kwargs):
+    _graph = None
+    _variables = None
+
+    @property
+    def graph(self):
+        return self._graph
+
+    @property
+    def variables(self):
+        return self._variables
+
+    def __init__(self, *args, **kwargs):
         pass
 
-    def predict(self, X, *, sess=None, **kwargs):
+    def validate(self, *args, **kwargs):
+        pass
+
+    def predict(self, *args, **kwargs):
+        pass
+
+    def train(self, *args, **kwargs):
+        pass
+
+    def from_tw(self, *args, **kwargs):
+        pass
+
+    def load(self, *args, **kwargs):
+        pass
+
+    def reset(self, *args, **kwargs):
+        pass
+
+    def save(self, *args, **kwargs):
         pass

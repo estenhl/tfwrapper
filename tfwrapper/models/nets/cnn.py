@@ -10,12 +10,9 @@ from .neural_net import NeuralNet
 class CNN(NeuralNet):
     learning_rate = 0.001
 
-    def __init__(self, X_shape=None, y_size=None, layers=None, sess=None, name='NeuralNet', **kwargs):
-        super().__init__(name=name)
-        if X_shape is not None and y_size is not None and layers is not None:
-            with TFSession(sess) as sess:
-                self.fill_from_shape(X_shape, y_size, layers, sess=sess, **kwargs)
-                self.post_init()
+    def __init__(self, X_shape, num_classes, layers=None, sess=None, name='NeuralNet', **kwargs):
+        with TFSession(sess) as sess:
+            super().__init__(X_shape, num_classes, layers, sess=sess, name=name, **kwargs)
 
     @classmethod
     def shallow(cls, X_shape, y_size, sess=None, name='ShallowCNN'):
