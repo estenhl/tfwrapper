@@ -1,17 +1,20 @@
 from tfwrapper.models import BaseModel, Predictive, RegressionModel, ClassificationModel
 
 class MockBaseModel(BaseModel):
-    def __init__(self, *args, **kwargs):
-        pass
-
+    @property
     def graph(self):
-        return self._graph
+        return super().graph
 
+    @property
     def variables(self):
-        return self._variables
+        return super().graph
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def reset(self, *args, **kwargs):
-        pass
+        print('self.graph: ' + str(self.graph))
+        super().reset(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         pass

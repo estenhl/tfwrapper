@@ -4,6 +4,7 @@ from tfwrapper.models import ModelWrapper, RegressionModelWrapper, Classificatio
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
 from mock import MockBaseModel, MockRegressionModel, MockClassificationModel
+from utils import softmax_wrapper
 
 
 def test_from_instance_regression():
@@ -23,7 +24,7 @@ def test_from_instance_classification():
 def test_from_instance_invalid():
     exception = False
     try:
-        ModelWrapper.from_instance(MockBaseModel())
+        ModelWrapper.from_instance(MockBaseModel([1, 2], 2, [softmax_wrapper()]))
     except InvalidArgumentException:
         exception = True
 

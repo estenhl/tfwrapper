@@ -68,42 +68,6 @@ class NeuralNet(ClassificationModel):
 
 
     @classmethod
-    def from_tw(cls, filename, sess=None, **kwargs):
-        if filename.endswith('.tw'):
-            metadata_filename = filename
-            weights_filename = filename[:-3]
-        else:
-            metadata_filename = '%s.%s' % (filename, 'tw')
-            weights_filename = filename
-
-        with open(metadata_filename, 'r') as f:
-            metadata = json.load(f)
-
-        name = metadata['name']
-        X_shape = metadata['X_shape']
-        y_size = metadata['y_size']
-        batch_size = metadata['batch_size']
-        classname = metadata['type']
-
-        from .single_layer_neural_net import SingleLayerNeuralNet
-        subclass = get_subclass_by_name(cls, classname)
-
-        for key in subclass.init_args:
-            value = subclass.init_args[key]
-
-            if value in metadata:
-                kwargs[key] = metadata[value]
-            else:
-                logger.warning('Trying to fetch non-existing pair (%s, %s) from tw file %s' % (key, value, filename))
-
-        with TFSession(sess) as sess:
-            net = subclass(X_shape, y_size, name=name, sess=sess, **kwargs)
-            net.load(weights_filename, sess=sess)
-            net.batch_size = batch_size
-
-            return net
-
-    @classmethod
     def from_meta_graph(cls, filename, name):
         with TFSession() as sess:
             model = cls(X_shape=None, y_size=None, name=name, sess=sess)
@@ -134,10 +98,6 @@ class NeuralNet(ClassificationModel):
             self.checkpoint_variables(sess)
             self.loss = self.graph.get_tensor_by_name(self.name + '/loss:0')
             self.accuracy = self.graph.get_tensor_by_name(self.name + '/accuracy:0')
-
-    def reset(self):
-        with TFSession(None, self.graph) as sess:
-            sess.run(tf.global_variables_initializer())
 
     def train_epoch(self, generator, epoch_nr, feed_dict=None, val_generator=None, sess=None):
         if feed_dict is None:
@@ -399,41 +359,6 @@ class NeuralNet(ClassificationModel):
 
     def save_serving(self, export_path, sess, over_write=False):
         save(export_path, self.X, self.preds, sess, over_write=over_write)
-
-    def save(self, filename, sess=None, **kwargs):
-        with TFSession(sess, self.graph, variables=self.variables) as sess:
-            saver = tf.train.Saver(tf.trainable_variables())
-            saver.save(sess, filename, meta_graph_suffix=META_GRAPH_SUFFIX)
-
-            metadata = kwargs
-            metadata['name'] = self.name
-            metadata['X_shape'] = self.X_shape
-            metadata['y_size'] = self.y_size
-            metadata['batch_size'] = self.batch_size
-            metadata['time'] = str(datetime.datetime.now())
-            metadata['type'] = self.__class__.__name__
-
-            metadata_filename = '%s.%s' % (filename, METADATA_SUFFIX)
-            with open(metadata_filename, 'w') as f:
-                f.write(json.dumps(metadata, indent=2))
-
-    def load(self, filename, sess=None):
-        with TFSession(sess, self.graph) as sess:
-            graph_path = filename + '.meta'
-            saver = tf.train.Saver(tf.trainable_variables())
-            saver.restore(sess, filename)
-
-            self._graph = sess.graph
-            self.X = sess.graph.get_tensor_by_name(self.name + '/X_placeholder:0')
-            self.y = sess.graph.get_tensor_by_name(self.name + '/y_placeholder:0')
-            self.lr = sess.graph.get_tensor_by_name(self.name + '/learning_rate_placeholder:0')
-            self.preds = sess.graph.get_tensor_by_name(self.name + '/pred:0')
-            self.loss = sess.graph.get_tensor_by_name(self.name + '/loss:0')
-            self.accuracy = sess.graph.get_tensor_by_name(self.name + '/accuracy:0')
-
-            self.checkpoint_variables(sess)
-
-            # TODO (11.05.17): SHOULD USE METADATA, NOT SURE HOW THOUGH
 
     def get_tensor(self, val):
         if type(val) is int:

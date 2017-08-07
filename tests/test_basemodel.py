@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 import tensorflow as tf
 
 from tfwrapper.layers import Layer
@@ -73,4 +74,18 @@ def test_name():
     model = MockBaseModel(X_shape, y_size, layers, preprocessing=preprocessing, name=name)
 
     assert name == model.name
+
+
+def test_reset():
+    with tf.Session() as sess:
+        var = tf.random_normal([5])
+        sess.run(tf.global_variables_initializer())
+        old_value = sess.run(var)
+
+        model = MockBaseModel([1, 2], [2], [softmax_wrapper()], sess=sess)
+        model.reset()
+
+        new_value = sess.run(var)
+
+    assert not np.array_equal(old_value, new_value)
     

@@ -73,7 +73,7 @@ def test_invalid_classes():
 def test_save_metadata():
     name = 'Name'
     X_shape = [1, 2, 3]
-    y_size = [4]
+    y_shape = [4]
     batch_size = 5
 
     folder = os.path.join(curr_path, 'test')
@@ -82,7 +82,7 @@ def test_save_metadata():
         filename = os.path.join(folder, 'test')
 
         with tf.Session() as sess:
-            model = SingleLayerNeuralNet(X_shape, y_size, 1, name=name, sess=sess)
+            model = SingleLayerNeuralNet(X_shape, y_shape, 1, name=name, sess=sess)
             model.batch_size = batch_size
             sess.run(tf.global_variables_initializer())
             model.save(filename, sess=sess)
@@ -95,7 +95,7 @@ def test_save_metadata():
 
             assert name == obj['name']
             assert X_shape == obj['X_shape']
-            assert y_size == obj['y_size']
+            assert y_shape == obj['y_shape']
             assert batch_size == obj['batch_size']
     finally:
         remove_dir(folder)

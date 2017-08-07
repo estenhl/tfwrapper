@@ -30,3 +30,4 @@ class SingleLayerNeuralNet(NeuralNet):
         with TFSession(sess, self.graph, variables=self.variables) as sess:
             kwargs['hidden'] = self.hidden
             return super().save(filename, sess=sess, **kwargs)
+
