@@ -120,6 +120,35 @@ def test_save():
         remove_dir(folder)
 
 
+def test_save_without_session():
+    name = 'test-save'
+    folder = os.path.join(curr_path, 'test')
+    path = os.path.join(folder, 'model')
+    pred_value = 2
+    try:
+        os.mkdir(folder)
+       
+        
+        model = MockBaseModel([2, 2], 1, [lambda x: tf.Variable(pred_value, name=name + '/pred')], name=name)
+        with tf.Session(graph=model.graph) as sess:
+            sess.run(tf.global_variables_initializer())
+            model._checkpoint_variables(sess)
+        model.save(path)
+
+        with tf.Session() as sess:
+            tf.train.Saver().restore(sess, path)
+            pred = sess.graph.get_tensor_by_name('%s/%s' % (name, 'pred:0'))
+
+            assert sess.graph.get_tensor_by_name('%s/%s' % (name, 'X_placeholder:0')) is not None, 'Saving a model does not save the X placeholder'
+            assert sess.graph.get_tensor_by_name('%s/%s' % (name, 'y_placeholder:0')) is not None, 'Saving a model does not save the y placeholder'
+            assert sess.graph.get_tensor_by_name('%s/%s' % (name, 'learning_rate_placeholder:0')) is not None, 'Saving a model does not save the learning rate placeholder'
+
+            assert pred is not None, 'Saving a model does not save the layers'
+            assert pred_value == sess.run(pred), 'Saving a model does not save the variables with correct values'
+    finally:
+        remove_dir(folder)
+
+
 def test_load():
     name = 'test-load'
     folder = os.path.join(curr_path, 'test')

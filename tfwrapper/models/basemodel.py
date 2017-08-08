@@ -175,9 +175,12 @@ class BaseModel(ABC):
     def load_from_meta_graph(self, path: str, sess: tf.Session = None):
         """ Loads a model from a tensorflow *.meta file. Requires the structure of the model
         to match the structure in the file """
+
         with TFSession(sess) as sess:
-            if not filename.endswith(META_GRAPH_SUFFIX):
+            if not path.endswith(META_GRAPH_SUFFIX):
                 path = '%s.%s' % (path, META_GRAPH_SUFFIX)
+
+            print(path)
 
             new_saver = tf.train.import_meta_graph(path, clear_devices=True)
             new_saver.restore(sess, path)

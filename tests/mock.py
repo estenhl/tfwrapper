@@ -21,6 +21,9 @@ class MockBaseModel(BaseModel):
     def load(self, *args, **kwargs):
         super().load(*args, **kwargs)
 
+    def load_from_meta_graph(self, *args, **kwargs):
+        super().load_from_meta_graph(*args, **kwargs)
+
     def from_tw(self, *args, **kwargs):
         super().from_tw(*args, **kwargs)
 

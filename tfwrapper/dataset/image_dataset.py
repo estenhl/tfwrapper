@@ -1,12 +1,73 @@
+import os
 import numpy as np
 
 from tfwrapper import logger
 from tfwrapper.utils.decorators import deprecated
 
 from .dataset import Dataset
-from .dataset import parse_folder_with_labels_file
-from .dataset import parse_datastructure
 from .image_loader import ImageLoader
+
+
+def parse_datastructure(root, allowed_suffixes=['jpg', 'jpeg', 'png'], verbose=False):
+    X = []
+    y = []
+
+    i = 0
+
+    for foldername in os.listdir(root):
+        src = os.path.join(root, foldername)
+        if os.path.isdir(src):
+            for filename in os.listdir(src):
+                if filename.lower().split('.')[-1] in allowed_suffixes:
+                    src_file = os.path.join(src, filename)
+                    X.append(src_file)
+                    y.append(foldername)
+
+                    if i % 1000 == 0:
+                        logger.debug('Read %d images from %s' % (i, root))
+                    i += 1
+                elif verbose:
+                    logger.warning('Skipping filename ' + filename)
+        elif verbose:
+            logger.warning('Skipping foldername ' + foldername)
+
+    logger.info('Read %d images from %s' % (len(X), root))
+
+    return np.asarray(X), np.asarray(y)
+
+
+def parse_folder_with_labels_file(root, labels_file, verbose=False):
+    X = []
+    y = []
+
+    i = 0
+    with open(labels_file, 'r') as f:
+        for line in f.readlines():
+            label, filename = line.split(',')
+            src_file = os.path.join(root, filename).strip()
+            if os.path.isfile(src_file):
+                X.append(src_file)
+                y.append(label)
+                
+                if i % 1000 == 0:
+                    logger.debug('Read %d images from %s' % (i, root))
+                i += 1
+            elif verbose:
+                logger.warning('Skipping filename ' + src_file)
+
+        logger.info('Read %d images from %s' % (len(X), root))
+
+    return np.asarray(X), np.asarray(y)
+
+
+def parse_unlabeled_folder(folder, allowed_suffixes=['jpg', 'jpeg', 'png']):
+    X = []
+
+    for filename in os.listdir(folder):
+        if filename.lower().split('.')[-1] in allowed_suffixes:
+            X.append(os.path.join(folder, filename))
+
+    return np.asarray(X)
 
 
 class ImageDataset(Dataset):
@@ -106,6 +167,12 @@ class ImageDataset(Dataset):
     @classmethod
     def from_root_folder(cls, root_folder):
         X, y = parse_datastructure(root_folder)
+        return cls(X=X, y=y)
+
+    @classmethod
+    def from_unlabeled_folder(cls, root_folder, label=1):
+        X = parse_unlabeled_folder(root_folder)
+        y = np.repeat(label, len(X))
         return cls(X=X, y=y)
 
     def normalize(self):
