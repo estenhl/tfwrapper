@@ -48,7 +48,11 @@ class FeatureLoader(ImageLoader):
                 else:
                     logger.debug('Extracting features for %s' % names[i])
 
+                    # TODO (08.08.17): Why is the lookup inside the loop?
                     imgs, names = super().load(img, name, label=label)
+
+                    if i >= len(imgs):
+                        continue
 
                     if self.layer is None:
                         vector = self.model.extract_bottleneck_features(imgs[i], sess=sess)

@@ -36,7 +36,7 @@ def _parse_layer_list(start: tf.Tensor, remaining: List[Union[tf.Tensor, _tensor
                 else:
                     log_and_raise(InvalidArgumentException, 'Invalid layer dependency type %s. (Valid is [str, list])' % type(dependencies))
         elif not callable(layer):
-            log_and_raise(InvalidArgumentException, 'Invalid layer typ %s. (Valid is [Layer, callable]' % str(type(layer)))
+            log_and_raise(InvalidArgumentException, 'Invalid layer type %s. (Valid is [Layer, callable]' % str(type(layer)))
 
         prev = layer(prev)
         tensors.append({'name': prev.name, 'tensor': prev})
@@ -309,9 +309,9 @@ class ClassificationModel(FixedClassificationModel, Trainable):
         return self._optimizer
 
     @optimizer.setter
-    def optimizer(self, value: Union[tf.Tensor, Optimizer, ABCMeta, Callable[..., tf.Tensor]]):
+    def optimizer(self, value: Union[tf.Operation, Optimizer, ABCMeta, Callable[..., tf.Tensor]]):
         self._optimizer_key = value
-        if type(value) is tf.Tensor:
+        if type(value) is tf.Operation:
             self._optimizer = value
         elif isinstance(value, Optimizer):
             self._optimizer = value(learning_rate=self.lr_placeholder, loss=self.loss, name=self.name + '/optimizer')
@@ -323,7 +323,7 @@ class ClassificationModel(FixedClassificationModel, Trainable):
             f = get_optimizer_by_name(value)
             self._optimizer = f(learning_rate=self.lr_placeholder, loss=self.loss, name=self.name + '/optimizer')
         else:
-            log_and_raise(InvalidArgumentException, 'Invalid optimizer type %s. (Valid is [tf.Tensor, Optimizer, ABCMeta, callable, str])' % str(type(value)))
+            log_and_raise(InvalidArgumentException, 'Invalid optimizer type %s. (Valid is [tf.Operation, Optimizer, ABCMeta, callable, str])' % str(type(value)))
 
     @property
     def loss(self) -> tf.Tensor:

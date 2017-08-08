@@ -1,4 +1,4 @@
-from .basemodel import BaseModel, Predictive, RegressionModel, ClassificationModel, Trainable, Derivable
+from .basemodel import BaseModel, Predictive, FixedRegressionModel, FixedClassificationModel, Trainable, RegressionModel, ClassificationModel, Derivable
 from .metamodel import MetaModel, PredictiveMeta, RegressionMetaModel, ClassificationMetaModel
 from .modelwrapper import ModelWrapper, RegressionModelWrapper, ClassificationModelWrapper
 from .frozenmodel import FrozenModel

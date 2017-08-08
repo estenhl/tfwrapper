@@ -1,4 +1,5 @@
 import pytest
+import tensorflow as tf
 
 from tfwrapper.models import ModelWrapper, RegressionModelWrapper, ClassificationModelWrapper
 from tfwrapper.utils.exceptions import InvalidArgumentException
@@ -15,7 +16,7 @@ def test_from_instance_regression():
 
 
 def test_from_instance_classification():
-    model = MockClassificationModel()
+    model = MockClassificationModel([2, 1], 2, [lambda x: tf.Variable([5., 5.])])
     wrapper = ModelWrapper.from_instance(model)
 
     assert isinstance(wrapper, ClassificationModelWrapper), 'Wrapping a classification model does not yield a ClassificationModelWrapper'
@@ -24,7 +25,7 @@ def test_from_instance_classification():
 def test_from_instance_invalid():
     exception = False
     try:
-        ModelWrapper.from_instance(MockBaseModel([1, 2], 2, [softmax_wrapper()]))
+        ModelWrapper.from_instance(MockBaseModel([1, 2], 2, [lambda x: tf.Variable(5.)]))
     except InvalidArgumentException:
         exception = True
 

@@ -1,31 +1,24 @@
-from tfwrapper.models import BaseModel, Predictive, RegressionModel, ClassificationModel
+from tfwrapper.models import BaseModel, Predictive, FixedRegressionModel, FixedClassificationModel, RegressionModel, ClassificationModel
 
 class MockBaseModel(BaseModel):
-    @property
-    def graph(self):
-        return super().graph
+    def mock(self):
+        pass
 
-    @property
-    def variables(self):
-        return super().variables
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class MockFixedRegressionModel(FixedRegressionModel):
+    def validate(self, *args, **kwargs):
+        pass
 
-    def reset(self, *args, **kwargs):
-        super().reset(*args, **kwargs)
+    def predict(self, *args, **kwargs):
+        pass
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
 
-    def load(self, *args, **kwargs):
-        super().load(*args, **kwargs)
+class MockFixedClassificationModel(FixedClassificationModel):
+    def validate(self, *args, **kwargs):
+        pass
 
-    def load_from_meta_graph(self, *args, **kwargs):
-        super().load_from_meta_graph(*args, **kwargs)
-
-    def from_tw(self, *args, **kwargs):
-        super().from_tw(*args, **kwargs)
+    def predict(self, *args, **kwargs):
+        pass
 
 
 class MockRegressionModel(RegressionModel):
@@ -43,6 +36,21 @@ class MockRegressionModel(RegressionModel):
     def __init__(self, *args, **kwargs):
         pass
 
+    def reset(self, *args, **kwargs):
+        pass
+
+    def save(self, *args, **kwargs):
+        pass
+
+    def load(self, *args, **kwargs):
+        pass
+
+    def load_from_meta_graph(self, *args, **kwargs):
+        pass
+
+    def from_tw(self, *args, **kwargs):
+        pass
+
     def validate(self, *args, **kwargs):
         pass
 
@@ -50,36 +58,10 @@ class MockRegressionModel(RegressionModel):
         pass
 
     def train(self, *args, **kwargs):
-        pass
-
-    def from_tw(self, *args, **kwargs):
-        pass
-
-    def load(self, *args, **kwargs):
-        pass
-
-    def reset(self, *args, **kwargs):
-        pass
-
-    def save(self, *args, **kwargs):
         pass
 
 
 class MockClassificationModel(ClassificationModel):
-    _graph = None
-    _variables = None
-
-    @property
-    def graph(self):
-        return self._graph
-
-    @property
-    def variables(self):
-        return self._variables
-
-    def __init__(self, *args, **kwargs):
-        pass
-
     def validate(self, *args, **kwargs):
         pass
 
@@ -87,16 +69,4 @@ class MockClassificationModel(ClassificationModel):
         pass
 
     def train(self, *args, **kwargs):
-        pass
-
-    def from_tw(self, *args, **kwargs):
-        pass
-
-    def load(self, *args, **kwargs):
-        pass
-
-    def reset(self, *args, **kwargs):
-        pass
-
-    def save(self, *args, **kwargs):
         pass

@@ -43,4 +43,4 @@ class Adam(Optimizer):
         #beta2_var = tf.Variable(beta2, name=name + '/beta2')
         #epsilon_var = tf.Variable(epsilon, name=name + '/epsilon')
 
-        return tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1, beta2=beta2, epsilon=epsilon, name=name + '/adam').minimize(loss, name=name + '/optimizer')
+        return tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1, beta2=beta2, epsilon=epsilon, name=name + '/adam').minimize(loss, name=name)

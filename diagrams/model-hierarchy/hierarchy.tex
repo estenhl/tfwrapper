@@ -19,13 +19,15 @@
 \begin{document}
 \begin{tikzpicture}[scale=1.5]
     \node (basemodel) [draw, dashed, fill=lightblue, rounded rectangle] {BaseModel};
-    \node (predictive) [right=1.8cm of basemodel, draw, dashed, fill=lightblue, rounded rectangle] {Predictive};
-    \node (predclassification) [below left=1.2cm and -2.25cm of basemodel, draw, dashed, fill=lightblue, rounded rectangle] {ClassificationModel};
-    \node (predregression) [below right=1.2cm and 1.75cm of basemodel, draw, dashed, fill=lightblue, rounded rectangle] {RegressionModel};
-    \node (trainable) [right=of predregression, draw, dashed, fill=lightblue, rounded rectangle] {Trainable};
-    \node (derivable) [left=of predclassification, draw, dashed, fill=lightblue, rounded rectangle] {Derivable};
+    \node (predictive) [below right=0.3 and 1.8cm of basemodel, draw, dashed, fill=lightblue, rounded rectangle] {Predictive};
+    \node (fixedclassification) [below left=2cm and -0.25cm of basemodel, draw, dashed, fill=lightblue, rounded rectangle] {FixedClassificationModel};
+    \node (fixedregression) [below right=2cm and -0.25cm of basemodel, draw, dashed, fill=lightblue, rounded rectangle] {FixedRegressionModel};
+    \node (trainable) [below=2cm of predictive, draw, dashed, fill=lightblue, rounded rectangle] {Trainable};
+    \node (classification) [below=2cm of fixedclassification, draw, dashed, fill=lightblue, rounded rectangle] {ClassificationModel};
+    \node (regression) [below=2cm of fixedregression, draw, dashed, fill=lightblue, rounded rectangle] {RegressionModel};
+    \node (derivable) [left=of classification, draw, dashed, fill=lightblue, rounded rectangle] {Derivable};
 
-    \node (nn) [below right=3cm and 0.5cm of predclassification, draw, densely dotted, fill=blue, rounded rectangle] {NeuralNet};
+    \node (nn) [below right=3cm and 0.5cm of classification, draw, densely dotted, fill=blue, rounded rectangle] {NeuralNet};
     \node (singlenn) [below left=0.8cm and -0.8cm of nn, draw, fill=green, rounded rectangle] {SingleLayerNeuralNet};
     \node (dualnn) [below=0.8cm of singlenn, draw, fill=green, rounded rectangle] {DualLayerNeuralNet};
     \node (rnn) [below right=0.8cm and 0.5cm of nn, draw, fill=green, rounded rectangle] {RNN};
@@ -74,7 +76,7 @@
     \node (multout) [below=0.3cm of arrowout] {};
     \node (multin) [right=0.2cm of multout] {There exists one variant per superclass};
 
-    \node (metamodel) [below right=11.5cm and 0cm of basemodel, draw, dashed, fill=yellow, rounded rectangle] {MetaModel};
+    \node (metamodel) [below right=13.5cm and 0cm of basemodel, draw, dashed, fill=yellow, rounded rectangle] {MetaModel};
     \node (metaclassification) [below left=1.2cm and -0.1cm of metamodel, draw, dashed, fill=yellow, rounded rectangle] {MetaClassificationModel};
     \node (metaregression) [below right=1.2cm and -0.1cm of metamodel, draw, dashed, fill=yellow, rounded rectangle] {MetaRegressionModel};
     \node (modelwrapper) [right=1cm of metaregression, draw, dashed, fill=blue, rounded rectangle] {ModelWrapper};
@@ -86,12 +88,15 @@
 
 
     \draw[->]
-    (basemodel) edge (predclassification)
-    (basemodel) edge (predregression)
-    (predictive) edge (predclassification)
-    (predictive) edge (predregression)
-    (predclassification) edge (nn)
-    (trainable) edge (nn)
+    (basemodel) edge (fixedclassification)
+    (basemodel) edge (fixedregression)
+    (predictive) edge (fixedclassification)
+    (predictive) edge (fixedregression)
+    (fixedclassification) edge (classification)
+    (fixedregression) edge (regression)
+    (classification) edge (nn)
+    (trainable) edge (classification)
+    (trainable) edge (regression)
     (derivable) edge (nn)
     (frozen) edge (finc3)
     (frozen) edge (finc4)
@@ -107,11 +112,11 @@
     (cnn) edge (vgg16)
     (cnn) edge (squeeze)
     (cnn) edge (unet)
-    (predregression) edge (linear)
-    (trainable) edge (linear)
+    (regression) edge (linear)
+
     (linear) edge (svm)
     (linear) edge (linreg)
-    (predclassification) edge (frozen)
+    (fixedclassification) edge (frozen)
     (derivable) edge (frozen)
     (metamodel) edge (metaregression)
     (metamodel) edge (metaclassification)

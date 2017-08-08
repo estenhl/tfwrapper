@@ -2,8 +2,9 @@ import pytest
 import numpy as np
 import tensorflow as tf
 
-from tfwrapper.layers import *
-
+print('Before large import')
+from tfwrapper.layers import bias, weight, reshape, relu, softmax, fullyconnected, dropout, channel_means, concatenate, zoom, unet_block, deconv2d
+print('After large import')
 
 def test_bias():
     size = 5
@@ -43,19 +44,6 @@ def test_reshape():
         result = sess.run(layer(values))
 
     assert np.array_equal(shape, result.shape)
-
-
-def test_out():
-    name = 'test_out'
-    values = np.zeros([10, 10])
-    layer = relu(name=name)
-
-    with tf.Session() as sess:
-        tensor = layer(values)
-        result = sess.run(tensor)
-
-    assert name + ':0' == tensor.name
-    assert np.array_equal(values.shape, result.shape)
 
 
 def test_relu():
