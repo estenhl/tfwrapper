@@ -26,8 +26,8 @@ def test_set_loss():
     with tf.Session(graph=model.graph) as sess:
         result = sess.run(model.loss, feed_dict={model.y: [[2.]], model.preds: [[4.]]})
 
-    assert len(result.shape) == 2
-    assert result[0][0] == 0.5
+    assert len(result.shape) == 2, 'Setting a custom loss in ClassificationModel does not return the correct shape'
+    assert result[0][0] == 0.5, 'The loss sat in a ClassificationModel is not used by the model'
     # TODO (08.08.17): Reinstate when we figure out how
     #assert name + '/loss:0' == model.loss.name
 
@@ -40,8 +40,8 @@ def test_set_accuracy():
     with tf.Session(graph=model.graph) as sess:
         result = sess.run(model.accuracy, feed_dict={model.y: [[2.]], model.preds: [[4.]]})
 
-    assert len(result.shape) == 2
-    assert result[0][0] == 8
+    assert len(result.shape) == 2, 'Setting a custom accuracy in ClassificationModel does not return the correct shape'
+    assert result[0][0] == 8, 'The accuracy sat in a ClassificationModel is not used by the model'
     # TODO (08.08.17): Reinstate when we figure out how
     #assert name + '/accuracy:0' == model.accuracy.name
 

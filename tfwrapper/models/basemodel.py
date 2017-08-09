@@ -2,14 +2,14 @@ import json
 import datetime
 import numpy as np
 import tensorflow as tf
-from abc import ABC, ABCMeta, abstractmethod, abstractproperty
+from abc import abstractmethod, abstractproperty, ABC, ABCMeta
 from typing import Callable, Dict, List, Union
 
-from tfwrapper import TFSession, METADATA_SUFFIX
+from tfwrapper import logger, METADATA_SUFFIX, TFSession
 from tfwrapper.layers import Layer
 from tfwrapper.layers.accuracy import Accuracy, CorrectPred
 from tfwrapper.layers.loss import Loss, MeanSoftmaxCrossEntropy
-from tfwrapper.layers.optimizers import Optimizer, Adam
+from tfwrapper.layers.optimizers import Adam, Optimizer
 from tfwrapper.utils.data import get_subclass_by_name
 from tfwrapper.utils.exceptions import log_and_raise, InvalidArgumentException
 
@@ -224,6 +224,8 @@ class FixedClassificationModel(BaseModel, Predictive):
 
     @loss.setter
     def loss(self, value: Union[tf.Tensor, Loss, ABCMeta, Callable[..., tf.Tensor]]):
+        logger.warning('Setting loss currently breaks save and load due to naming')
+
         if type(value) is tf.Tensor:
             self._loss = value
         elif isinstance(value, Loss):
@@ -244,6 +246,8 @@ class FixedClassificationModel(BaseModel, Predictive):
 
     @accuracy.setter
     def accuracy(self, value: Union[tf.Tensor, Accuracy, ABCMeta, Callable[..., tf.Tensor]]):
+        logger.warning('Setting accuracy currently breaks save and load due to naming')
+
         if type(value) is tf.Tensor:
             self._accuracy = value
         elif isinstance(value, Accuracy):
@@ -310,6 +314,8 @@ class ClassificationModel(FixedClassificationModel, Trainable):
 
     @optimizer.setter
     def optimizer(self, value: Union[tf.Operation, Optimizer, ABCMeta, Callable[..., tf.Tensor]]):
+        logger.warning('Setting optimizer currently breaks save and load due to naming')
+
         self._optimizer_key = value
         if type(value) is tf.Operation:
             self._optimizer = value

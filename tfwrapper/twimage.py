@@ -1,7 +1,9 @@
-
 import cv2
 import matplotlib.pyplot as plt
 import scipy.ndimage
+
+from tfwrapper import logger
+
 
 def _read_gif(filepath):
     return scipy.ndimage.imread(filepath)
@@ -17,10 +19,10 @@ def imread(filepath):
         image = cv2.imread(filepath)
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     except Exception as e:
+        logger.error('Unable to parse %s' % filepath)
         print(e)
 
     return rgb_image
-
 
 
 def imwrite(file_path, image):
