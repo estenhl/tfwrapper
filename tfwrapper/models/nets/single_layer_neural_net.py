@@ -9,8 +9,6 @@ from tfwrapper.layers import out
 from .neural_net import NeuralNet
 
 class SingleLayerNeuralNet(NeuralNet):
-    init_args = {'hidden': 'hidden'}
-
     def __init__(self, X_shape, y_size, hidden, sess=None, name='SingleLayerNeuralNet'):
         self.hidden = hidden
 
@@ -26,8 +24,16 @@ class SingleLayerNeuralNet(NeuralNet):
             super().__init__(X_shape, y_size, layers, sess=sess, name=name)
             self._graph = sess.graph
 
+    @classmethod
+    def from_tw_data(cls, data, weights_filename, sess=None, **kwargs):
+        kwargs['hidden'] = data['hidden']
+
+        with TFSession(sess) as sess:
+            return super().from_tw_data(data, weights_filename, sess=sess, **kwargs)
+
     def save(self, filename, sess=None, **kwargs):
+        kwargs['hidden'] = self.hidden
+
         with TFSession(sess, self.graph, variables=self.variables) as sess:
-            kwargs['hidden'] = self.hidden
             return super().save(filename, sess=sess, **kwargs)
 

@@ -70,9 +70,12 @@ class MSE(Loss):
         if y.get_shape()[0] != preds.get_shape()[0]:
             log_and_raise(InvalidArgumentException, 'MSE loss requires y and predictions to be of the same length')
         
-        squared = tf.square(preds - y, name=name + '/squared')
+        subtracted = tf.subtract(preds, y, name=name + '/subtracted')
+        squared = tf.square(subtracted, name=name + '/squared')
+        summed = tf.reduce_sum(squared, name=name + '/reduce_sum')
+        batch_size = tf.cast(tf.shape(squared)[0], tf.float32)
 
-        return tf.reduce_mean(squared, name=name)
+        return tf.divide(summed, batch_size, name=name)
 
 
 class MultiClassHinge(Loss):
@@ -146,6 +149,21 @@ class PixelwiseSoftmaxCrossEntropy(Loss):
         
         return tf.reduce_mean(individual_losses, name=name)
 
+
+class DiceCoefficient(Loss):
+    def _execute(self, y, preds, name):
+        equal = tf.multiply(y, preds, name=name + '/equal')
+        true_positives = tf.multiply(y, equal, name=name + '/true_positives')
+        tp_sum = tf.reduce_sum(true_positives, name=name + '/sum_true_positives')
+        numerator = tf.multiply(tp_sum, 2, name=name + '/numerator')
+
+        y_sum = tf.reduce_sum(y, name=name + '/sum_y')
+        y_sum_squared = tf.square(y_sum, name=name + '/squared_sum_y')
+        preds_sum = tf.reduce_sum(preds, name=name + '/sum_preds')
+        preds_sum_squared = tf.square(preds_sum, name=name + '/squared_sum_preds')
+        denominator = tf.add(y_sum_squared, preds_sum_squared, name=name + '/denominator')
+
+        return tf.divide(numerator, denominator, name=name)
 
 @deprecated
 def mse(*, y, preds, name='mse'):

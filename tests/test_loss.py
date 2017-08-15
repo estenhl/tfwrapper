@@ -189,7 +189,7 @@ def test_mean_softmax_cross_entropy():
 def test_from_name():
     loss = Loss.from_name('MSE')
 
-    assert loss is not None
+    assert loss is not None, 'Calling Loss.from_name with a valid name does not return a loss function'
 
 
 def test_from_name_invalid():
@@ -200,5 +200,36 @@ def test_from_name_invalid():
     except NotImplementedError:
         exception = True
 
-    assert exception
+    assert exception, 'Calling Loss.from_name with an invalid name does not raise an Exception'
+
+
+def test_dice():
+    name = 'test-dice'
+    with tf.Session() as sess:
+        y = tf.Variable([
+            [1., 1., 1., 1.],
+            [1., 1., 1., 1.],
+            [1., 1., 1., 1.],
+            [0., 0., 0., 0.]
+        ])
+
+        preds = tf.Variable([
+            [0., 0., 0., 0.],
+            [1., 1., 1., 1.],
+            [1., 1., 1., 1.],
+            [1., 1., 1., 1.]
+        ])
+
+        sess.run(tf.global_variables_initializer())
+
+        loss = DiceCoefficient()
+        tensor = loss(y=y, preds=preds, name=name)
+        result = sess.run(tensor)
+
+    expected_result = (2*8) / (12**2 + 12**2)
+    print('Expected: ' + str(expected_result))
+    print('Result: ' + str(result))
+
+    assert abs(expected_result - result) < 1e-5, 'DiceCoefficient does not return the correct value'
+    assert name + ':0' == tensor.name, 'DiceCoefficient does not return a tensor with the correct name'
 

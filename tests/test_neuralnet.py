@@ -54,22 +54,6 @@ def test_y_without_onehot():
     assert exception
 
 
-#TODO (24.07.17): Reinstate when we figure out how
-"""
-def test_invalid_classes():
-    model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
-    X = np.zeros([100, 28, 28, 1])
-    y = np.zeros([100, 5])
-
-    exception = False
-    try:
-        model.train(X, y, epochs=1)
-    except InvalidArgumentException:
-        exception = True
-
-    assert exception
-"""
-
 def test_save_metadata():
     name = 'Name'
     X_shape = [1, 2, 3]

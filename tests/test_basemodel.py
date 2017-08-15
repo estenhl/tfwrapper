@@ -1,3 +1,4 @@
+import json
 import os
 import pytest
 import numpy as np
@@ -112,7 +113,6 @@ def test_save():
 
             assert sess.graph.get_tensor_by_name('%s/%s' % (name, 'X_placeholder:0')) is not None, 'Saving a model does not save the X placeholder'
             assert sess.graph.get_tensor_by_name('%s/%s' % (name, 'y_placeholder:0')) is not None, 'Saving a model does not save the y placeholder'
-            assert sess.graph.get_tensor_by_name('%s/%s' % (name, 'learning_rate_placeholder:0')) is not None, 'Saving a model does not save the learning rate placeholder'
 
             assert pred is not None, 'Saving a model does not save the layers'
             assert pred_value == sess.run(pred), 'Saving a model does not save the variables with correct values'
@@ -141,7 +141,6 @@ def test_save_without_session():
 
             assert sess.graph.get_tensor_by_name('%s/%s' % (name, 'X_placeholder:0')) is not None, 'Saving a model does not save the X placeholder'
             assert sess.graph.get_tensor_by_name('%s/%s' % (name, 'y_placeholder:0')) is not None, 'Saving a model does not save the y placeholder'
-            assert sess.graph.get_tensor_by_name('%s/%s' % (name, 'learning_rate_placeholder:0')) is not None, 'Saving a model does not save the learning rate placeholder'
 
             assert pred is not None, 'Saving a model does not save the layers'
             assert pred_value == sess.run(pred), 'Saving a model does not save the variables with correct values'
@@ -201,5 +200,27 @@ def test_load_without_session():
         assert len(model.variables) == 1, 'Loading a model without a session does not save the loaded trainable variables'
         assert 'W2:0' in model.variables, 'Loading a model without a session does not save the loaded trainable variables with the correct name'
         assert 2. ==  model.variables['W2:0']['value'], 'Loading a model without a session does not save the loaded trainable variables with the correct value'
+    finally:
+        remove_dir(folder)
+
+
+def test_from_tw():
+    name = 'test-from-tw'
+    folder = os.path.join(curr_path, 'test')
+    path = os.path.join(folder, 'test-from-tw')
+
+    try:
+        os.mkdir(folder)
+
+        with tf.Session() as sess:
+            model = MockBaseModel([2], 1, [lambda x: tf.Variable(2. , name=name + '/pred')], sess=sess, name=name)
+            sess.run(tf.global_variables_initializer())
+            model.save(path, sess=sess)
+
+        loaded_model = MockBaseModel.from_tw(path + '.tw', layers=[lambda x: tf.Variable(3., name=name + '/pred')])
+
+        assert loaded_model.name == model.name
+        assert loaded_model.X_shape == model.X_shape
+        assert loaded_model.y_shape == model.y_shape
     finally:
         remove_dir(folder)

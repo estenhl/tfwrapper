@@ -25,9 +25,8 @@ META_GRAPH_SUFFIX = 'meta'
 
 class NeuralNet(ClassificationModel):
     DEFAULT_BOTTLENECK_LAYER = -2
-
-    learning_rate = 0.1
-    batch_size = 128
+    DEFAULT_LEARNING_RATE = 0.1
+    DEFAULT_BATCH_SIZE = 128
 
     @property
     def graph(self):
@@ -59,7 +58,7 @@ class NeuralNet(ClassificationModel):
             except Exception as e:
                 num_items = -1
 
-            feed_dict[self.lr] = self.calculate_learning_rate(epoch=epoch_nr)
+            feed_dict[self.lr_placeholder] = self.calculate_learning_rate(epoch=epoch_nr)
 
             epoch_loss_avg = 0
             epoch_acc_avg = 0

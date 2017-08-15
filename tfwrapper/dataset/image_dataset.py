@@ -195,7 +195,10 @@ class ImageDataset(Dataset):
 
             cursor += 1
             if counter % 100 == 0:
-                logger.info('Parsed %d/%s' % (counter, str(batch_size)))
+                total_size = batch_size
+                if total_size == float('inf'):
+                    total_size = len(self._X)
+                logger.info('Parsed %d/%d' % (counter, total_size))
             counter += 1
 
         X = np.asarray(batch_X)

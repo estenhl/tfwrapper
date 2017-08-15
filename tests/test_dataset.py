@@ -11,6 +11,7 @@ from tfwrapper.utils.files import write_features
 from utils import curr_path
 from utils import generate_features
 
+
 def test_parse_datastructure():
     root_path = os.path.join(os.path.dirname(__file__), 'data/testset')
     if not os.path.isdir(root_path):
@@ -391,6 +392,7 @@ def test_num_classes():
 
     assert 3 == dataset.num_classes
 
+
 def test_num_classes_onehot():
     X = np.asarray([[1], [2], [3]])
     y = np.asarray([0, 1, 2])
@@ -399,3 +401,62 @@ def test_num_classes_onehot():
 
     assert 3 == dataset.num_classes
 
+
+def test_upsample():
+    X = np.concatenate([np.zeros(5), np.ones(3)])
+    y = np.concatenate([np.zeros(5), np.ones(3)])
+
+    dataset = Dataset(X=X, y=y)
+    dataset = dataset.upsampled(labels=1, size=5)
+
+    assert 10 == len(dataset)
+    assert 5 == np.sum(dataset.y)
+    assert np.array_equal(dataset.X, dataset.y)
+
+
+def test_upsample_max():
+    X = np.concatenate([np.zeros(5), np.ones(3), np.ones(2) * 2])
+    y = np.concatenate([np.zeros(5), np.ones(3), np.ones(2) * 2])
+
+    dataset = Dataset(X=X, y=y)
+    dataset = dataset.upsampled(labels=2, size='max')
+
+    assert 13 == len(dataset)
+    assert 13 == np.sum(dataset.y)
+    assert np.array_equal(dataset.X, dataset.y)
+
+
+def test_upsample_min():
+    X = np.concatenate([np.zeros(5), np.ones(3), np.ones(2) * 2])
+    y = np.concatenate([np.zeros(5), np.ones(3), np.ones(2) * 2])
+
+    dataset = Dataset(X=X, y=y)
+    dataset = dataset.upsampled(labels=2, size='min')
+
+    assert 11 == len(dataset)
+    assert 9 == np.sum(dataset.y)
+    assert np.array_equal(dataset.X, dataset.y)
+
+
+def test_upsample_multiple():
+    X = np.concatenate([np.zeros(5), np.ones(3), np.ones(2) * 2])
+    y = np.concatenate([np.zeros(5), np.ones(3), np.ones(2) * 2])
+
+    dataset = Dataset(X=X, y=y)
+    dataset = dataset.upsampled(labels=[1, 2], size='max')
+
+    assert 15 == len(dataset)
+    assert 15 == np.sum(dataset.y)
+    assert np.array_equal(dataset.X, dataset.y)
+
+
+def test_upsample_all():
+    X = np.concatenate([np.zeros(5), np.ones(3), np.ones(2) * 2])
+    y = np.concatenate([np.zeros(5), np.ones(3), np.ones(2) * 2])
+
+    dataset = Dataset(X=X, y=y)
+    dataset = dataset.upsampled(labels=None, size='max')
+
+    assert 15 == len(dataset)
+    assert 15 == np.sum(dataset.y)
+    assert np.array_equal(dataset.X, dataset.y)

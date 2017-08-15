@@ -5,8 +5,7 @@ from collections import Counter
 from tfwrapper import logger
 from tfwrapper.utils.files import parse_features
 from tfwrapper.utils.decorators import deprecated
-from tfwrapper.utils.exceptions import raise_exception
-from tfwrapper.utils.exceptions import InvalidArgumentException
+from tfwrapper.utils.exceptions import log_and_raise, InvalidArgumentException, raise_exception
 
 from .dataset_generator import DatasetGenerator
 
@@ -131,6 +130,26 @@ def drop_classes(X, y, *, keep):
                 print(e)
 
     return np.asarray(filtered_X), np.asarray(filtered_y)
+
+
+def upsample_label(X, y, label, size):
+    original_idx = np.where(y == label)[0].astype(int)
+
+    ratio = size // len(original_idx) - 1
+    if ratio > 0:
+        idx = np.repeat(original_idx, ratio)
+    else:
+        idx = np.asarray([]).astype(int)
+
+    remaining = size % len(original_idx)
+    np.random.shuffle(original_idx)
+    remaining_idx = original_idx[:remaining]
+    idx = np.concatenate([idx, remaining_idx])
+
+    X = np.concatenate([X, X[idx]])
+    y = np.concatenate([y, y[idx]])
+
+    return X, y
 
 
 class Dataset():
@@ -261,6 +280,46 @@ class Dataset():
             return self.__class__(X=self._X, y=onehot_array(y), **self.kwargs())
         except TypeError:
             raise_exception('Invalid type for onehot_encoded %s. (Valid are all types of ints. Automatically converted are %s' % (y.dtype, str(invalid_types)), InvalidArgumentException)
+
+    def upsampled(self, *, labels=None, size='max'):
+        if type(labels) is int:
+            labels = [labels]
+        elif labels is None:
+            labels = np.unique(self._y)
+        elif type(labels) is not list:
+            log_and_raise(InvalidArgumentException, 'Invalid labels type %s. (Valid are [None, int, list])' % str(type(labels)))
+
+        if type(size) is str:
+            counts = Counter(self._y)
+
+            if not len(counts) == len(labels):
+                for label in labels:
+                    if label in counts:
+                        del counts[label]
+                    else:
+                        logger.warning('Trying to upsample non-existing label %s' % str(label))
+
+            counts = [counts[x] for x in counts]
+            sorted_counts = sorted(counts)
+
+            if size == 'min':
+                index = 0
+            elif size == 'max':
+                index = -1
+            else:
+                log_and_raise(InvalidArgumentException, 'Invalid size value %s. (Valid str-values are [\'min\', \'max\'])' % size)
+
+            size = int(sorted_counts[index])
+        elif type(size) is not int:
+            log_and_raise(InvalidArgumentException, 'Invalid size type %s. (Valid are [str, int])' % str(type(size)))
+        
+        print('BEFORE')
+        X, y = self._X, self._y
+
+        for label in labels:
+            X, y = upsample_label(X, y, label, size)
+
+        return self.__class__(X=X, y=y, **self.kwargs())
 
     def squeezed(self):
         return self.__class__(X=np.squeeze(self._X), y=self._y, **self.kwargs())

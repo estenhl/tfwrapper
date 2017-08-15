@@ -1,4 +1,7 @@
+import tensorflow as tf
+
 from tfwrapper.models import BaseModel, Predictive, FixedRegressionModel, FixedClassificationModel, RegressionModel, ClassificationModel
+
 
 class MockBaseModel(BaseModel):
     def mock(self):
@@ -62,6 +65,14 @@ class MockRegressionModel(RegressionModel):
 
 
 class MockClassificationModel(ClassificationModel):
+        
+    @classmethod
+    def from_tw(cls, *args, **kwargs):
+        name = kwargs['name']
+        del kwargs['name']
+        layers = [lambda x: tf.Variable([[5.]], name=name + '/pred')]
+        return ClassificationModel.from_tw(*args, layers=layers, **kwargs)
+
     def validate(self, *args, **kwargs):
         pass
 

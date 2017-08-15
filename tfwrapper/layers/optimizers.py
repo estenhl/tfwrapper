@@ -10,13 +10,17 @@ class Optimizer(ABC):
     def from_name(name: str):
         name = name.lower()
 
-        correct_pred = ['correctpred', 'correct-pred']
+        adam = ['adam']
+        sgd = ['sgd', 'stochastic-gradient-descent']
 
         combined = []
-        combined += correct_pred
+        combined += adam
+        combined += sgd
 
-        if name in correct_pred:
-            return CorrectPred()
+        if name in adam:
+            return Adam()
+        elif name in sgd:
+            return SGD()
         else:
             log_and_raise(NotImplementedError, '%s accuracy is not implemented. (Valid is %s)' % (name, combined))
 
@@ -44,3 +48,8 @@ class Adam(Optimizer):
         #epsilon_var = tf.Variable(epsilon, name=name + '/epsilon')
 
         return tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1, beta2=beta2, epsilon=epsilon, name=name + '/adam').minimize(loss, name=name)
+
+
+class SGD(Optimizer):
+    def _execute(self, lr, loss, name):
+        return tf.train.GradientDescentOptimizer(learning_rate=lr, name=name + '/sgd').minimize(loss, name=name)
