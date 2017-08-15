@@ -224,3 +224,16 @@ def test_from_tw():
         assert loaded_model.y_shape == model.y_shape
     finally:
         remove_dir(folder)
+
+
+def test_assign_variable_value():
+    name = 'test-assign-variable-value'
+    model = MockBaseModel([10], 3, [lambda x: tf.Variable([3.], name='W')], name=name)
+    
+    with tf.Session(graph=model.graph) as sess:
+        sess.run(tf.global_variables_initializer())
+        old_value = sess.run(sess.graph.get_tensor_by_name('W:0'))
+        model.assign_variable_value('W', np.zeros(1), sess=sess)
+        new_value = sess.run(sess.graph.get_tensor_by_name('W:0'))
+
+    assert not np.array_equal(new_value, old_value)

@@ -10,6 +10,7 @@ from tfwrapper.layers import Layer
 from tfwrapper.layers.accuracy import Accuracy, CorrectPred
 from tfwrapper.layers.loss import Loss, MeanSoftmaxCrossEntropy, MSE
 from tfwrapper.layers.optimizers import Adam, Optimizer
+from tfwrapper.utils import get_variable_by_name
 from tfwrapper.utils.data import get_subclass_by_name
 from tfwrapper.utils.exceptions import log_and_raise, InvalidArgumentException
 
@@ -113,6 +114,8 @@ class BaseModel(ABC):
 
     @classmethod
     def from_tw_data(cls, data: Dict[str, Any], weights_filename: str, load_params: Dict[str, Any] = None, sess: tf.Session = None, **kwargs):
+        """ Loads a model from a dictionary of key-value pairs (as specified by the tfwrapper-specific *.tw files) """
+
         if load_params is None:
             load_params = {}
 
@@ -131,6 +134,18 @@ class BaseModel(ABC):
 
         for variable in tf.trainable_variables():
             self._variables[variable.name] = {'tensor': variable, 'value': sess.run(variable)}
+
+    def assign_variable_value(self, name, value, sess=None):
+        """ Assigns a value to a variable. If the variable (identified by name) does not exist on the models graph,
+        an InvalidArgumentException is raised """
+        
+        with TFSession(sess, self.graph) as sess:
+            variable = get_variable_by_name(name)
+
+            if variable is None:
+                log_and_raise(InvalidArgumentException, '%s contains has no variable named %s' % (self.name, name))
+
+            sess.run(variable.assign(value))
 
     def reset(self, **kwargs):
         """ Resets the value of all variables stored on the graph """

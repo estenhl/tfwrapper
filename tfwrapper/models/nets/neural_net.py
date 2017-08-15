@@ -28,14 +28,6 @@ class NeuralNet(ClassificationModel):
     DEFAULT_LEARNING_RATE = 0.1
     DEFAULT_BATCH_SIZE = 128
 
-    @property
-    def graph(self):
-        return self._graph
-
-    @property
-    def variables(self):
-        return self._variables
-
     def __init__(self, X_shape, num_classes, layers, preprocessing=None, sess=None, name='NeuralNet'):
         with TFSession(sess) as sess:
             ClassificationModel.__init__(self, X_shape, num_classes, layers, preprocessing=preprocessing, sess=sess, name=name)
@@ -217,11 +209,6 @@ class NeuralNet(ClassificationModel):
             errormsg = 'Invalid type %s for learning rate. (Valid is [\'float\', \'int\', \'func\'])' % type(self.learning_rate)
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
-
-    def assign_variable_value(self, name, value, sess=None):
-        with TFSession(sess, self.graph) as sess:
-            variable = get_variable_by_name(name)
-            sess.run(variable.assign(value))
 
     def train(self, X=None, y=None, generator=None, feed_dict=None, epochs=None, val_X=None, val_y=None, val_generator=None, validate=True, shuffle=True, sess=None, **kwargs):
         feed_dict = self.parse_feed_dict(feed_dict, log=True, **kwargs)
