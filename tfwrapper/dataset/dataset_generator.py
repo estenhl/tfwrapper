@@ -104,7 +104,7 @@ class ImageDatasetGenerator(DatasetGeneratorBase):
         values = (dataset.X, dataset.y)
 
         if self.include_filenames:
-            values += (dataset._X,)
+            values += (dataset.paths,)
 
         return values
 

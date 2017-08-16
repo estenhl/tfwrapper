@@ -144,6 +144,9 @@ class ImageDataset(Dataset):
             logger.warning('Do not pass labels_file and root_folder to constructor, use the create classmethods')
             X, y = parse_datastructure(root_folder)
 
+        if paths is None:
+            paths = X
+
         # TODO should happen first??
         super().__init__(X=X, y=y, paths=paths, **kwargs)
 
@@ -204,7 +207,7 @@ class ImageDataset(Dataset):
         X = np.asarray(batch_X)
         y = np.asarray(batch_y)
 
-        return Dataset(X=X, y=y, paths=paths), cursor
+        return Dataset(X=X, y=y, paths=self.paths), cursor
 
     def kwargs(self, **kwargs):
         kwargs = super().kwargs(**kwargs)
