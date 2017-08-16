@@ -180,3 +180,19 @@ def test_load_from_tw():
         remove_dir(folder)
 
 
+def test_get_tensor_by_name():
+    name = 'test-get-tensor-by-name'
+    with tf.Session() as sess:
+        model = SingleLayerNeuralNet([10], 3, 5, name=name, sess=sess)
+        tensor = model.get_tensor(name + '/hidden:0')
+
+    assert tensor is not None
+
+
+def test_get_tensor_by_id():
+    name = 'test-get-tensor-by-id'
+    with tf.Session() as sess:
+        model = SingleLayerNeuralNet([10], 3, 5, name=name, sess=sess)
+        tensor = model.get_tensor(-1)
+
+    assert tensor is not None

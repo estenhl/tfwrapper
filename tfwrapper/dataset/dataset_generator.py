@@ -73,6 +73,42 @@ class DatasetGenerator(DatasetGeneratorBase):
         return dataset.X, dataset.y
 
 
+class ImageDatasetGenerator(DatasetGeneratorBase):
+    def __init__(self, dataset, batch_size: int, normalize: bool = False, shuffle: bool = True, infinite: bool = False, include_filenames: bool = True):
+        super().__init__(dataset, batch_size, normalize=normalize, shuffle=shuffle, infinite=infinite)
+        self.include_filenames = include_filenames
+
+    def __next__(self):
+        if self.cursor >= len(self):
+            if not self.infinite:
+                raise StopIteration
+            self._start()
+
+        if self.include_filenames:
+            batch_X, batch_y, filenames = self._next_batch()
+        else:
+            batch_X, batch_y = self._next_batch()
+
+        if self.normalize:
+            # TODO (08.06.17): change this to dataset.normalize_array once the circular dependency issue is solved
+            batch_X = (batch_X - batch_X.mean()) / batch_X.std()
+
+        if self.include_filenames:
+            return batch_X, batch_y, filenames
+        else:
+            return batch_X, batch_y
+
+    def _next_batch(self):
+        dataset, self.cursor = self.dataset.next_batch(self.cursor, self.batch_size)
+
+        values = (dataset.X, dataset.y)
+
+        if self.include_filenames:
+            values += (dataset._X,)
+
+        return values
+
+
 class DatasetSamplingGenerator(DatasetGeneratorBase):
     """
     Samples classes of the dataset so that the number of samples for each class is equal per epoch.

@@ -237,3 +237,37 @@ def test_assign_variable_value():
         new_value = sess.run(sess.graph.get_tensor_by_name('W:0'))
 
     assert not np.array_equal(new_value, old_value)
+
+
+def test_get_tensor_by_name():
+    tensor_name = 'test-lookup-by-name'
+    tensor_value = 3.
+    with tf.Session() as sess:
+        model = MockBaseModel([10], 3, [lambda x: tf.Variable([tensor_value], name=tensor_name)], sess=sess)
+        sess.run(tf.global_variables_initializer())
+        tensor = model.get_tensor(tensor_name + ':0')
+        value = sess.run(tensor)
+
+    assert tensor is not None, 'BaseModel is unable to lookup tensor based on name'
+    assert tensor_name + ':0' == tensor.name, 'BaseModel.get_tensor with name returns tensor with the wrong name'
+    assert tensor_value == value, 'BaseModel.get_tensor with name returns the wrong tensor'
+
+def test_get_tensor_by_id():
+    tensor_name = 'test-lookup-by-id'
+    tensor_value = 3.
+    with tf.Session() as sess:
+        model = MockBaseModel([10], 3, [lambda x: tf.Variable([tensor_value], name=tensor_name)], sess=sess)
+        sess.run(tf.global_variables_initializer())
+        tensor = model.get_tensor(-1)
+        value = sess.run(tensor)
+
+    assert tensor is not None, 'BaseModel is unable to lookup tensor based on id'
+    assert tensor_name + ':0' == tensor.name, 'BaseModel.get_tensor with id returns tensor with the wrong name'
+    assert tensor_value == value, 'BaseModel.get_tensor with id returns the wrong tensor'
+
+
+def test_len():
+    with tf.Session() as sess:
+        model = MockBaseModel([10], 3, [lambda x: tf.Variable([3.])], sess=sess)
+
+    assert len(model) == 2

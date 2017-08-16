@@ -46,7 +46,7 @@ def _parse_layer_list(start: tf.Tensor, remaining: List[Union[tf.Tensor, _tensor
 
 
 class BaseModel(ABC):
-    """ The base class for singular machine learning models. Mainly contains infrastructure stuff """
+    """ The base class for singular machine learning models. Mainly contains setup and infrastructure functionality """
 
     @property
     def graph(self) -> tf.Graph:
@@ -138,7 +138,7 @@ class BaseModel(ABC):
     def assign_variable_value(self, name, value, sess=None):
         """ Assigns a value to a variable. If the variable (identified by name) does not exist on the models graph,
         an InvalidArgumentException is raised """
-        
+
         with TFSession(sess, self.graph) as sess:
             variable = get_variable_by_name(name)
 
@@ -212,8 +212,49 @@ class BaseModel(ABC):
             self._checkpoint_variables(sess)
             self._graph = sess.graph
 
+    def get_tensor(self, val: Union[str, int]):
+        """ Returns a tensor from the model. Lookups can be done either on name or on index (in the setup order) """
+
+        if type(val) is int:
+            return self.tensors[val]['tensor']
+        elif type(val) is str:
+            for i in range(len(self.tensors)):
+                if self.tensors[i]['name'] == val:
+                    return self.tensors[i]['tensor']
+
+            errormsg = 'Invalid tensor name %s' % val
+        else:
+            errormsg = 'Invalid type %s for get_tensor. (Valid is [\'int\', \'str\'])' % repr(type(val))
+
+        logger.error(errormsg)
+        raise InvalidArgumentException(errormsg)
+
+    def __len__(self):
+        return len(self.tensors)
+
+    def __add__(self, other):
+        layers = self.layers + other.layers
+        name = '%s_%s' % (self.name, other.name)
+        X_shape = self.X_shape
+        y_size = other.y_size
+
+        if not self.y_size == other.X_shape:
+            raise_exception('Unable to join neural nets with last layer shape %s and first layer shape %s' % (str(X_shape), str(y_size)), InvalidArgumentException)
+
+        net = NeuralNet.from_shape(X_shape, y_size, layers, name=name)
+
+        for key in self.feed_dict:
+            net.feed_dict[key] = self.feed_dict[key]
+
+        for key in other.feed_dict:
+            net.feed_dict[key] = other.feed_dict[key]
+
+        return net
+
 
 class Predictive(ABC):
+    """ An \'interface\' for models able to make predictions. Contains no functionality """
+
     @abstractmethod
     def validate(self, X: np.ndarray, y: np.ndarray, *, sess: tf.Session = None, **kwargs):
         pass
@@ -224,6 +265,9 @@ class Predictive(ABC):
 
 
 class PredictiveModel(BaseModel, Predictive):
+    """ A conceptual abstract class combining models with the Predictive interface. Contains functionality for
+    handling loss functions (setting/getting/validating etc) and predicting """
+
     DEFAULT_LOSS = MSE
 
     @property
@@ -291,12 +335,16 @@ class PredictiveModel(BaseModel, Predictive):
 
 
 class FixedRegressionModel(PredictiveModel):
+    """ An abstract class for predictive regression models. Contains functionality for validating predictions """
+
     @abstractmethod
     def validate(self, X: np.ndarray, y: np.ndarray, *, sess: tf.Session = None, **kwargs) -> float:
         pass
 
 
 class FixedClassificationModel(PredictiveModel):
+    """ An abstract class for predictive classification models. Contains functionality for validating predictions (performs accuracy measurements) """
+
     DEFAULT_LOSS = MeanSoftmaxCrossEntropy
     DEFAULT_ACCURACY = CorrectPred
 
