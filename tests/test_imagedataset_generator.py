@@ -10,7 +10,7 @@ from utils import curr_path
 
 def test_imagedataset_generator():
     dataset = ImageDataset.from_root_folder(os.path.join(curr_path, 'data', 'testset'))
-    #dataset.loader = FeatureLoader(FrozenInceptionV3())
+    dataset.loader = FeatureLoader(FrozenInceptionV3())
 
     generator = ImageDatasetGenerator(dataset, 2)
     values = next(generator)
@@ -23,7 +23,7 @@ def test_imagedataset_generator():
 
 def test_imagedataset_generator_no_filenames():
     dataset = ImageDataset.from_root_folder(os.path.join(curr_path, 'data', 'testset'))
-    #dataset.loader = FeatureLoader(FrozenInceptionV3())
+    dataset.loader = FeatureLoader(FrozenInceptionV3())
 
     generator = ImageDatasetGenerator(dataset, 2, include_filenames=False)
 
