@@ -11,7 +11,7 @@ from tfwrapper.utils.exceptions import InvalidArgumentException
 from utils import curr_path
 from utils import remove_dir
 
-
+"""
 def test_mismatching_lengths():
     model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
     X = np.zeros([50, 28, 28, 1])
@@ -196,3 +196,28 @@ def test_get_tensor_by_id():
         tensor = model.get_tensor(-1)
 
     assert tensor is not None
+
+"""
+def test_run_op():
+    name = 'test-run-op'
+    num_hidden = 3
+    batch_size = 10
+    with tf.Session() as sess:
+        model = SingleLayerNeuralNet([10], 3, num_hidden, name=name, sess=sess)
+        sess.run(tf.global_variables_initializer())
+        values = model.run_op(name + '/hidden:0', data=np.zeros((batch_size, 10)), sess=sess)
+
+    assert (batch_size, num_hidden) == values.shape
+
+
+def test_run_op_with_source():
+    name = 'test-run-op-with-source'
+    num_hidden = 3
+    num_classes = 2
+    batch_size = 10
+    with tf.Session() as sess:
+        model = SingleLayerNeuralNet([10], num_classes, num_hidden, name=name, sess=sess)
+        sess.run(tf.global_variables_initializer())
+        values = model.run_op(name + '/pred:0', data=np.zeros((batch_size, num_hidden)), source=name + '/hidden:0', sess=sess)
+
+    assert (batch_size, num_classes) == values.shape

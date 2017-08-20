@@ -8,7 +8,6 @@ from tfwrapper.utils.exceptions import InvalidArgumentException
 from .neural_net import NeuralNet
 
 class CNN(NeuralNet):
-    learning_rate = 0.001
 
     def __init__(self, X_shape, num_classes, layers=None, sess=None, name='NeuralNet', **kwargs):
         with TFSession(sess) as sess:

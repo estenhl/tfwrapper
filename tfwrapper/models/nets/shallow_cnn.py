@@ -7,7 +7,7 @@ from tfwrapper.layers import reshape, conv2d, maxpool2d, fullyconnected, dropout
 from .cnn import CNN
 
 class ShallowCNN(CNN):
-    learning_rate = 0.001
+    DEFAULT_LEARNING_RATE = 0.001
 
     def __init__(self, X_shape, num_classes, sess=None, name='ShallowCNN'):
         

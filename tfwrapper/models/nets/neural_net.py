@@ -121,6 +121,11 @@ class NeuralNet(ClassificationModel):
             logger.error(errormsg)
             raise InvalidArgumentException(errormsg)
 
+        if type(source) in [str, int]:
+            source = self.get_tensor(source)
+        elif type(target) is not tf.Tensor:
+            log_and_raise(InvalidArgumentException, 'Invalid type %s for source in run_op. Valid is [\'str\', \'int\', \'tf.Tensor\'])' % repr(type(target)))
+
         if source is None:
             source = self.X
 

@@ -28,8 +28,11 @@ if not os.path.isdir(os.path.dirname(model_path)):
     os.mkdir(os.path.dirname(model_path))
 cnn.save(model_path)
 
+tf.reset_default_graph()
 
-loaded_cnn = ShallowCNN([28, 28, 1], 10, name='SaveAndLoadExample')
-loaded_cnn.load(model_path)
-_, acc = loaded_cnn.validate(test.X, test.y)
-print('Acc after load: %d%%' % (acc * 100))
+
+with tf.Session() as sess:
+    loaded_cnn = ShallowCNN([28, 28, 1], 10, sess=sess, name='SaveAndLoadExample')
+    loaded_cnn.load(model_path, sess=sess)
+    _, acc = loaded_cnn.validate(test.X, test.y, sess=sess)
+    print('Acc after load: %d%%' % (acc * 100))
