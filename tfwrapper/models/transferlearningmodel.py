@@ -1,6 +1,7 @@
 import json
 import datetime
 import numpy as np
+import os
 import tensorflow as tf
 from typing import Union
 
@@ -52,7 +53,9 @@ class TransferLearningModel(MetaModel, PredictiveMeta):
         with TFSession(sess, self.prediction_model.graph, variables=variables) as sess2:
             return self.prediction_model.validate(dataset, sess=sess2)
 
-    def predict(self, dataset: Dataset, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
+    def predict(self, X = None, dataset: Dataset = None, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
+        if X is not None and dataset is None:
+            dataset = Dataset(X)
         with TFSession(sess, self.feature_model.graph) as sess1:
             if isinstance(dataset, ImageDataset):
                 dataset.loader = FeatureLoader(self.feature_model, cache=self.features_cache, preprocessor=preprocessor, sess=sess1)
@@ -94,7 +97,7 @@ class TransferLearningModel(MetaModel, PredictiveMeta):
         name = metadata['name']
         feature_model_type = metadata['feature_model_type']
         prediction_model_type = metadata['prediction_model_type']
-        prediction_model_path = metadata['prediction_model_path']
+        prediction_model_path = os.path.join(os.path.split(path)[0], metadata['prediction_model_path'])
         features_layer = metadata['features_layer']
         features_cache = metadata['features_cache']
 
