@@ -53,7 +53,7 @@ class TransferLearningModel(MetaModel, PredictiveMeta):
         with TFSession(sess, self.prediction_model.graph, variables=variables) as sess2:
             return self.prediction_model.validate(dataset, sess=sess2)
 
-    def predict(self, X = None, dataset: Dataset = None, *, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
+    def predict(self, dataset: Dataset = None, *, X = None, preprocessor: ImagePreprocessor = None, sess: tf.Session = None):
         if X is not None and dataset is None:
             dataset = Dataset(X)
         with TFSession(sess, self.feature_model.graph) as sess1:
