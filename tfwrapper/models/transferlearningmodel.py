@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from typing import Union
 
-from tfwrapper import TFSession, Dataset, ImageDataset, FeatureLoader, ImagePreprocessor, METADATA_SUFFIX
+from tfwrapper import Dataset, FeatureLoader, ImageDataset, ImagePreprocessor, logger, METADATA_SUFFIX, TFSession
 from tfwrapper.models.nets import NeuralNet
 from tfwrapper.utils.data import get_subclass_by_name
 from tfwrapper.utils.exceptions import log_and_raise, InvalidArgumentException
@@ -70,6 +70,10 @@ class TransferLearningModel(MetaModel, PredictiveMeta):
 
     def save(self, path: str, *, sess: tf.Session = None, **kwargs):
         prediction_model_path = path + '_prediction'
+
+        if not 'labels' in kwargs:
+            logger.warning('Saving %s without saving labels. Shame on you' % self.name)
+
         metadata = kwargs
         metadata['name'] = self.name
         metadata['time'] = str(datetime.datetime.now())

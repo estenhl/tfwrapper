@@ -161,6 +161,9 @@ class BaseModel(ABC):
             saver = tf.train.Saver(tf.trainable_variables())
             saver.save(sess, path, meta_graph_suffix=META_GRAPH_SUFFIX)
 
+            if not 'labels' in kwargs:
+                logger.warning('Saving %s without saving labels. Shame on you' % self.name)
+
             metadata = kwargs
             metadata['name'] = self.name
             metadata['X_shape'] = self.X_shape
