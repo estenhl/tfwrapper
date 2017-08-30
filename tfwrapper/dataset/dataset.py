@@ -313,7 +313,6 @@ class Dataset():
         elif type(size) is not int:
             log_and_raise(InvalidArgumentException, 'Invalid size type %s. (Valid are [str, int])' % str(type(size)))
         
-        print('BEFORE')
         X, y = self._X, self._y
 
         for label in labels:

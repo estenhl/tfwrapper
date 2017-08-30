@@ -80,6 +80,8 @@ def test_save_loss():
             model.loss = MSE()
             model.save(path, sess=sess)
 
+        tf.reset_default_graph()
+
         with open(path + '.tw', 'r') as f:
             data = json.load(f)
 
@@ -111,6 +113,7 @@ def test_load_default_loss():
 
     finally:
         remove_dir(folder)
+
 
 def test_load_custom_loss():
     name = 'test-load-custom-loss'
@@ -276,3 +279,4 @@ def test_save_optimizer():
         assert model.optimizer.name == data['optimizer_tensor_name'], 'MockClassificationModel does not store correct optimizer tensor name'
     finally:
         remove_dir(folder)
+

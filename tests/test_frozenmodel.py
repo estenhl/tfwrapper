@@ -26,6 +26,7 @@ class TestInceptionV3():
 
     @classmethod
     def setup_class(cls):
+        tf.reset_default_graph()
         cls.sess = tf.Session()
         if os.path.isfile(INCEPTIONV3_PB_PATH):
             cls.model = FrozenInceptionV3(sess=cls.sess)
@@ -33,7 +34,8 @@ class TestInceptionV3():
     @classmethod
     def teardown_class(cls):
         cls.sess.close()
-
+        tf.reset_default_graph()
+    
     def test_invalid_path(self):
         exception = False
 
@@ -117,7 +119,7 @@ class TestInceptionV3():
 
             assert features is not None
             assert (1, 1, 1, 2048) == features.shape
-
+    
     def test_predict(self):
         if os.path.isfile(INCEPTIONV3_PB_PATH):
             predictions = self.model.predict(cat_img, sess=self.sess)

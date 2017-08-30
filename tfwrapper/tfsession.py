@@ -1,5 +1,7 @@
 import tensorflow as tf
 
+assign_placeholder = tf.placeholder(tf.float32, shape=[1])
+
 class TFSession():
     def __init__(self, session=None, graph=None, init=False, variables=None):
         self.is_local_session = session is None
@@ -22,6 +24,8 @@ class TFSession():
         self.variables = variables
 
     def __enter__(self):
+        global assign_op
+
         if self.is_local_session:
             self.context_mgr.__enter__()
             self.session.__enter__()
@@ -33,7 +37,19 @@ class TFSession():
                 for name in self.variables:
                     tensor = self.variables[name]['tensor']
                     value = self.variables[name]['value']
-                    self.session.run(tensor.assign(value))
+                    tensor_name = tensor.name
+
+                    if ':' in tensor_name:
+                        tensor_name = tensor_name.split(':')[0]
+                    
+                    # Creates a single assign op to avoid exploding the graph with assign nodes
+                    if not 'assign_op' in self.variables[name]:
+                        placeholder = tf.placeholder(dtype=tensor.dtype, shape=tensor.shape, name=tensor_name + '_assign_placeholder')
+                        assign_op = tensor.assign(placeholder)
+                        self.variables[name]['placeholder'] = placeholder
+                        self.variables[name]['assign_op'] = assign_op
+
+                    self.session.run(self.variables[name]['assign_op'], feed_dict={self.variables[name]['placeholder']: value})
 
         return self.session
 

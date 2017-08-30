@@ -203,6 +203,9 @@ def test_deconv2d_shape():
         tensor = deconv2d(X, filter=[2, 2], depth=10)
         sess.run(tf.global_variables_initializer())
         result = sess.run(tensor)
+        print('TEST_DECONV2d_SHAPE:')
+        print(len(sess.graph.get_operations()))
+        print(sess.graph.get_operations())
 
     assert (5, 24, 24, 10) == result.shape
 

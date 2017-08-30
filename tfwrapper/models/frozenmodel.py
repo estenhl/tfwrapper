@@ -31,7 +31,12 @@ class FrozenModel(Derivable):
     @classmethod
     def from_type(cls, classname, path=None, name='FrozenModel', sess=None):
         with TFSession(sess) as sess:
-            subclass = get_subclass_by_name(cls, classname)
+            try:
+                subclass = get_subclass_by_name(cls, classname)
+            except InvalidArgumentException:
+                import tfwrapper.models.frozen
+                subclass = get_subclass_by_name(cls, classname)
+
             return subclass(name=name, sess=sess)
 
     def run_op(self, X, *, src, dest, sess=None):
