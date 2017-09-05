@@ -1,11 +1,11 @@
 import numpy as np
-import tensorflow as tf
 
-from tfwrapper.metrics import loss
-from tfwrapper.metrics import accuracy
-from tfwrapper.metrics import confusion_matrix
+from tfwrapper.metrics import accuracy, confusion_matrix, loss
 from tfwrapper.metrics.distance import euclidean
 from tfwrapper.metrics.entropy import kullback_leibler
+
+from fixtures import tf
+
 
 def create_data():
 	y = np.asarray([
@@ -32,20 +32,24 @@ def create_data():
 
 	return y, yhat, loss / np.prod(y.shape) , correct / len(y), conf_matrix
 
+
 def test_loss():
 	y, yhat, correct_loss, _, _ = create_data()
 
 	assert correct_loss == loss(y, yhat)
+
 
 def test_accuracy():
 	y, yhat, _, correct_acc, _ = create_data()
 
 	assert correct_acc == accuracy(y, yhat)
 
+
 def test_confusion_matrix():
 	y, yhat, _, _, correct_conf_matrix = create_data()
 
 	assert np.array_equal(correct_conf_matrix, confusion_matrix(y, yhat))
+
 
 def test_euclidean_2d():
 	x1 = np.asarray([0, 0])
@@ -54,6 +58,7 @@ def test_euclidean_2d():
 
 	assert dist == euclidean(x1, x2)
 
+
 def test_euclidean_3d():
 	x1 = np.asarray([0, 0, 0])
 	x2 = np.asarray([10, 10, 10])
@@ -61,7 +66,8 @@ def test_euclidean_3d():
 
 	assert dist == euclidean(x1, x2)
 
-def test_kullback_leibler():
+
+def test_kullback_leibler(tf):
 	P_init = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 	Q_init = [[1, 1, 1], [2, 2, 2], [3, 3, 3]]
 

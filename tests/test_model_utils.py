@@ -1,12 +1,13 @@
 import pytest
 import numpy as np
-import tensorflow as tf
 
 from tfwrapper.models.utils import combine_graphs
 from tfwrapper.utils.exceptions import IllegalStateException
 
+from fixtures import tf
 
-def test_combine_graphs():
+
+def test_combine_graphs(tf):
     graph1 = tf.Graph()
     with graph1.as_default():
         with tf.Session(graph=graph1) as sess:
@@ -31,7 +32,7 @@ def test_combine_graphs():
     assert np.array_equal([4, 4, 4], result)
 
 
-def test_combine_graphs_with_multiple_variables():
+def test_combine_graphs_with_multiple_variables(tf):
     graph1 = tf.Graph()
     with graph1.as_default():
         with tf.Session(graph=graph1) as sess:
@@ -60,7 +61,7 @@ def test_combine_graphs_with_multiple_variables():
     assert np.array_equal([10, 10, 10], result)
 
 
-def test_combine_graphs_with_placeholders():
+def test_combine_graphs_with_placeholders(tf):
     graph1 = tf.Graph()
     with graph1.as_default():
         with tf.Session(graph=graph1) as sess:
@@ -86,7 +87,7 @@ def test_combine_graphs_with_placeholders():
     assert np.array_equal([8, 8, 8], result)
 
 
-def test_combine_graphs_with_session():
+def test_combine_graphs_with_session(tf):
     exception = False
     with tf.Session() as sess:
         try:
@@ -97,7 +98,7 @@ def test_combine_graphs_with_session():
     assert exception, 'Calling combine_graphs when a tf.Session is default does not raise an exception'
 
 
-def test_combine_graphs_name_scopes():
+def test_combine_graphs_name_scopes(tf):
     graph1 = tf.Graph()
     with graph1.as_default():
         with tf.Session(graph=graph1) as sess:

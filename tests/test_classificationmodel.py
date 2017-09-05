@@ -1,18 +1,18 @@
 import os
 import json
 import pytest
-import tensorflow as tf
 
 from tfwrapper.models import ClassificationModel
 from tfwrapper.layers.accuracy import CorrectPred
 from tfwrapper.layers.loss import MSE
 from tfwrapper.layers.optimizers import SGD
 
+from fixtures import tf
 from mock import MockFixedClassificationModel, MockClassificationModel
 from utils import curr_path, remove_dir, softmax_wrapper
 
 
-def test_fixed_init():
+def test_fixed_init(tf):
     name = 'test-fixed-init'
     model = MockFixedClassificationModel([2, 2], 2, [softmax_wrapper()], name=name)
 
@@ -24,7 +24,7 @@ def test_fixed_init():
     assert name + '/accuracy:0' == model.accuracy.name, 'FixedClassificationModel.__init__ does not set the name of the accuracy-tensor to accuracy'
 
 
-def test_set_loss():
+def test_set_loss(tf):
     name = 'test-set-loss'
     model = MockFixedClassificationModel([2, 2], 1, [lambda x: tf.Variable([[2.]])], name=name)
     model.loss = lambda y, preds, name: tf.divide(y, preds, name=name)
@@ -36,7 +36,7 @@ def test_set_loss():
     assert result[0][0] == 0.5, 'The loss sat in a ClassificationModel is not used by the model'
 
 
-def test_set_accuracy():
+def test_set_accuracy(tf):
     name = 'test-set-accuracy'
     model = MockFixedClassificationModel([2, 2], 1, [lambda x: tf.Variable([[2.]])], name=name)
     model.accuracy = lambda y, preds, name: tf.multiply(y, preds, name=name)
@@ -48,7 +48,7 @@ def test_set_accuracy():
     assert result[0][0] == 8, 'The accuracy sat in a ClassificationModel is not used by the model'
 
 
-def test_init():
+def test_init(tf):
     name = 'test-init'
     model = MockClassificationModel([2, 2], 2, [lambda x: tf.Variable([5., 5.])], name=name)
 
@@ -57,7 +57,7 @@ def test_init():
     assert name + '/optimizer' == model.optimizer.name, 'FixedClassificationModel.__init__ does not set the name of the optimizer-tensor to optimizer'
 
 
-def test_set_optimizer():
+def test_set_optimizer(tf):
     name = 'test-set-optimizer'
     model = MockClassificationModel([2, 2], 1, [lambda x: tf.Variable([[2.]])], name=name)
     old_optimizer = model.optimizer
@@ -67,7 +67,7 @@ def test_set_optimizer():
     assert old_optimizer != model.optimizer
 
 
-def test_save_loss():
+def test_save_loss(tf):
     name = 'test-save-loss'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'model')
@@ -91,7 +91,7 @@ def test_save_loss():
         remove_dir(folder)
 
 
-def test_load_default_loss():
+def test_load_default_loss(tf):
     name = 'test-load-default-loss'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'model')
@@ -115,7 +115,7 @@ def test_load_default_loss():
         remove_dir(folder)
 
 
-def test_load_custom_loss():
+def test_load_custom_loss(tf):
     name = 'test-load-custom-loss'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'model')
@@ -140,7 +140,7 @@ def test_load_custom_loss():
         remove_dir(folder)
 
 
-def test_loss_from_tw():
+def test_loss_from_tw(tf):
     name = 'test-loss-from-tw'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'model')
@@ -164,7 +164,7 @@ def test_loss_from_tw():
         remove_dir(folder)
 
 
-def test_save_accuracy():
+def test_save_accuracy(tf):
     name = 'test-save-accuracy'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'model')
@@ -186,7 +186,7 @@ def test_save_accuracy():
         remove_dir(folder)
 
 
-def test_load_default_accuracy():
+def test_load_default_accuracy(tf):
     name = 'test-load-default-accuracy'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'model')
@@ -210,7 +210,7 @@ def test_load_default_accuracy():
         remove_dir(folder)
 
 
-def test_load_custom_accuracy():
+def test_load_custom_accuracy(tf):
     name = 'test-load-custom-accuracy'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'model')
@@ -235,7 +235,7 @@ def test_load_custom_accuracy():
         remove_dir(folder)
 
 
-def test_accuracy_from_tw():
+def test_accuracy_from_tw(tf):
     name = 'test-accuracy-from-tw'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'model')
@@ -259,7 +259,7 @@ def test_accuracy_from_tw():
         remove_dir(folder)
 
 
-def test_save_optimizer():
+def test_save_optimizer(tf):
     name = 'test-save-optimizer'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'model')

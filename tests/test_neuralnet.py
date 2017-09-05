@@ -1,18 +1,17 @@
 import os
 import json
 import numpy as np
-import tensorflow as tf
 
 from tfwrapper.models.nets import SingleLayerNeuralNet
 from tfwrapper.models.nets import NeuralNet
 from tfwrapper.models.nets.neural_net import METADATA_SUFFIX
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
-from utils import curr_path
-from utils import remove_dir
+from fixtures import tf
+from utils import curr_path, remove_dir
 
 
-def test_mismatching_lengths():
+def test_mismatching_lengths(tf):
     model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
     X = np.zeros([50, 28, 28, 1])
     y = np.zeros([100, 3])
@@ -26,7 +25,7 @@ def test_mismatching_lengths():
     assert exception
 
 
-def test_invalid_X_shape():
+def test_invalid_X_shape(tf):
     model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
     X = np.zeros([100, 28, 28, 2])
     y = np.zeros([100, 3])
@@ -40,7 +39,7 @@ def test_invalid_X_shape():
     assert exception
 
 
-def test_y_without_onehot():
+def test_y_without_onehot(tf):
     model = SingleLayerNeuralNet([28, 28, 1], 3, 5)
     X = np.zeros([100, 28, 28, 1])
     y = np.zeros([100])
@@ -54,7 +53,7 @@ def test_y_without_onehot():
     assert exception
 
 
-def test_save_metadata():
+def test_save_metadata(tf):
     name = 'Name'
     X_shape = [1, 2, 3]
     y_shape = [4]
@@ -85,7 +84,7 @@ def test_save_metadata():
         remove_dir(folder)
 
 
-def test_save_labels():
+def test_save_labels(tf):
     labels = ['a', 'b', 'c']
 
     folder = os.path.join(curr_path, 'test')
@@ -109,7 +108,7 @@ def test_save_labels():
         remove_dir(folder)
 
 
-def test_train_X_y():
+def test_train_X_y(tf):
     model = SingleLayerNeuralNet([1], 1, 5)
     X = np.reshape(np.arange(10), [10, 1])
     y = np.reshape(np.arange(10), [10, 1])
@@ -132,7 +131,7 @@ def data_generator(size=10, batch_size=5):
         yield X[i * batch_size:(i + 1) * batch_size], y[i * batch_size:(i + 1) * batch_size]
 
 
-def test_train_generator():
+def test_train_generator(tf):
     model = SingleLayerNeuralNet([1], 1, 5)
     generator = data_generator()
 
@@ -146,7 +145,7 @@ def test_train_generator():
     assert not exception
 
 
-def test_no_data():
+def test_no_data(tf):
     model = SingleLayerNeuralNet([10], 3, 5)
 
     exception = False
@@ -158,7 +157,7 @@ def test_no_data():
     assert exception
 
 
-def test_load_from_tw():
+def test_load_from_tw(tf):
     data = np.random.rand(10, 10)
     folder = os.path.join(curr_path, 'test')
     try:
@@ -180,7 +179,7 @@ def test_load_from_tw():
         remove_dir(folder)
 
 
-def test_get_tensor_by_name():
+def test_get_tensor_by_name(tf):
     name = 'test-get-tensor-by-name'
     with tf.Session() as sess:
         model = SingleLayerNeuralNet([10], 3, 5, name=name, sess=sess)
@@ -189,7 +188,7 @@ def test_get_tensor_by_name():
     assert tensor is not None
 
 
-def test_get_tensor_by_id():
+def test_get_tensor_by_id(tf):
     name = 'test-get-tensor-by-id'
     with tf.Session() as sess:
         model = SingleLayerNeuralNet([10], 3, 5, name=name, sess=sess)
@@ -198,7 +197,7 @@ def test_get_tensor_by_id():
     assert tensor is not None
 
 
-def test_run_op():
+def test_run_op(tf):
     name = 'test-run-op'
     num_hidden = 3
     batch_size = 10
@@ -210,7 +209,7 @@ def test_run_op():
     assert (batch_size, num_hidden) == values.shape
 
 
-def test_run_op_with_source():
+def test_run_op_with_source(tf):
     name = 'test-run-op-with-source'
     num_hidden = 3
     num_classes = 2
@@ -221,9 +220,3 @@ def test_run_op_with_source():
         values = model.run_op(name + '/pred:0', data=np.zeros((batch_size, num_hidden)), source=name + '/hidden:0', sess=sess)
 
     assert (batch_size, num_classes) == values.shape
-
-"""
-def test_run_op_invalid_target():
-    with tf.Session() as sess:
-        model = SingleLayerNeuralNet([10], num_classes, num_hidden, name=name, sess=sess)
-"""

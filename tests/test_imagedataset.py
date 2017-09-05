@@ -13,6 +13,7 @@ from utils import curr_path
 from utils import remove_dir
 from utils import create_tmp_dir
 
+
 def test_create_from_datastructure():
     try:
         size = 10
@@ -24,6 +25,7 @@ def test_create_from_datastructure():
         assert size == len(dataset.y)
     finally:
         remove_dir(root_folder)
+
 
 def test_create_from_weird_datastructure():
     try:
@@ -42,12 +44,14 @@ def test_create_from_weird_datastructure():
     finally:
         remove_dir(root)
 
+
 def create_tmp_labels_file(root_folder, name):
     with open(name, 'w') as f:
         for filename in os.listdir(root_folder):
             f.write('label,' + filename + '\n')
 
     return name
+
 
 def test_create_from_labels_file():
     try:
@@ -65,6 +69,7 @@ def test_create_from_labels_file():
         remove_dir(parent)
         os.remove(labels_file)
 
+
 def test_imagedataset_inheritance():
     X = np.arange(10)
     y = np.arange(10)
@@ -76,6 +81,7 @@ def test_imagedataset_inheritance():
     assert np.array_equal(labels, dataset.labels)
     assert id(loader) == id(dataset.loader)
 
+
 def test_imageloader_shape():
     try:
         size = 10
@@ -85,6 +91,7 @@ def test_imageloader_shape():
         assert [size, -1, -1, 3] == dataset.shape
     finally:
         remove_dir(root_folder)
+
 
 def test_resized_imageloader_shape():
     try:
@@ -99,6 +106,7 @@ def test_resized_imageloader_shape():
         assert [size, 64, 64, 3] == dataset.shape
     finally:
         remove_dir(root_folder)
+
 
 def test_set_preprocessor():
     try:

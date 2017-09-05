@@ -1,12 +1,11 @@
 import pytest
 import numpy as np
-import tensorflow as tf
 
-print('Before large import')
 from tfwrapper.layers import bias, weight, reshape, relu, softmax, fullyconnected, dropout, channel_means, concatenate, zoom, unet_block, deconv2d
-print('After large import')
 
-def test_bias():
+from fixtures import tf
+
+def test_bias(tf):
     size = 5
     name = 'test_bias'
 
@@ -19,7 +18,7 @@ def test_bias():
     assert name + ':0' == tensor.name
 
 
-def test_weight():
+def test_weight(tf):
     shape = [5]
     name = 'test_weight'
 
@@ -34,7 +33,7 @@ def test_weight():
 
 
 
-def test_reshape():
+def test_reshape(tf):
     shape = np.asarray([10, 10])
     length = np.prod(shape)
     layer = reshape(shape=shape)
@@ -46,7 +45,7 @@ def test_reshape():
     assert np.array_equal(shape, result.shape)
 
 
-def test_relu():
+def test_relu(tf):
     name = 'test_relu'
     values = np.zeros([10, 10])
     layer = relu(name=name)
@@ -59,7 +58,7 @@ def test_relu():
     assert np.array_equal(values.shape, result.shape)
 
 
-def test_softmax():
+def test_softmax(tf):
     name = 'test_softmax'
     values = np.zeros([10, 10])
     layer = softmax(name=name)
@@ -72,7 +71,7 @@ def test_softmax():
     assert np.array_equal(values.shape, result.shape)
 
 
-def test_fullyconnected():
+def test_fullyconnected(tf):
     name = 'test_fullyconnected'
     shape = np.asarray([10, 10, 10])
     values = np.ones(shape).astype(np.float32)
@@ -90,7 +89,7 @@ def test_fullyconnected():
     assert outputs == len(result[0])
 
 
-def test_dropout():
+def test_dropout(tf):
     name = 'test_dropout'
     values = np.zeros([10, 10])
     layer = dropout(keep_prob=0.5, name=name)
@@ -104,7 +103,7 @@ def test_dropout():
     assert np.array_equal(values.shape, result.shape)
 
 
-def test_channel_means():
+def test_channel_means(tf):
     name = 'test_channel_means'
     imgs = np.zeros((2, 4, 4, 3))
     for i in range(2):
@@ -125,7 +124,7 @@ def test_channel_means():
                 assert np.array_equal(result[i][j][k], np.asarray([1, 2, 3]) * i)
 
 
-def test_concatenate():
+def test_concatenate(tf):
     name = 'test_concatenate'
 
     zeros = np.zeros((3, 3, 3, 3))
@@ -150,7 +149,7 @@ def test_concatenate():
             assert np.array_equal(expected_result, result), 'Concatenate does not work for axis %d' % i
 
 
-def test_zoom():
+def test_zoom(tf):
     name = 'test_zoom'
 
     data = np.zeros((1, 5, 5, 3)).astype(float)
@@ -173,7 +172,7 @@ def test_zoom():
         assert name + ':0' == tensor.name, 'Zooming tensor does not get correct name'
 
 
-def test_unet_block_shape():
+def test_unet_block_shape(tf):
     with tf.Session() as sess:
         X = tf.ones((5, 12, 12, 3))
 
@@ -187,7 +186,7 @@ def test_unet_block_shape():
     assert 5 == channels, 'unet_block does not yield correct number of channels'
 
 
-def test_unet_block_name():
+def test_unet_block_name(tf):
     name = 'test_unet_block'
 
     X = tf.ones((5, 12, 12, 3))
@@ -196,7 +195,7 @@ def test_unet_block_name():
     assert name + ':0' == tensor.name, 'unet_block is not given correct name (%s instead of %s)' % (tensor.name, name + ':0')
 
 
-def test_deconv2d_shape():
+def test_deconv2d_shape(tf):
     with tf.Session() as sess:
         X = tf.ones((5, 12, 12, 20))
 
@@ -210,7 +209,7 @@ def test_deconv2d_shape():
     assert (5, 24, 24, 10) == result.shape
 
 
-def test_deconv2d_name():
+def test_deconv2d_name(tf):
     name = 'test_deconv2d'
 
     X = tf.ones((5, 12, 12, 3))

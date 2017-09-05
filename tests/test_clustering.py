@@ -4,7 +4,9 @@ import numpy as np
 from tfwrapper.clustering import kmeans
 from tfwrapper.clustering import KMEANS_INIT_RANDOM_PARTITION as randpar
 
-def test_kmeans():
+from fixtures import tf
+
+def test_kmeans(tf):
     points = np.asarray([[1, 1], [2, 2], [3, 3], [4, 4]])
     num_clusters = 2
 
@@ -15,7 +17,7 @@ def test_kmeans():
         assert not elem in clusters[1], 'kmeans returns overlapping clusters'
 
 
-def test_kmeans_with_random_partitioning_init():
+def test_kmeans_with_random_partitioning_init(tf):
     points = np.asarray([[1, 1], [2, 2], [3, 3], [4, 4]])
     num_clusters = 2
 
@@ -26,7 +28,7 @@ def test_kmeans_with_random_partitioning_init():
         assert not elem in clusters[1], 'kmeans with init=\'random_partition\' returns overlapping clusters'
 
 
-def test_kmeans_with_invalid_k():
+def test_kmeans_with_invalid_k(tf):
     points = np.asarray([[1, 1], [2, 2], [3, 3], [4, 4]])
     num_clusters = 5
 

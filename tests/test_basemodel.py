@@ -2,18 +2,18 @@ import json
 import os
 import pytest
 import numpy as np
-import tensorflow as tf
 
 from tfwrapper import TFSession
 from tfwrapper.layers import Layer
 from tfwrapper.models.basemodel import _parse_layer_list
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
+from fixtures import tf
 from mock import MockBaseModel
 from utils import curr_path, softmax_wrapper, remove_dir
 
 
-def test_parse_layer_list_wrappers():
+def test_parse_layer_list_wrappers(tf):
     start = tf.placeholder(tf.float32, [10])
     remaining = [softmax_wrapper(), softmax_wrapper(name='last1')]
 
@@ -23,7 +23,7 @@ def test_parse_layer_list_wrappers():
     assert 'last1:0' == last.name, 'The last tensor in the list is not returned'
 
 
-def test_parse_layer_list_layers():
+def test_parse_layer_list_layers(tf):
     start = tf.placeholder(tf.float32, [10])
     remaining = [Layer(tf.nn.softmax), Layer(tf.nn.softmax, name='last2')]
 
@@ -33,7 +33,7 @@ def test_parse_layer_list_layers():
     assert 'last2:0' == last.name, 'The last tensor in the list is not returned'
 
 
-def test_parse_layer_list_mixed():
+def test_parse_layer_list_mixed(tf):
     start = tf.placeholder(tf.float32, [10])
     remaining = [softmax_wrapper(), Layer(tf.nn.softmax, name='last3')]
 
@@ -43,7 +43,7 @@ def test_parse_layer_list_mixed():
     assert 'last3:0' == last.name, 'The last tensor in the list is not returned'
 
 
-def test_parse_layer_list_invalid():
+def test_parse_layer_list_invalid(tf):
     start = tf.placeholder(tf.float32, [10])
     remaining = [softmax_wrapper(), 'b']
 
@@ -56,7 +56,7 @@ def test_parse_layer_list_invalid():
     assert exception, 'Giving an invalid layer type does not raise an exception'
 
 
-def test_preprocessing_is_added():
+def test_preprocessing_is_added(tf):
     X_shape = [1, 2]
     y_size = 2
     layers = [softmax_wrapper()]
@@ -68,7 +68,7 @@ def test_preprocessing_is_added():
     assert 3 == len(model.tensors), 'Preprocessing tensors are not added to tensors lists'
 
 
-def test_name():
+def test_name(tf):
     X_shape = [1, 2]
     y_size = 2
     layers = [softmax_wrapper()]
@@ -80,7 +80,7 @@ def test_name():
     assert name == model.name, 'BaseModel does not store the name given in __init__'
 
 
-def test_reset():
+def test_reset(tf):
     with tf.Session() as sess:
         var = tf.random_normal([5])
         sess.run(tf.global_variables_initializer())
@@ -94,7 +94,7 @@ def test_reset():
     assert not np.array_equal(old_value, new_value), 'Calling BaseModel.reset() does not reset variable values'
 
 
-def test_save():
+def test_save(tf):
     name = 'test-save'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'model')
@@ -120,14 +120,13 @@ def test_save():
         remove_dir(folder)
 
 
-def test_save_without_session():
+def test_save_without_session(tf):
     name = 'test-save'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'model')
     pred_value = 2
     try:
         os.mkdir(folder)
-       
         
         model = MockBaseModel([2, 2], 1, [lambda x: tf.Variable(pred_value, name=name + '/pred')], name=name)
         with tf.Session(graph=model.graph) as sess:
@@ -136,11 +135,9 @@ def test_save_without_session():
         model.save(path)
 
         with tf.Session() as sess:
+            tf.Variable(pred_value * 2, name=name + '/pred')
             tf.train.Saver().restore(sess, path)
             pred = sess.graph.get_tensor_by_name('%s/%s' % (name, 'pred:0'))
-
-            assert sess.graph.get_tensor_by_name('%s/%s' % (name, 'X_placeholder:0')) is not None, 'Saving a model does not save the X placeholder'
-            assert sess.graph.get_tensor_by_name('%s/%s' % (name, 'y_placeholder:0')) is not None, 'Saving a model does not save the y placeholder'
 
             assert pred is not None, 'Saving a model does not save the layers'
             assert pred_value == sess.run(pred), 'Saving a model does not save the variables with correct values'
@@ -148,7 +145,7 @@ def test_save_without_session():
         remove_dir(folder)
 
 
-def test_load():
+def test_load(tf):
     name = 'test-load'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'load-model')
@@ -176,7 +173,7 @@ def test_load():
         remove_dir(folder)
 
 
-def test_load_without_session():
+def test_load_without_session(tf):
     name = 'test-load-no-sess'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'load-model-no-sess')
@@ -204,7 +201,7 @@ def test_load_without_session():
         remove_dir(folder)
 
 
-def test_from_tw():
+def test_from_tw(tf):
     name = 'test-from-tw'
     folder = os.path.join(curr_path, 'test')
     path = os.path.join(folder, 'test-from-tw')
@@ -226,7 +223,7 @@ def test_from_tw():
         remove_dir(folder)
 
 
-def test_assign_variable_value():
+def test_assign_variable_value(tf):
     name = 'test-assign-variable-value'
     model = MockBaseModel([10], 3, [lambda x: tf.Variable([3.], name='W')], name=name)
     
@@ -239,7 +236,7 @@ def test_assign_variable_value():
     assert not np.array_equal(new_value, old_value)
 
 
-def test_get_tensor_by_name():
+def test_get_tensor_by_name(tf):
     tensor_name = 'test-lookup-by-name'
     tensor_value = 3.
     with tf.Session() as sess:
@@ -252,7 +249,7 @@ def test_get_tensor_by_name():
     assert tensor_name + ':0' == tensor.name, 'BaseModel.get_tensor with name returns tensor with the wrong name'
     assert tensor_value == value, 'BaseModel.get_tensor with name returns the wrong tensor'
 
-def test_get_tensor_by_id():
+def test_get_tensor_by_id(tf):
     tensor_name = 'test-lookup-by-id'
     tensor_value = 3.
     with tf.Session() as sess:
@@ -266,7 +263,7 @@ def test_get_tensor_by_id():
     assert tensor_value == value, 'BaseModel.get_tensor with id returns the wrong tensor'
 
 
-def test_len():
+def test_len(tf):
     with tf.Session() as sess:
         model = MockBaseModel([10], 3, [lambda x: tf.Variable([3.])], sess=sess)
 

@@ -160,6 +160,8 @@ class BaseModel(ABC):
         with TFSession(sess, graph=self._graph, variables=self._variables) as sess:
             saver = tf.train.Saver(tf.trainable_variables())
             saver.save(sess, path, meta_graph_suffix=META_GRAPH_SUFFIX)
+            for var in sess.graph.get_operations():
+                print('IN SAVE: %s' % var.name)
 
             if not 'labels' in kwargs:
                 logger.warning('Saving %s without saving labels. Shame on you' % self.name)

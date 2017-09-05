@@ -3,6 +3,8 @@ import numpy as np
 from tfwrapper.models.ensembles.utils import accumulate_predictions
 from tfwrapper.models.ensembles.utils import vote_predictions
 
+from fixtures import tf
+
 def generate_preds():
     return np.asarray([
         [
@@ -22,7 +24,7 @@ def generate_preds():
         ]
     ])
 
-def test_accumulate_predictions():
+def test_accumulate_predictions(tf):
     preds = generate_preds()
 
     expected = np.asarray([
@@ -35,7 +37,8 @@ def test_accumulate_predictions():
 
     assert np.array_equal(expected, accumulated)
 
-def test_majority_vote_predictions():
+
+def test_majority_vote_predictions(tf):
     preds = generate_preds()
 
     expected = np.asarray([

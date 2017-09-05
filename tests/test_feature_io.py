@@ -4,14 +4,14 @@ import random
 import numpy as np
 import pandas as pd
 
-from tfwrapper.utils.files import parse_features
-from tfwrapper.utils.files import write_features
+from tfwrapper.utils.files import parse_features, write_features
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
-from utils import curr_path
-from utils import generate_features
+from fixtures import tf
+from utils import curr_path, generate_features
 
-def test_write_new_file():
+
+def test_write_new_file(tf):
     filename = os.path.join(curr_path, 'test_write_new_file.tmp')
     assert not os.path.isfile(filename)
 
@@ -31,7 +31,7 @@ def test_write_new_file():
 
     os.remove(filename)
 
-def test_write_append():
+def test_write_append(tf):
     filename = os.path.join(curr_path, 'test_write_append.tmp')
     assert not os.path.isfile(filename)
 
@@ -51,7 +51,7 @@ def test_write_append():
 
     os.remove(filename)
 
-def test_change_mode():
+def test_change_mode(tf):
     filename = os.path.join(curr_path, 'test_change_mode.tmp')
     assert not os.path.isfile(filename)
 
@@ -71,7 +71,7 @@ def test_change_mode():
 
     os.remove(filename)
 
-def test_write_list_of_dicts():
+def test_write_list_of_dicts(tf):
     filename = os.path.join(curr_path, 'test_write_list_of_dicts.tmp')
     assert not os.path.isfile(filename)
 
@@ -89,7 +89,7 @@ def test_write_list_of_dicts():
 
     os.remove(filename)
 
-def test_no_label():
+def test_no_label(tf):
     filename = os.path.join(curr_path, 'test_no_label.tmp')
 
     df = pd.DataFrame(columns=['filename', 'label', 'features'])
@@ -101,7 +101,7 @@ def test_no_label():
     
     os.remove(filename)
 
-def test_valid_datatypes():
+def test_valid_datatypes(tf):
     filename = os.path.join(curr_path, 'test_valid_datatypes.tmp')
 
     valid_datatypes = [
@@ -129,7 +129,7 @@ def test_valid_datatypes():
 
     os.remove(filename)
 
-def test_parse_written_features():
+def test_parse_written_features(tf):
     filename = os.path.join(curr_path, 'test_parse_written.tmp')
     _, _, features = generate_features()
     write_features(filename, features)
@@ -145,7 +145,7 @@ def test_parse_written_features():
         assert features.ix[i, 'label'] == parsed_features.ix[i, 'label']
         assert np.array_equal(features.ix[i, 'features'], parsed_features.ix[i, 'features'])
 
-def test_parse_legacy_format():
+def test_parse_legacy_format(tf):
     filename = os.path.join(curr_path, 'test_parse_legacy.tmp')
 
     num_cases = 3
@@ -165,7 +165,7 @@ def test_parse_legacy_format():
     assert num_cases == len(features), 'Unable to parse legacy feature format'
     assert num_features == len(np.asarray(features.ix[0, 'features'])), 'Unable to parse features in legacy feature format'
 
-def test_parse_new_format():
+def test_parse_new_format(tf):
     filename = os.path.join(curr_path, 'test_parse_new.tmp')
 
     num_cases = 3
@@ -185,7 +185,7 @@ def test_parse_new_format():
     assert num_cases == len(features), 'Unable to parse new feature format'
     assert num_features == len(np.asarray(features.ix[0, 'features'])), 'Unable to parse features in new feature format'
 
-def test_parse_complex_format():
+def test_parse_complex_format(tf):
     filename = os.path.join(curr_path, 'test_parse_complex.tmp')
 
     num_cases = 3
@@ -209,7 +209,7 @@ def test_parse_complex_format():
     assert num_cases == len(features), 'Unable to parse new feature format with complex features'
     assert (height, width, depth) == np.asarray(features.ix[0, 'features']).shape, 'Unable to parse complex features in new feature format'
 
-def test_write_complex_format():
+def test_write_complex_format(tf):
     filename = os.path.join(curr_path, 'test_write_complex.tmp')
 
     data = []
@@ -234,7 +234,7 @@ def test_write_complex_format():
 
     assert num_cases + 1 == len(lines), 'Unable to write complex features in new feature format'
 
-def test_parse_written_complex():
+def test_parse_written_complex(tf):
     filename = os.path.join(curr_path, 'test_parse_written_complex.tmp')
 
     data = []

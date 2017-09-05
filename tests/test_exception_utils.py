@@ -13,6 +13,7 @@ def test_raise_exception():
     assert exception, 'Exception from raise_exception is not the correct type'
     assert 'msg' == msg, 'Exception from raise_exception does not contain correct error msg'
 
+
 def test_illegalstateexception():
     e = IllegalStateException('msg')
     assert 'msg' == str(e), 'IllegalStateException does not contain correct error msg'

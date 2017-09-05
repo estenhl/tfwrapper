@@ -17,10 +17,11 @@ from tfwrapper.models.frozen.utils import RESNET152_PB_PATH
 from tfwrapper.models.frozen import FrozenVGG16
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
-from utils import curr_path
-from utils import is_better_than_tensorflow_errormsg
+from utils import curr_path, is_better_than_tensorflow_errormsg
+
 
 cat_img = twimage.imread(os.path.join(curr_path, 'data', 'cat.jpg'))
+
 
 class TestInceptionV3():
 

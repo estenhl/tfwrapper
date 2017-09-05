@@ -2,7 +2,9 @@ import pytest
 
 from tfwrapper.layers import residual_block
 
-def test_block_with_filters():
+from fixtures import tf
+
+def test_block_with_filters(tf):
     exception = False
     try:
         residual_block(modules=3, filters=[[1, 1], [2, 2], [3, 3]], depths=16)
@@ -11,7 +13,7 @@ def test_block_with_filters():
         exception = True
     assert not exception
 
-def test_block_with_invalid_filters():
+def test_block_with_invalid_filters(tf):
     exception = False
     try:
         residual_block(modules=2, filters=[[1, 1], [2, 2], [3, 3]], depths=16)
@@ -20,7 +22,7 @@ def test_block_with_invalid_filters():
     assert exception
 
 
-def test_block_with_single_filter():
+def test_block_with_single_filter(tf):
     exception = False
     try:
         residual_block(filters=[2, 3], depths=16)
@@ -30,7 +32,7 @@ def test_block_with_single_filter():
     assert not exception
 
 
-def test_block_with_strides():
+def test_block_with_strides(tf):
     exception = False
     try:
         residual_block(modules=3, filters=[3, 3], strides=[[1, 1], [2, 2], [3, 3]], depths=16)
@@ -39,7 +41,7 @@ def test_block_with_strides():
     assert not exception
 
 
-def test_block_invalid_strides():
+def test_block_invalid_strides(tf):
     exception = False
     try:
         residual_block(modules=2, filters=[3, 3], strides=[[1, 1], [2, 2], [3, 3]], depths=16)
@@ -48,7 +50,7 @@ def test_block_invalid_strides():
     assert exception
 
 
-def test_block_with_single_strides():
+def test_block_with_single_strides(tf):
     exception = False
     try:
         residual_block(filters=[2, 3], strides=[1, 1], depths=16)
@@ -57,7 +59,7 @@ def test_block_with_single_strides():
         exception = True
     assert not exception
 
-def test_block_with_depths():
+def test_block_with_depths(tf):
     exception = False
     try:
         residual_block(modules=3, filters=[3, 3], depths=[16, 16, 16])
@@ -67,7 +69,7 @@ def test_block_with_depths():
     assert not exception
 
 
-def test_block_invalid_depths():
+def test_block_invalid_depths(tf):
     exception = False
     try:
         residual_block(modules=2, filters=[3, 3], depths=[16, 16, 16])

@@ -1,11 +1,12 @@
 import pytest
 import numpy as np
-import tensorflow as tf
 
 from tfwrapper.layers.loss import *
 
+from fixtures import tf
 
-def test_mse():
+
+def test_mse(tf):
     name = 'test-mse'
 
     with tf.Session() as sess:
@@ -21,7 +22,7 @@ def test_mse():
     assert name + ':0' == loss_tensor.name
 
 
-def test_binary_hinge():
+def test_binary_hinge(tf):
     name = 'test-binary-hinge'
 
     with tf.Session() as sess:
@@ -37,7 +38,7 @@ def test_binary_hinge():
     assert name + ':0' == loss_tensor.name
 
 
-def test_binary_squared_hinge():
+def test_binary_squared_hinge(tf):
     name = 'test-binary-hinge-squared'
 
     with tf.Session() as sess:
@@ -53,7 +54,7 @@ def test_binary_squared_hinge():
     assert name + ':0' == loss_tensor.name
 
 
-def test_hinge():
+def test_hinge(tf):
     name = 'test-hinge'
 
     with tf.Session() as sess:
@@ -83,7 +84,7 @@ def test_hinge():
     assert name + ':0' == loss_tensor.name
 
 
-def test_squared_multiclass_hinge():
+def test_squared_multiclass_hinge(tf):
     name = 'test-hinge-squared'
 
     with tf.Session() as sess:
@@ -113,7 +114,7 @@ def test_squared_multiclass_hinge():
     assert name + ':0' == loss_tensor.name
 
 
-def test_pixelwise_softmax_cross_entropy():
+def test_pixelwise_softmax_cross_entropy(tf):
     name = 'test-pixelwise-softmax-cross-entropy'
     y = np.asarray([
             [
@@ -157,7 +158,7 @@ def test_pixelwise_softmax_cross_entropy():
     assert abs(expected_result - result) < 1
 
 
-def test_mean_softmax_cross_entropy():
+def test_mean_softmax_cross_entropy(tf):
     name = 'test-mean-softmax-cross-entropy'
 
     with tf.Session() as sess:
@@ -186,13 +187,13 @@ def test_mean_softmax_cross_entropy():
     assert abs(loss - expected_loss) < 1e-2
 
 
-def test_from_name():
+def test_from_name(tf):
     loss = Loss.from_name('MSE')
 
     assert loss is not None, 'Calling Loss.from_name with a valid name does not return a loss function'
 
 
-def test_from_name_invalid():
+def test_from_name_invalid(tf):
     exception = False
 
     try:
@@ -203,7 +204,7 @@ def test_from_name_invalid():
     assert exception, 'Calling Loss.from_name with an invalid name does not raise an Exception'
 
 
-def test_dice():
+def test_dice(tf):
     name = 'test-dice'
     with tf.Session() as sess:
         y = tf.Variable([

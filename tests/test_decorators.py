@@ -2,6 +2,8 @@ import pytest
 
 from tfwrapper.utils.decorators import deprecated
 
+from fixtures import tf
+
 
 class A():
     @deprecated('new_func')
@@ -30,26 +32,26 @@ def deprecated3(arg, keyword_arg=1):
     return arg * keyword_arg * 13
 
 
-def test_deprecated_in_class():
+def test_deprecated_in_class(tf):
     a = A()
     result = a.deprecated_func(2, keyword_arg=3)
 
     assert result == 2 * 3 * 7, 'A deprecated func does not call the replacement given as a decorator parameter'
 
 
-def test_deprecated_outside_class():
+def test_deprecated_outside_class(tf):
     result = deprecated1(2, keyword_arg=3)
 
     assert result == 2 * 3 * 7
 
 
-def test_deprecated_with_invalid_replacement():
+def test_deprecated_with_invalid_replacement(tf):
     result = deprecated2(2, keyword_arg=3)
 
     assert result == 2 * 3 * 11
 
 
-def test_deprecated_without_replacement():
+def test_deprecated_without_replacement(tf):
     result = deprecated3(2, keyword_arg=3)
 
     assert result == 2 * 3 * 13

@@ -6,6 +6,7 @@ from tfwrapper import twimage
 from tfwrapper.models.frozen import FrozenInceptionV3
 from tfwrapper import FeatureLoader
 
+from fixtures import tf
 from utils import curr_path
 
 
@@ -13,7 +14,7 @@ cat_img = os.path.join(curr_path, 'data', 'cat.jpg')
 dog_img = os.path.join(curr_path, 'data', 'dog.jpg')
 
 
-def test_featureloader_with_cache():
+def test_featureloader_with_cache(tf):
     feature_file = 'tmp.csv'
     try:
         loader = FeatureLoader(FrozenInceptionV3(), cache=feature_file)
@@ -26,7 +27,7 @@ def test_featureloader_with_cache():
         os.remove(feature_file)
 
 
-def test_featureloader_no_cache():
+def test_featureloader_no_cache(tf):
     loader = FeatureLoader(FrozenInceptionV3())
 
     cat_features = loader.load(cat_img, name='test')
