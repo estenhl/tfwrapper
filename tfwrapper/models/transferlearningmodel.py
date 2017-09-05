@@ -90,7 +90,10 @@ class TransferLearningModel(MetaModel, PredictiveMeta):
         with open(metadata_filename, 'w') as f:
             f.write(json.dumps(metadata, indent=2))
 
-        self.prediction_model.save(prediction_model_path, sess=sess)
+        if 'labels' in kwargs:
+            self.prediction_model.save(prediction_model_path, labels=kwargs['labels'], sess=sess)
+        else:
+            self.prediction_model.save(prediction_model_path, sess=sess)
 
     @staticmethod
     def from_tw(path: str, sess: tf.Session = None, **kwargs):
