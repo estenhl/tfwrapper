@@ -11,7 +11,7 @@ from tfwrapper.layers.accuracy import Accuracy, CorrectPred
 from tfwrapper.layers.loss import Loss, MeanSoftmaxCrossEntropy, MSE
 from tfwrapper.layers.optimizers import Adam, Optimizer
 from tfwrapper.utils import get_variable_by_name
-from tfwrapper.utils.data import get_subclass_by_name
+from tfwrapper.utils.data import ensure_serializable, get_subclass_by_name
 from tfwrapper.utils.exceptions import log_and_raise, InvalidArgumentException
 
 
@@ -170,6 +170,8 @@ class BaseModel(ABC):
             metadata['y_shape'] = self.y_shape
             metadata['time'] = str(datetime.datetime.now())
             metadata['type'] = self.__class__.__name__
+
+            metadata = ensure_serializable(metadata)
 
             metadata_filename = '%s.%s' % (path, METADATA_SUFFIX)
             with open(metadata_filename, 'w') as f:

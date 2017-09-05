@@ -7,7 +7,7 @@ from typing import Union
 
 from tfwrapper import Dataset, FeatureLoader, ImageDataset, ImagePreprocessor, logger, METADATA_SUFFIX, TFSession
 from tfwrapper.models.nets import NeuralNet
-from tfwrapper.utils.data import get_subclass_by_name
+from tfwrapper.utils.data import ensure_serializable, get_subclass_by_name
 from tfwrapper.utils.exceptions import log_and_raise, InvalidArgumentException
 
 from .basemodel import Predictive, Derivable, RegressionModel, ClassificationModel
@@ -85,6 +85,8 @@ class TransferLearningModel(MetaModel, PredictiveMeta):
         metadata['prediction_model_path'] = '%s.%s' % (prediction_model_path, 'tw')
         metadata['features_layer'] = self.features_layer
         metadata['features_cache'] = self.features_cache
+
+        metadata = ensure_serializable(metadata)
 
         metadata_filename = '%s.%s' % (path, METADATA_SUFFIX)
         with open(metadata_filename, 'w') as f:
