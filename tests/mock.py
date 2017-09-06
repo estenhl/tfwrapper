@@ -1,7 +1,6 @@
 import tensorflow as tf
 
-from tfwrapper.models import BaseModel, Predictive, FixedRegressionModel, FixedClassificationModel, RegressionModel, ClassificationModel
-
+from tfwrapper.models import BaseModel, ClassificationModel, FixedRegressionModel, FixedClassificationModel, FrozenModel, RegressionModel, Predictive
 
 class MockBaseModel(BaseModel):
     def mock(self):
@@ -81,3 +80,16 @@ class MockClassificationModel(ClassificationModel):
 
     def train(self, *args, **kwargs):
         pass
+
+
+class MockFrozenModel(FrozenModel):
+    input_tensor = None
+    output_tensor = None
+    bottleneck_tensor = None
+
+    def __init__(self, path, input_tensor='input', output_tensor='output', bottleneck_tensor='bottleneck', name='name', sess=None):
+        FrozenModel.__init__(self, path, name=name, sess=sess)
+
+        self.input_tensor = input_tensor
+        self.output_tensor = output_tensor
+        self.bottleneck_tensor = bottleneck_tensor

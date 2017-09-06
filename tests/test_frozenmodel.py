@@ -17,6 +17,7 @@ from tfwrapper.models.frozen.utils import RESNET152_PB_PATH
 from tfwrapper.models.frozen import FrozenVGG16
 from tfwrapper.utils.exceptions import InvalidArgumentException
 
+from mock import MockFrozenModel
 from utils import curr_path, is_better_than_tensorflow_errormsg
 
 
@@ -41,7 +42,7 @@ class TestInceptionV3():
         exception = False
 
         try:
-            model = FrozenModel(path='not/a/valid/path', sess=self.sess)
+            model = MockFrozenModel(path='not/a/valid/path', sess=self.sess)
         except InvalidArgumentException as e:
             exception = True
             errormsg = str(e)
@@ -87,7 +88,7 @@ class TestInceptionV3():
     def test_name(self):
         if os.path.isfile(INCEPTIONV3_PB_PATH):
             name = 'test'
-            model = FrozenModel(path=INCEPTIONV3_PB_PATH, name=name)
+            model = MockFrozenModel(path=INCEPTIONV3_PB_PATH, name=name)
 
             assert name == model.name, 'FrozenModel does not get given name'
 
