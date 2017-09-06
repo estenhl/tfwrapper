@@ -268,3 +268,19 @@ def test_len(tf):
         model = MockBaseModel([10], 3, [lambda x: tf.Variable([3.])], sess=sess)
 
     assert len(model) == 2
+
+
+def test_save_nonserializable_param(tf):
+    folder = os.path.join(curr_path, 'test')
+    path = os.path.join(folder, 'save-non-serializable')
+
+    try:
+        os.mkdir(folder)
+
+        with tf.Session() as sess:
+            model = MockBaseModel([10], 3, [lambda x: tf.Variable([3.])], sess=sess)
+            sess.run(tf.global_variables_initializer())
+            model.save(path, labels=np.asarray(['label1']), sess=sess)
+
+    finally:
+        remove_dir(folder)

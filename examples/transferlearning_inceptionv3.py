@@ -40,7 +40,7 @@ print('Acc before save: %.2f%%' % (acc * 100))
 
 path = os.path.join(datafolder, 'inception_v3_tl')
 print('Saving model')
-model.save(path)
+model.save(path, labels=str(train.labels))
 
 tf.reset_default_graph()
 

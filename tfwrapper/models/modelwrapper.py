@@ -54,11 +54,11 @@ class ModelWrapper(ABC):
         return self.model.reset()
 
     def save(self, path: str, sess: tf.Session = None, **kwargs):
-        self.model.save(path, sess=sess)
+        self.model.save(path, sess=sess, **kwargs)
 
     def from_tw(self, path, sess=None, **kwargs):
         from tfwrapper.models.nets import NeuralNet
-        self.model = NeuralNet.from_tw(path, sess=sess)
+        self.model = NeuralNet.from_tw(path, sess=sess, **kwargs)
 
 
 class RegressionModelWrapper(ModelWrapper, RegressionMetaModel):
