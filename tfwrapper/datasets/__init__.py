@@ -13,24 +13,25 @@ from tfwrapper import config
 from tfwrapper import logger
 from tfwrapper import Dataset
 from tfwrapper import ImageDataset
-from tfwrapper.dataset import SegmentationDataset
+from tfwrapper.dataset import BoundingBoxDataset, SegmentationDataset
 from tfwrapper.utils.files import download_file
 
-from .iris import parse_iris
-from .wine import headers as wine_headers
-from .wine import download_wine
-from .utils import setup_structure
-from .utils import recursive_delete
-from .utils import curr_path
-from .mnist import parse_mnist
+from .boston import parse_boston
+from .boston import headers as boston_headers
+from .catsdogs import parse_cats_and_dogs
 from .cifar import parse_cifar10
 from .cifar import parse_cifar10_test
 from .cifar import parse_cifar100
-from .boston import parse_boston
-from .boston import headers as boston_headers
-from .voc2012 import parse_voc2012
-from .catsdogs import parse_cats_and_dogs
+from .fddb import parse_fddb
 from .imagenet import parse_imagenet_labels
+from .iris import parse_iris
+from .mnist import parse_mnist
+from .utils import setup_structure
+from .utils import recursive_delete
+from .utils import curr_path
+from .voc2012 import parse_voc2012
+from .wine import headers as wine_headers
+from .wine import download_wine
 
 
 curr_path = config.DATASETS
@@ -198,3 +199,10 @@ def VOC2012(subset='train', size=None):
     root_folder = parse_voc2012()
 
     return SegmentationDataset.from_root_folder(root_folder, size=size)
+
+
+# http://vis-www.cs.umass.edu/fddb/fddb.pdf
+def FDDB(size=None):
+    root_folder, labels_file = parse_fddb()
+
+    return BoundingBoxDataset.from_fddb_annotations(root_folder=root_folder, labels_folder=labels_file, size=size)
