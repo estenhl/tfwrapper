@@ -200,7 +200,7 @@ class Dataset():
             self.labels = np.asarray([])
 
         if len(kwargs) > 0:
-            errormsg = 'Invalid key(s) for dataset: %s' % [str(x) for x in kwargs]
+            errormsg = 'Invalid keyword argument(s) for dataset: %s' % [str(x) for x in kwargs]
             logger.error(errormsg)
             raise ValueError(errormsg)
 
@@ -391,14 +391,15 @@ class Dataset():
     def __len__(self):
         return len(self._X)
 
-    def __add__(self, other):
+    def __add__(self, other, **kwargs):
         X = np.concatenate((self._X, other._X))
         y = np.concatenate((self._y, other._y))
         labels = np.asarray([])
         if len(self.labels) > 0 and len(other.labels) > 0:
             labels = np.concatenate((self.labels, other.labels))
+        kwargs['labels'] = labels
 
-        return self.__class__(X=X, y=y, **self.kwargs(labels=labels))
+        return self.__class__(X=X, y=y, **self.kwargs(**kwargs))
 
     def _get_ndarray_slice(self, arr):
         return self._X[arr], self._y[arr]

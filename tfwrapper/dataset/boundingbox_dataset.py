@@ -1,11 +1,17 @@
+import cv2
+import hashlib
+import io
+import json
 import math
 import os
 import numpy as np
-import cv2
+import tensorflow as tf
 
 from tfwrapper import twimage
+from tfwrapper.utils.data import create_tfrecord_feature
 
 from .dataset import Dataset
+
 
 def _parse_fddb_region(region):
     major_axis_radius = region[0]
@@ -24,9 +30,11 @@ def _parse_fddb_region(region):
 
     return int(y_min), int(x_min), int(y_max), int(x_max)
 
-def _parse_fddb_annotations(root_folder, labels_folder, size=None):
+
+def _parse_fddb_annotations(root_folder, labels_folder, size=None, label='face'):
     X = []
     y = []
+    paths = []
 
     parsed = 0
     for labels_file in os.listdir(labels_folder):
@@ -38,7 +46,8 @@ def _parse_fddb_annotations(root_folder, labels_folder, size=None):
 
                 while i < len(lines):
                     filename = lines[i].strip() + '.jpg'
-                    img = twimage.imread(os.path.join(root_folder, filename))
+                    path = os.path.join(root_folder, filename)
+                    img = twimage.imread(path)
                     parsed += 1
                     i += 1
 
@@ -51,10 +60,11 @@ def _parse_fddb_annotations(root_folder, labels_folder, size=None):
                         y_min, x_min, y_max, x_max = _parse_fddb_region(tokens)
                         
 
-                        boxes.append(['face', [y_min, x_min, y_max, x_max]])
+                        boxes.append([label, [y_min, x_min, y_max, x_max]])
 
-                    y.append(boxes)
                     X.append(img)
+                    y.append(boxes)
+                    paths.append(path)
                     i += num_boxes
 
                     if size is not None and parsed == size:
@@ -64,18 +74,98 @@ def _parse_fddb_annotations(root_folder, labels_folder, size=None):
         if completed:
             break
 
-    return np.asarray(X), np.asarray(y)
+    return np.asarray(X), np.asarray(y), np.asarray(paths)
+
+
+def _parse_vgg_json(root_folder, annotations_file):
+    X = []
+    y = []
+    paths = []
+
+    with open(annotations_file, 'r') as f:
+        data = json.load(f)
+
+    for key in data:
+        entry = data[key]
+        filename = entry['filename']
+        path = os.path.join(root_folder, filename)
+        img = twimage.imread(path)
+
+        boxes = []
+        for i in entry['regions']:
+            region = entry['regions'][i]
+            label = region['region_attributes']['label']
+
+            shape_attrs = region['shape_attributes']
+            if shape_attrs['name'] != 'rect':
+                logger.warning('Unable to parse vgg region with type %s. (Only \'rect\' is supported). Skipping region %s for %s' % (shape_attrs['name'], str(i), filename))
+                continue
+
+            y_min = int(shape_attrs['y'])
+            x_min = int(shape_attrs['x'])
+            y_max = y_min + int(shape_attrs['height'])
+            x_max = x_min + int(shape_attrs['width'])
+
+            boxes.append([label, [y_min, x_min, y_max, x_max]])
+
+        X.append(img)
+        y.append(boxes)
+        paths.append(path)
+
+    return np.asarray(X), np.asarray(y), np.asarray(paths)
+
+
+def _translate_boundingbox_labels(y):
+    labels = ['background']
+    for entry in y:
+        for label, _ in entry:
+            if label not in labels:
+                labels.append(label)
+
+    labels = sorted(labels)
+
+    translated_y = []
+    for entry in y:
+        new_entry = []
+        for label, boundingbox in entry:
+            new_entry.append([labels.index(label), boundingbox])
+        translated_y.append(new_entry)
+
+    return np.asarray(translated_y), np.asarray(labels)
 
 
 class BoundingBoxDataset(Dataset):
-    def __init__(self, X, y):
-        super().__init__(X=X, y=y)
+    def __init__(self, X, y, paths=None, **kwargs):
+        super().__init__(X=X, y=y, **kwargs)
+        
+        if paths is None:
+            paths = np.asarray([])
+
+        self.paths = paths
 
     @classmethod
     def from_fddb_annotations(cls, *, root_folder, labels_folder, size=None):
-        X, y = _parse_fddb_annotations(root_folder, labels_folder, size=size)
+        X, y, paths = _parse_fddb_annotations(root_folder, labels_folder, size=size)
 
-        return cls(X=X, y=y)
+        return cls(X=X, y=y, paths=paths)
+
+    @classmethod
+    def from_vgg_json(cls, *, root_folder, annotations_file):
+        X, y, paths = _parse_vgg_json(root_folder, annotations_file)
+
+        return cls(X=X, y=y, paths=paths)
+
+    def translated_labels(self):
+        y, labels = _translate_boundingbox_labels(self._y)
+
+        return self.__class__(self._X, y, paths=self.paths, labels=labels)
+
+    def kwargs(self, **kwargs):
+        kwargs = super().kwargs(**kwargs)
+        if 'paths' not in kwargs:
+            kwargs['paths'] = self.paths
+
+        return kwargs
 
     def visualize(self, num=None):
         if num is None:
@@ -86,6 +176,69 @@ class BoundingBoxDataset(Dataset):
 
         for i in range(num):
             img = self._X[i].copy()
-            for _, (y_min, x_min, y_max, x_max) in self._y[i]:
+            for label, (y_min, x_min, y_max, x_max) in self._y[i]:
                 img = cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), thickness=3)
+                if not hasattr(self, 'labels') or self.labels is None or len(self.labels) == 0:
+                    img = cv2.putText(img, str(label), (x_min, y_min-10), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color=(0, 255, 0))
+                else:
+                    img = cv2.putText(img, '%s: %s' % (str(label), self.labels[label]), (x_min, y_min-10), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color=(0, 255, 0))
             twimage.show(img)
+
+    def to_tfrecord(self, output_path):
+        for i in range(len(self._X)):
+            path = self.paths[i]
+            img = self._X[i]
+            height, width, _ = img.shape
+
+            bboxes = self._y[i]
+
+            with tf.gfile.GFile(path, 'rb') as fid:
+                encoded_jpg = fid.read()
+            encoded_img = io.BytesIO(encoded_jpg)
+            key = hashlib.sha256(encoded_jpg).hexdigest()
+
+            ymins = []
+            xmins = []
+            ymaxs = []
+            xmaxs = []
+            label_names = []
+            labels = []
+
+            for label, (ymin, xmin, ymax, xmax) in bboxes:
+                ymins.append(float(ymin / height))
+                xmins.append(float(xmin / width))
+                ymaxs.append(float(ymax / height))
+                xmaxs.append(float(xmax / width))
+                label_names.append(self.labels[label].encode('utf8'))
+                labels.append(label)
+
+            featuremap = {
+                'image/height': create_tfrecord_feature(height),
+                'image/width': create_tfrecord_feature(width),
+                'image/filename': create_tfrecord_feature(str.encode(path)),
+                'image/source_id': create_tfrecord_feature(str.encode(path)),
+                'image/key/sha256': create_tfrecord_feature(str.encode(key)),
+                'image/encoded': create_tfrecord_feature(encoded_img.read()),
+                'image/format': create_tfrecord_feature(str.encode('jpeg')),
+                'image/object/bbox/ymin': create_tfrecord_feature(ymins),
+                'image/object/bbox/xmin': create_tfrecord_feature(xmins),
+                'image/object/bbox/ymax': create_tfrecord_feature(ymaxs),
+                'image/object/bbox/xmax': create_tfrecord_feature(xmaxs),
+                'image/object/class/text': create_tfrecord_feature(label_names),
+                'image/object/class/label': create_tfrecord_feature(labels),
+
+                # TODO (14.09.17): These should be handled better
+                'image/object/difficult': create_tfrecord_feature([]),
+                'image/object/truncated': create_tfrecord_feature([]),
+                'image/object/view': create_tfrecord_feature([])
+            }
+
+            data = tf.train.Example(features=tf.train.Features(feature=featuremap))
+
+            with tf.python_io.TFRecordWriter(output_path) as writer:
+                writer.write(data.SerializeToString())
+
+    def __add__(self, other, **kwargs):
+        kwargs['paths'] = np.concatenate([self.paths, other.paths])
+
+        return super().__add__(other, **kwargs)
