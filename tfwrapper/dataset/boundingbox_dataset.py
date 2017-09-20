@@ -205,10 +205,10 @@ class BoundingBoxDataset(Dataset):
             labels = []
 
             for label, (ymin, xmin, ymax, xmax) in bboxes:
-                ymins.append(float(ymin / height))
-                xmins.append(float(xmin / width))
-                ymaxs.append(float(ymax / height))
-                xmaxs.append(float(xmax / width))
+                ymins.append(max(0., float(ymin / height)))
+                xmins.append(max(0., float(xmin / width)))
+                ymaxs.append(min(1., float(ymax / height)))
+                xmaxs.append(min(1., float(xmax / width)))
                 label_names.append(self.labels[label].encode('utf8'))
                 labels.append(label)
 
