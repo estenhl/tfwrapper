@@ -218,7 +218,7 @@ class BoundingBoxDataset(Dataset):
                 'image/filename': create_tfrecord_feature(str.encode(path)),
                 'image/source_id': create_tfrecord_feature(str.encode(path)),
                 'image/key/sha256': create_tfrecord_feature(str.encode(key)),
-                'image/encoded': create_tfrecord_feature(encoded_img.read()),
+                'image/encoded': create_tfrecord_feature(encoded_jpg),
                 'image/format': create_tfrecord_feature(str.encode('jpeg')),
                 'image/object/bbox/ymin': create_tfrecord_feature(ymins),
                 'image/object/bbox/xmin': create_tfrecord_feature(xmins),
