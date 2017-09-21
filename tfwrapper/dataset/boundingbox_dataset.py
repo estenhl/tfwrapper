@@ -9,6 +9,7 @@ import tensorflow as tf
 
 from tfwrapper import twimage
 from tfwrapper.utils.data import create_tfrecord_feature
+from tfwrapper.utils.exceptions import log_and_raise
 
 from .dataset import Dataset
 
@@ -116,13 +117,15 @@ def _parse_vgg_json(root_folder, annotations_file):
 
 
 def _translate_boundingbox_labels(y):
-    labels = ['background']
+    labels = []
+    
     for entry in y:
         for label, _ in entry:
             if label not in labels:
                 labels.append(label)
 
     labels = sorted(labels)
+    labels = ['background'] + labels
 
     translated_y = []
     for entry in y:
@@ -132,6 +135,16 @@ def _translate_boundingbox_labels(y):
         translated_y.append(new_entry)
 
     return np.asarray(translated_y), np.asarray(labels)
+
+
+def _shuffle_boundingbox_dataset(X, y, paths, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+
+    idx = np.arange(len(X))
+    np.random.shuffle(idx)
+
+    return X[idx], y[idx], paths[idx]
 
 
 class BoundingBoxDataset(Dataset):
@@ -160,6 +173,23 @@ class BoundingBoxDataset(Dataset):
 
         return self.__class__(self._X, y, paths=self.paths, labels=labels)
 
+    # TODO: THESE THREE (shuffle and shuffled, split) SHOULD USE SOME GENERIC SHUFFLING FUNCTION IN THE SUPERCLASS
+    def shuffle(self, seed=None):
+        log_and_raise(NotImplementedException, 'Use BoundingBoxDataset.shuffled')
+
+    def shuffled(self, seed=None):
+        if self.paths is None or len(self.paths) == 0:
+            return super().shuffled(seed=seed)
+
+        X, y, paths = _shuffle_boundingbox_dataset(self._X, self._y, self.paths, seed=seed)
+
+        return self.__class__(X=X, y=y, paths=paths)
+
+    def split(self, ratio):
+        pivot = int(len(self) * ratio)
+
+        return self.__class__(X=self._X[:pivot], y=self._y[:pivot], paths=self.paths[:pivot], labels=self.labels), self.__class__(X=self._X[pivot:], y=self.y[pivot:], paths=self.paths[pivot:], labels=self.labels)
+
     def kwargs(self, **kwargs):
         kwargs = super().kwargs(**kwargs)
         if 'paths' not in kwargs:
@@ -185,58 +215,60 @@ class BoundingBoxDataset(Dataset):
             twimage.show(img)
 
     def to_tfrecord(self, output_path):
-        for i in range(len(self._X)):
-            path = self.paths[i]
-            img = self._X[i]
-            height, width, _ = img.shape
+        with tf.python_io.TFRecordWriter(output_path) as writer:
+            for i in range(len(self._X)):
+                path = self.paths[i]
+                img = self._X[i]
+                height, width, _ = img.shape
 
-            bboxes = self._y[i]
+                bboxes = self._y[i]
 
-            with tf.gfile.GFile(path, 'rb') as fid:
-                encoded_jpg = fid.read()
-            encoded_img = io.BytesIO(encoded_jpg)
-            key = hashlib.sha256(encoded_jpg).hexdigest()
+                # TODO (21.09.17): This seems very unecessary (should find out if we can use some sort of numpy to bytestring)
+                with tf.gfile.GFile(path, 'rb') as fid:
+                    encoded_jpg = fid.read()
+                encoded_img = io.BytesIO(encoded_jpg)
+                key = hashlib.sha256(encoded_jpg).hexdigest()
 
-            ymins = []
-            xmins = []
-            ymaxs = []
-            xmaxs = []
-            label_names = []
-            labels = []
+                ymins = []
+                xmins = []
+                ymaxs = []
+                xmaxs = []
+                label_names = []
+                labels = []
 
-            for label, (ymin, xmin, ymax, xmax) in bboxes:
-                ymins.append(max(0., float(ymin / height)))
-                xmins.append(max(0., float(xmin / width)))
-                ymaxs.append(min(1., float(ymax / height)))
-                xmaxs.append(min(1., float(xmax / width)))
-                label_names.append(self.labels[label].encode('utf8'))
-                labels.append(label)
+                for label, (ymin, xmin, ymax, xmax) in bboxes:
+                    ymins.append(max(0., float(ymin / height)))
+                    xmins.append(max(0., float(xmin / width)))
+                    ymaxs.append(min(1., float(ymax / height)))
+                    xmaxs.append(min(1., float(xmax / width)))
+                    label_names.append(self.labels[label].encode('utf8'))
+                    labels.append(label)
 
-            featuremap = {
-                'image/height': create_tfrecord_feature(height),
-                'image/width': create_tfrecord_feature(width),
-                'image/filename': create_tfrecord_feature(str.encode(path)),
-                'image/source_id': create_tfrecord_feature(str.encode(path)),
-                'image/key/sha256': create_tfrecord_feature(str.encode(key)),
-                'image/encoded': create_tfrecord_feature(encoded_jpg),
-                'image/format': create_tfrecord_feature(str.encode('jpeg')),
-                'image/object/bbox/ymin': create_tfrecord_feature(ymins),
-                'image/object/bbox/xmin': create_tfrecord_feature(xmins),
-                'image/object/bbox/ymax': create_tfrecord_feature(ymaxs),
-                'image/object/bbox/xmax': create_tfrecord_feature(xmaxs),
-                'image/object/class/text': create_tfrecord_feature(label_names),
-                'image/object/class/label': create_tfrecord_feature(labels),
+                featuremap = {
+                    'image/height': create_tfrecord_feature(height),
+                    'image/width': create_tfrecord_feature(width),
+                    'image/filename': create_tfrecord_feature(str.encode(path)),
+                    'image/source_id': create_tfrecord_feature(str.encode(path)),
+                    'image/key/sha256': create_tfrecord_feature(str.encode(key)),
+                    'image/encoded': create_tfrecord_feature(encoded_jpg),
+                    'image/format': create_tfrecord_feature(str.encode('jpeg')),
+                    'image/object/bbox/ymin': create_tfrecord_feature(ymins),
+                    'image/object/bbox/xmin': create_tfrecord_feature(xmins),
+                    'image/object/bbox/ymax': create_tfrecord_feature(ymaxs),
+                    'image/object/bbox/xmax': create_tfrecord_feature(xmaxs),
+                    'image/object/class/text': create_tfrecord_feature(label_names),
+                    'image/object/class/label': create_tfrecord_feature(labels),
 
-                # TODO (14.09.17): These should be handled better
-                'image/object/difficult': create_tfrecord_feature([]),
-                'image/object/truncated': create_tfrecord_feature([]),
-                'image/object/view': create_tfrecord_feature([])
-            }
+                    # TODO (14.09.17): These should be handled better
+                    'image/object/difficult': create_tfrecord_feature([]),
+                    'image/object/truncated': create_tfrecord_feature([]),
+                    'image/object/view': create_tfrecord_feature([])
+                }
 
-            data = tf.train.Example(features=tf.train.Features(feature=featuremap))
+                data = tf.train.Example(features=tf.train.Features(feature=featuremap))
 
-            with tf.python_io.TFRecordWriter(output_path) as writer:
                 writer.write(data.SerializeToString())
+
 
     def __add__(self, other, **kwargs):
         kwargs['paths'] = np.concatenate([self.paths, other.paths])

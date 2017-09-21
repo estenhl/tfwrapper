@@ -5,6 +5,8 @@ from tfwrapper import logger
 
 from tfwrapper.utils.exceptions import InvalidArgumentException, log_and_raise, raise_exception
 
+from .tfrecord import parse_tfrecord
+
 
 def get_all_subclasses(cls):
     return cls.__subclasses__() + [g for s in cls.__subclasses__() for g in get_all_subclasses(s)]
