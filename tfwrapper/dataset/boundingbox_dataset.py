@@ -148,6 +148,29 @@ def _shuffle_boundingbox_dataset(X, y, paths, seed=None):
 
 
 class BoundingBoxDataset(Dataset):
+    """ Stores datasets where the labels are bounding boxes.
+
+    Attributes
+    ----------
+    X : np.ndarray
+        A 4-dimensional array containing images
+
+    y : np.ndarray
+        An ndarray of lists where each entry is a list of bounding boxes related to an image. The list is on the form:
+        [
+            [label, [ymin, xmin, ymax, xmax]],
+            [label, [ymin, xmin, ymax, xmax]]
+        ]
+
+    labels : np.ndarray
+        A 1-dimensional array containing labels related to the label tags of the bounding boxes
+
+    paths : np.ndarray
+        A 1-dimensional ndarray containing the paths of the images in X
+
+    """
+
+
     def __init__(self, X, y, paths=None, **kwargs):
         super().__init__(X=X, y=y, **kwargs)
         

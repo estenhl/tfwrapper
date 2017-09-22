@@ -17,7 +17,6 @@ def parse_tfrecord(path):
     }
 
     with tf.Session() as sess:
-        i = 0
         for entry in iterator:
             obj = tf.parse_single_example(entry, features=features)
             img = sess.run(obj['image/encoded'])
